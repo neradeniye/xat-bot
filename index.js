@@ -1,10 +1,8 @@
 import 'dotenv/config';
 import { Client, GatewayIntentBits } from 'discord.js';
 import { getUserBalance } from './db.js';
-import config from './config.json' assert { type: 'json' };
 
 const prefix = '.x';
-const { xatEmoji } = config;
 const token = process.env.DISCORD_TOKEN;
 
 const client = new Client({
@@ -28,7 +26,7 @@ client.on('messageCreate', async message => {
 
   if (command === 'balance') {
     const balance = getUserBalance(message.author.id);
-    return message.reply(`You have ${xatEmoji} ${balance} xats.`);
+    return message.reply(`You have 💰 ${balance} xats.`);
   }
 });
 
