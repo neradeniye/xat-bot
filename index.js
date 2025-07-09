@@ -40,9 +40,13 @@ if (now - lastUsed >= 10_000) {
   }
 
   if (command === 'balance') {
-    const balance = getUserBalance(message.author.id);
-    return message.reply(`You have ${balance} ${xatEmoji} xats.`);
-  }
-});
+  const target = message.mentions.users.first() || message.author;
+  const balance = getUserBalance(target.id);
+
+  const isSelf = target.id === message.author.id;
+  const descriptor = isSelf ? 'You have' : 'They have';
+
+  return message.reply(`${descriptor} ${balance} ${xatEmoji} xats.`);
+}
 
 client.login(token);
