@@ -18,7 +18,7 @@ client.on('messageCreate', message => {
   const command = args.shift()?.toLowerCase();
 
   if (command === 'ping') {
-    message.reply('🏓 Pong!');
+    message.reply('🏓 Pong2!');
   }
 });
 
