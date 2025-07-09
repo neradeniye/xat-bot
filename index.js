@@ -1,5 +1,7 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const { token, prefix } = require('./config.json');
+import { getUserBalance } from './db.js';
+import config from './config.json' assert { type: 'json' };
+const { prefix, xatEmoji } = config;
 require('dotenv').config();
 import { getUserBalance } from './db.js';
 
