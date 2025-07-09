@@ -10,6 +10,6 @@ module.exports = {
     { name: 'Violet', roleId: '1386977755748634635' },
   ],
   items: [
-    { name: 'Pink Pawn', price: 500, roleId: '1392263894449524767' },
+    { name: 'PinkPawn', price: 500, roleId: '1392263894449524767' },
   ]
 };
