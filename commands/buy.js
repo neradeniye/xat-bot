@@ -14,11 +14,15 @@ export default {
   name: 'buy',
   async execute(message, args) {
     console.log(`[BUY] Command triggered by ${message.author.tag}`);
+
     const itemName = args.join(' ').toLowerCase();
     if (!itemName) return message.reply(`Please specify an item to buy.`);
 
-    const item = shopItems.find(i => i.name.toLowerCase() === itemName);
-    if (!item) return message.reply(`❌ Item not found.`);
+    const item = shopItems.find(i => i.name.toLowerCase().includes(itemName));
+    if (!item) {
+      console.log(`[BUY] Item not found: ${itemName}`);
+      return message.reply(`❌ Item not found.`);
+    }
 
     const userId = message.author.id;
     const balance = getUserBalance(userId);
@@ -32,7 +36,7 @@ export default {
       return message.reply(`❌ You need ${item.price} ${xatEmoji}, but you only have ${balance}.`);
     }
 
-    // Deduct price and record ownership
+    // Deduct and track ownership
     addUserXats(userId, -item.price);
     giveUserItem(userId, item.name);
 
@@ -47,7 +51,7 @@ export default {
         await member.roles.add(role);
         return message.reply(`✅ You bought **${item.name}** for ${item.price} ${xatEmoji} and received the role!`);
       } catch (err) {
-        console.error(err);
+        console.error('[BUY] Failed to assign role:', err);
         return message.reply(`❌ Failed to assign role. Make sure I have permission to manage roles.`);
       }
     }
