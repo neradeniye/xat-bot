@@ -1,8 +1,9 @@
 import 'dotenv/config';
 import { Client, GatewayIntentBits } from 'discord.js';
 import { getUserBalance } from './db.js';
-import config from './config.json' assert { type: 'json' };
+import fs from 'fs';
 
+const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 const { prefix, xatEmoji } = config;
 const token = process.env.DISCORD_TOKEN;
 
