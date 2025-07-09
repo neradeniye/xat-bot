@@ -1,4 +1,4 @@
-const shop = require('../shopData');
+const shop = require('../shaed/shopData');
 
 module.exports = {
   name: 'shop',
