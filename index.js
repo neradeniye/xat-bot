@@ -1,36 +1,41 @@
 const fs = require('fs');
-const path = require('path');
 const { Client, GatewayIntentBits } = require('discord.js');
 const db = require('./db');
-require('dotenv').config();
+const { token, prefix } = require('./config.json');
 
-const prefix = process.env.PREFIX || '.x';
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 const commands = new Map();
-
-// Load each command into a map
-for (const file of commandFiles) {
+fs.readdirSync('./commands').forEach(file => {
   const command = require(`./commands/${file}`);
   commands.set(command.name, command);
-}
+});
+
+const cooldowns = new Map();
 
 client.on('messageCreate', message => {
-  if (message.author.bot || !message.content.startsWith(prefix)) return;
+  if (message.author.bot) return;
 
-  const args = message.content.slice(prefix.length).trim().split(/ +/);
-  const commandName = args.shift().toLowerCase();
-
-  const command = commands.get(commandName);
-  if (!command) return;
-
-  try {
-    command.execute(message, args, db);
-  } catch (error) {
-    console.error(error);
-    message.reply('There was an error trying to execute that command.');
+  // Earn 1 xat every 10 seconds
+  const lastEarn = cooldowns.get(message.author.id) || 0;
+  if (Date.now() - lastEarn >= 10_000) {
+    db.addXat(message.author.id, 1);
+    cooldowns.set(message.author.id, Date.now());
   }
+
+  // Command handling
+  if (!message.content.startsWith(prefix)) return;
+  const args = message.content.slice(prefix.length).trim().split(/\s+/);
+  const cmdName = args.shift().toLowerCase();
+
+  const command = commands.get(cmdName);
+  if (command) {
+    command.run(message, args);
+  }
+});
+
+client.once('ready', () => {
+  console.log(`🟢 Logged in as ${client.user.tag}`);
 });
 
 client.login(process.env.DISCORD_TOKEN);
