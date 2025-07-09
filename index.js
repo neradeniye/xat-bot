@@ -3,8 +3,9 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import { getUserBalance } from './db.js';
 import config from './config.json' assert { type: 'json' };
 
+const prefix = '.x';
+const { xatEmoji } = config;
 const token = process.env.DISCORD_TOKEN;
-const { prefix, xatEmoji } = config;
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
