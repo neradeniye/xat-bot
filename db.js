@@ -10,6 +10,15 @@ db.prepare(`
   )
 `).run();
 
+// ✅ Create user_items table (this is the missing one)
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS user_items (
+    userId TEXT,
+    itemName TEXT,
+    PRIMARY KEY (userId, itemName)
+  )
+`).run();
+
 export function getUserBalance(userId) {
   let user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
   if (!user) {

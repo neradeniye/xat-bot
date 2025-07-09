@@ -13,6 +13,7 @@ const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 export default {
   name: 'buy',
   async execute(message, args) {
+    console.log(`[BUY] Command triggered by ${message.author.tag}`);
     const itemName = args.join(' ').toLowerCase();
     if (!itemName) return message.reply(`Please specify an item to buy.`);
 
