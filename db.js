@@ -27,3 +27,16 @@ export function addUserXats(userId, amount = 1) {
     db.prepare('UPDATE users SET balance = balance + ? WHERE id = ?').run(amount, userId);
   }
 }
+
+export function userOwnsItem(userId, itemName) {
+  const row = db.prepare(`
+    SELECT 1 FROM user_items WHERE userId = ? AND itemName = ?
+  `).get(userId, itemName);
+  return !!row;
+}
+
+export function giveUserItem(userId, itemName) {
+  db.prepare(`
+    INSERT OR IGNORE INTO user_items (userId, itemName)
+  `).run(userId, itemName);
+}

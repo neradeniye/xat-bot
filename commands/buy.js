@@ -1,5 +1,10 @@
 import fs from 'fs';
-import { getUserBalance, addUserXats } from '../db.js';
+import {
+  getUserBalance,
+  addUserXats,
+  userOwnsItem,
+  giveUserItem
+} from '../db.js';
 
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 const { xatEmoji } = config;
@@ -17,14 +22,20 @@ export default {
     const userId = message.author.id;
     const balance = getUserBalance(userId);
 
+    // Check ownership
+    if (userOwnsItem(userId, item.name)) {
+      return message.reply(`🛑 You already own **${item.name}**.`);
+    }
+
     if (balance < item.price) {
       return message.reply(`❌ You need ${item.price} ${xatEmoji}, but you only have ${balance}.`);
     }
 
-    // Deduct price
+    // Deduct price and record ownership
     addUserXats(userId, -item.price);
+    giveUserItem(userId, item.name);
 
-    // Assign role if it's a role-based item
+    // Assign role if applicable
     if (item.roleId) {
       const role = message.guild.roles.cache.get(item.roleId);
       if (!role) return message.reply(`❌ Role not found on this server.`);
@@ -40,7 +51,6 @@ export default {
       }
     }
 
-    // If no roleId, just confirm purchase
     return message.reply(`✅ You bought **${item.name}** for ${item.price} ${xatEmoji}.`);
   }
 };
