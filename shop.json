@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Red Role",
+    "type": "color",
+    "price": 100
+  },
+  {
+    "name": "Blue Role",
+    "type": "color",
+    "price": 100
+  },
+  {
+    "name": "Lightsaber",
+    "type": "item",
+    "price": 250
+  }
+]

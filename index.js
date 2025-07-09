@@ -1,14 +1,24 @@
-const cooldowns = new Map(); // userId → timestamp
-
 import 'dotenv/config';
-import { Client, GatewayIntentBits } from 'discord.js';
-import { getUserBalance } from './db.js';
 import fs from 'fs';
+import { Client, GatewayIntentBits } from 'discord.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
-const { prefix, xatEmoji } = config;
+const { prefix } = config;
 const token = process.env.DISCORD_TOKEN;
 
+// Load commands
+const commands = new Map();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const commandFiles = fs.readdirSync(path.join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+  const command = (await import(`./commands/${file}`)).default;
+  commands.set(command.name, command);
+}
+
+// Set up bot
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
@@ -19,35 +29,15 @@ client.once('ready', () => {
 
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
-  // 10 second cooldown
-const now = Date.now();
-const lastUsed = cooldowns.get(message.author.id) || 0;
-
-if (now - lastUsed >= 10_000) {
-  import('./db.js').then(({ addUserXats }) => {
-    addUserXats(message.author.id, 1);
-    cooldowns.set(message.author.id, now);
-    console.log(`[+1 xat] ${userId}`);
-  });
-}
   if (!message.content.startsWith(prefix)) return;
 
   const args = message.content.slice(prefix.length).trim().split(/\s+/);
-  const command = args.shift()?.toLowerCase();
+  const commandName = args.shift()?.toLowerCase();
 
-  if (command === 'ping') {
-    return message.reply('🏓 Pong!');
+  const command = commands.get(commandName);
+  if (command) {
+    command.execute(message, args);
   }
-
-if (command === 'balance') {
-  const target = message.mentions.users.first() || message.author;
-  const balance = getUserBalance(target.id);
-
-  const isSelf = target.id === message.author.id;
-  const descriptor = isSelf ? 'You have' : 'They have';
-
-  return message.reply(`${descriptor} ${balance} ${xatEmoji} xats.`);
-}
 });
 
 client.login(token);
