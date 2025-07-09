@@ -16,18 +16,20 @@ const cooldowns = new Map();
 client.on('messageCreate', message => {
   if (message.author.bot) return;
 
-  // Earn 1 xat every 10 seconds
+  // Earn xat with cooldown
   const lastEarn = cooldowns.get(message.author.id) || 0;
   if (Date.now() - lastEarn >= 10_000) {
     db.addXat(message.author.id, 1);
     cooldowns.set(message.author.id, Date.now());
   }
 
-  // Command handling
+  // Check for prefix
   if (!message.content.startsWith(prefix)) return;
+
   const args = message.content.slice(prefix.length).trim().split(/\s+/);
   const cmdName = args.shift().toLowerCase();
 
+  // Check for .x balance
   const command = commands.get(cmdName);
   if (command) {
     command.run(message, args);
