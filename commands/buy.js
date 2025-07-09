@@ -1,4 +1,4 @@
-const shop = require('../shopData');
+const shop = require('../shared/shopData');
 
 module.exports = {
   name: 'buy',
