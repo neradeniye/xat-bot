@@ -16,6 +16,6 @@ module.exports = {
     const emoji = '<:xats:1387149871987036260>'; // Replace with your emoji ID
     const name = target.id === message.author.id ? 'You have' : `${target.username} has`;
 
-    message.reply(`${name} ${row.xats} ${emoji} xats.`);
+    message.reply(`${name} ${row.xats} ${emoji} fucks.`);
   }
 };
