@@ -42,6 +42,7 @@ export function giveUserItem(userId, itemName) {
 }
 
 export function clearAllData() {
-  db.prepare('DELETE FROM users').run();
-  db.prepare('DELETE FROM user_items').run();
+  const deletedUsers = db.prepare('DELETE FROM users').run();
+  const deletedItems = db.prepare('DELETE FROM user_items').run();
+  console.log(`[cleardata] Removed ${deletedUsers.changes} users and ${deletedItems.changes} item records.`);
 }

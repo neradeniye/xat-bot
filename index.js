@@ -14,7 +14,7 @@ const token = process.env.DISCORD_TOKEN;
 // Load commands
 const commands = new Map();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const commandFiles = fs.readdirSync(path.join(__dirname, 'commands')).filter(file => file.endsWith('.js'));
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
   const command = (await import(`./commands/${file}`)).default;
