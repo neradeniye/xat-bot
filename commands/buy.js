@@ -1,4 +1,4 @@
-const shop = require('../shared/shopData');
+const shop = require('../shopData');
 
 module.exports = {
   name: 'buy',
@@ -42,6 +42,7 @@ module.exports = {
     db.prepare('UPDATE users SET xats = xats - ? WHERE userId = ?').run(price, userId);
     await member.roles.add(roleId);
 
-    message.reply(`✅ You purchased **${itemName}** for ${price} xats!`);
+    const remaining = user.xats - price;
+    message.reply(`✅ You purchased **${itemName}** for ${price} xats. You now have **${remaining}** xats left.`);
   }
 };
