@@ -1,7 +1,8 @@
-const { Client, GatewayIntentBits } = require('discord.js');
-const { token, prefix } = require('./config.json');
+import 'dotenv/config';
+import { Client, GatewayIntentBits } from 'discord.js';
 
-require('dotenv').config();
+const prefix = '.x';
+const token = process.env.DISCORD_TOKEN;
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
@@ -24,4 +25,4 @@ client.on('messageCreate', message => {
 });
 
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(token);
