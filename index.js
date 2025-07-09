@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { Client, GatewayIntentBits } from 'discord.js';
+import { getUserBalance } from './db.js';
 
 const prefix = '.x';
 const token = process.env.DISCORD_TOKEN;
@@ -12,7 +13,7 @@ client.once('ready', () => {
   console.log(`🟢 Logged in as ${client.user.tag}`);
 });
 
-client.on('messageCreate', message => {
+client.on('messageCreate', async message => {
   if (message.author.bot) return;
   if (!message.content.startsWith(prefix)) return;
 
@@ -20,7 +21,12 @@ client.on('messageCreate', message => {
   const command = args.shift()?.toLowerCase();
 
   if (command === 'ping') {
-    message.reply('🏓 Pong!');
+    return message.reply('🏓 Pong!');
+  }
+
+  if (command === 'balance') {
+    const balance = getUserBalance(message.author.id);
+    return message.reply(`You have 💰 ${balance} xats.`);
   }
 });
 
