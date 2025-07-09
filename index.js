@@ -1,4 +1,5 @@
-import { Client, GatewayIntentBits } from 'discord.js';
+const { Client, GatewayIntentBits } = require('discord.js');
+const { token, prefix } = require('./config.json');
 
 require('dotenv').config();
 
@@ -21,5 +22,6 @@ client.on('messageCreate', message => {
     message.reply('🏓 Pong!');
   }
 });
+
 
 client.login(process.env.DISCORD_TOKEN);
