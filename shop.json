@@ -6,10 +6,10 @@
     "roleId": "1386977735846527087"
   },
   {
-    "name": "Blue Role",
+    "name": "Blue",
     "type": "color",
-    "price": 100,
-    "roleId": "234567890123456789"
+    "price": 1,
+    "roleId": "1386977749721157712"
   },
   {
     "name": "Lightsaber",
