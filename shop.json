@@ -2,16 +2,19 @@
   {
     "name": "Red Role",
     "type": "color",
-    "price": 100
+    "price": 1,
+    "roleId": "1386977735846527087"
   },
   {
     "name": "Blue Role",
     "type": "color",
-    "price": 100
+    "price": 100,
+    "roleId": "234567890123456789"
   },
   {
     "name": "Lightsaber",
     "type": "item",
-    "price": 250
+    "price": 250,
+    "roleId": "345678901234567890"
   }
 ]
