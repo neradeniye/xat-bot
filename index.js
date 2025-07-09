@@ -28,7 +28,7 @@ client.on('messageCreate', async message => {
 
   if (command === 'balance') {
     const balance = getUserBalance(message.author.id);
-    return message.reply(`You have ${xatEmoji} ${balance} xats.`);
+    return message.reply(`You have ${balance} ${xatEmoji} xats.`);
   }
 });
 
