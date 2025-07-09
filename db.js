@@ -40,3 +40,8 @@ export function giveUserItem(userId, itemName) {
     INSERT OR IGNORE INTO user_items (userId, itemName)
   `).run(userId, itemName);
 }
+
+export function clearAllData() {
+  db.prepare('DELETE FROM users').run();
+  db.prepare('DELETE FROM user_items').run();
+}
