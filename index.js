@@ -1,43 +1,24 @@
-const fs = require('fs');
 const { Client, GatewayIntentBits } = require('discord.js');
-const db = require('./db');
 const { token, prefix } = require('./config.json');
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
-
-const commands = new Map();
-fs.readdirSync('./commands').forEach(file => {
-  const command = require(`./commands/${file}`);
-  commands.set(command.name, command);
-});
-
-const cooldowns = new Map();
-
-client.on('messageCreate', message => {
-  if (message.author.bot) return;
-
-  // Earn xat with cooldown
-  const lastEarn = cooldowns.get(message.author.id) || 0;
-  if (Date.now() - lastEarn >= 10_000) {
-    db.addXat(message.author.id, 1);
-    cooldowns.set(message.author.id, Date.now());
-  }
-
-  // Check for prefix
-  if (!message.content.startsWith(prefix)) return;
-
-  const args = message.content.slice(prefix.length).trim().split(/\s+/);
-  const cmdName = args.shift().toLowerCase();
-
-  // Check for .x balance
-  const command = commands.get(cmdName);
-  if (command) {
-    command.run(message, args);
-  }
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 
 client.once('ready', () => {
   console.log(`🟢 Logged in as ${client.user.tag}`);
+});
+
+client.on('messageCreate', message => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith(prefix)) return;
+
+  const args = message.content.slice(prefix.length).trim().split(/\s+/);
+  const command = args.shift()?.toLowerCase();
+
+  if (command === 'ping') {
+    message.reply('🏓 Pong!');
+  }
 });
 
 client.login(process.env.DISCORD_TOKEN);
