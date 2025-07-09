@@ -39,7 +39,7 @@ if (now - lastUsed >= 10_000) {
     return message.reply('🏓 Pong!');
   }
 
-  if (command === 'balance') {
+if (command === 'balance') {
   const target = message.mentions.users.first() || message.author;
   const balance = getUserBalance(target.id);
 
@@ -48,5 +48,6 @@ if (now - lastUsed >= 10_000) {
 
   return message.reply(`${descriptor} ${balance} ${xatEmoji} xats.`);
 }
+});
 
 client.login(token);
