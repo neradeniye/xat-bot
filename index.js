@@ -3,7 +3,6 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import { getUserBalance } from './db.js';
 import config from './config.json' assert { type: 'json' };
 
-const token = process.env.DISCORD_TOKEN;
 const { prefix, xatEmoji } = config;
 
 const client = new Client({
@@ -31,4 +30,4 @@ client.on('messageCreate', async message => {
   }
 });
 
-client.login(token);
+client.login(process.env.DISCORD_TOKEN);
