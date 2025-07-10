@@ -53,4 +53,5 @@ message.reply({
   embeds: [embed],
   allowedMentions: { parse: ['roles'] }
 });
+  }
 };
