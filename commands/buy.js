@@ -41,7 +41,7 @@ export default {
 addUserXats(userId, -price);
 giveUserItem(userId, item.name);
 
-    // Assign role if applicable
+ // Assign role if applicable
     if (item.roleId) {
       const role = message.guild.roles.cache.get(item.roleId);
       if (!role) return message.reply(`❌ Role not found on this server.`);
@@ -49,7 +49,14 @@ giveUserItem(userId, item.name);
       const member = message.guild.members.cache.get(userId) || await message.guild.members.fetch(userId);
 
       try {
+        // Remove all other roles of the same type (item or color)
+        const sameTypeRoles = shopItems
+          .filter(i => i.type === item.type)
+          .map(i => i.roleId);
+
+        await member.roles.remove(sameTypeRoles);
         await member.roles.add(role);
+
         return message.reply(`✅ You bought **${item.name}** for ${price} ${xatEmoji} and received the role!`);
       } catch (err) {
         console.error('[BUY] Failed to assign role:', err);
