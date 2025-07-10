@@ -1,9 +1,9 @@
 import fs from 'fs';
-import {
-  userOwnsItem
-} from '../db.js';
+import { EmbedBuilder } from 'discord.js';
+import { userOwnsItem } from '../db.js';
 
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
+const { xatEmoji } = config;
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 
 export default {
@@ -12,32 +12,42 @@ export default {
     const userId = message.author.id;
     const member = message.guild.members.cache.get(userId) || await message.guild.members.fetch(userId);
 
-    // Group by type
-    const ownedColors = shopItems.filter(item =>
-      item.type === 'color' && userOwnsItem(userId, item.name)
+    const ownedColors = shopItems.filter(
+      i => i.type === 'color' && userOwnsItem(userId, i.name)
     );
 
-    const ownedItems = shopItems.filter(item =>
-      item.type === 'item' && userOwnsItem(userId, item.name)
+    const ownedItems = shopItems.filter(
+      i => i.type === 'item' && userOwnsItem(userId, i.name)
     );
 
-    // Determine which ones are currently active (roles assigned)
-    const hasRole = (roleId) => member.roles.cache.has(roleId);
+    const hasRole = roleId => member.roles.cache.has(roleId);
 
-    const formatList = (items) =>
-      items.length > 0
-        ? items.map(i => `${hasRole(i.roleId) ? '🟢' : '⚪'} ${i.name}`).join('\n')
-        : 'None';
+    let colorSection = '';
+    for (const color of ownedColors) {
+      const active = hasRole(color.roleId) ? '✅ ' : '▫️ ';
+      colorSection += `${active}<@&${color.roleId}>\n`;
+    }
+    if (colorSection === '') colorSection = 'You do not own any color roles.';
 
-    const reply = `📦 **Inventory for ${message.author.username}:**
+    let itemSection = '';
+    for (const item of ownedItems) {
+      const active = hasRole(item.roleId) ? '✅ ' : '▫️ ';
+      itemSection += `${active}${item.name}\n`;
+    }
+    if (itemSection === '') itemSection = 'You do not own any items.';
 
-🎨 **Colors:**
-${formatList(ownedColors)}
+    const embed = new EmbedBuilder()
+      .setTitle(`🎒 ${message.author.username}'s Inventory`)
+      .setColor(0x9b59b6)
+      .addFields(
+        { name: '🎨 Colors', value: colorSection, inline: false },
+        { name: '🧸 Items', value: itemSection, inline: false }
+      )
+      .setFooter({ text: `Use .x enable or .x disable to activate/deactivate roles.` });
 
-🧸 **Items:**
-${formatList(ownedItems)}
-`;
-
-    message.reply(reply);
+    message.reply({
+      embeds: [embed],
+      allowedMentions: { parse: ['roles'] }
+    });
   }
 };
