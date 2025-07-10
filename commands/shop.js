@@ -30,7 +30,7 @@ export default {
         ? `<@&${item.roleId}>` // Proper mention syntax
         : item.name;
 
-      description += `• ${name} — ${price} ${xatEmoji}\n`;
+      description += `• ${name} — ${price} ${xatEmoji} xats\n`;
     }
 
     const embed = new EmbedBuilder()
