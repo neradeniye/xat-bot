@@ -1,18 +1,18 @@
 [
   {
-    "name": "Red Role",
+    "name": "Red",
     "type": "color",
-    "roleId": "123456789012345678"
+    "roleId": "1386977735846527087"
   },
   {
-    "name": "Blue Role",
+    "name": "Blue",
     "type": "color",
-    "roleId": "234567890123456789"
+    "roleId": "1386977749721157712"
   },
   {
-    "name": "Lightsaber",
+    "name": "Pink Pawn",
     "type": "item",
-    "price": 250,
-    "roleId": "345678901234567890"
+    "price": 1,
+    "roleId": "1392263894449524767"
   }
 ]
