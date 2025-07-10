@@ -24,10 +24,15 @@ export default {
 
     let reply = `🛒 **Available ${input.charAt(0).toUpperCase() + input.slice(1)}:**\n`;
 
-    for (const item of filtered) {
-      const price = item.type === 'color' ? colorRolePrice : item.price;
-      reply += `• ${item.name} — ${price} ${xatEmoji}\n`;
-    }
+for (const item of filtered) {
+  const price = item.type === 'color' ? colorRolePrice : item.price;
+
+  const name = item.type === 'color'
+    ? `<@&${item.roleId}>`  // ping role
+    : item.name;
+
+  reply += `• ${name} — ${price} ${xatEmoji}\n`;
+}
 
     message.reply(reply);
   }
