@@ -45,5 +45,11 @@
     "type": "item",
     "price": 500,
     "roleId": "1392731162819952700"
+  },
+  {
+    "name": "Gold Pawn",
+    "type": "item",
+    "price": 2000,
+    "roleId": "1392731162819952700"
   }
 ]
