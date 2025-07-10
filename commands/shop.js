@@ -41,9 +41,10 @@ export default {
       });
     }
 
-    message.reply({
-      embeds: [embed],
-      allowedMentions: { parse: ['roles'] }  // This is crucial
-    });
+   message.reply({
+  content: type === 'color' ? '🔔 Showing mentionable roles:' : undefined,
+  embeds: [embed],
+  allowedMentions: { parse: ['roles'] }
+});
   }
 };
