@@ -38,6 +38,9 @@ export default {
       });
     }
 
-    message.reply({ embeds: [embed] });
+    message.reply({
+  embeds: [embed],
+  allowedMentions: { parse: ['roles'] }
+});
   }
 };
