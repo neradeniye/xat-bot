@@ -22,29 +22,26 @@ export default {
       return message.reply(`❌ No ${input} are currently available.`);
     }
 
-    const embed = new EmbedBuilder()
-      .setTitle(`🛒 ${input.charAt(0).toUpperCase() + input.slice(1)} Shop`)
-      .setColor(type === 'color' ? 0xff66cc : 0x66ccff)
-      .setFooter({ text: 'Use .x buy <name> to purchase.' });
+    let description = '';
 
     for (const item of filtered) {
       const price = item.type === 'color' ? colorRolePrice : item.price;
-
-      const display = item.type === 'color'
-        ? `<@&${item.roleId}>`  // PING the role
+      const name = item.type === 'color'
+        ? `<@&${item.roleId}>` // Proper mention syntax
         : item.name;
 
-      embed.addFields({
-        name: display,
-        value: `${price} ${xatEmoji}`,
-        inline: true
-      });
+      description += `• ${name} — ${price} ${xatEmoji}\n`;
     }
 
-   message.reply({
-  content: type === 'color' ? '🔔 Showing mentionable roles:' : undefined,
-  embeds: [embed],
-  allowedMentions: { parse: ['roles'] }
-});
+    const embed = new EmbedBuilder()
+      .setTitle(`🛒 ${input.charAt(0).toUpperCase() + input.slice(1)} Shop`)
+      .setColor(type === 'color' ? 0xff66cc : 0x66ccff)
+      .setDescription(description)
+      .setFooter({ text: 'Use .x buy <name> to purchase.' });
+
+    message.reply({
+      embeds: [embed],
+      allowedMentions: { parse: ['roles'] }
+    });
   }
 };
