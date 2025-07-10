@@ -14,5 +14,11 @@
     "type": "item",
     "price": 1,
     "roleId": "1392263894449524767"
+  },
+  {
+    "name": "Cyan Pawn",
+    "type": "item",
+    "price": 1,
+    "roleId": "1392731162819952700"
   }
 ]
