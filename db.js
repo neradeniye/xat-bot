@@ -2,21 +2,21 @@ import Database from 'better-sqlite3';
 
 const db = new Database('economy.db');
 
-// Create table if it doesn't exist
+// ✅ Create users table
 db.prepare(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     balance INTEGER DEFAULT 0
-  )
+  );
 `).run();
 
-// ✅ Create user_items table (this is the missing one)
+// ✅ Create user_items table
 db.prepare(`
   CREATE TABLE IF NOT EXISTS user_items (
-    userId TEXT,
-    itemName TEXT,
+    userId TEXT NOT NULL,
+    itemName TEXT NOT NULL,
     PRIMARY KEY (userId, itemName)
-  )
+  );
 `).run();
 
 export function getUserBalance(userId) {
@@ -38,16 +38,12 @@ export function addUserXats(userId, amount = 1) {
 }
 
 export function userOwnsItem(userId, itemName) {
-  const row = db.prepare(`
-    SELECT 1 FROM user_items WHERE userId = ? AND itemName = ?
-  `).get(userId, itemName);
+  const row = db.prepare('SELECT 1 FROM user_items WHERE userId = ? AND itemName = ?').get(userId, itemName);
   return !!row;
 }
 
 export function giveUserItem(userId, itemName) {
-  db.prepare(`
-    INSERT OR IGNORE INTO user_items (userId, itemName)
-  `).run(userId, itemName);
+  db.prepare('INSERT OR IGNORE INTO user_items (userId, itemName) VALUES (?, ?)').run(userId, itemName);
 }
 
 export function clearAllData() {

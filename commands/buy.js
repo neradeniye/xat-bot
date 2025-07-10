@@ -32,13 +32,14 @@ export default {
       return message.reply(`🛑 You already own **${item.name}**.`);
     }
 
-    if (balance < item.price) {
-      return message.reply(`❌ You need ${item.price} ${xatEmoji}, but you only have ${balance}.`);
+    const price = item.type === 'color' ? config.colorRolePrice : item.price;
+    
+    if (balance < price) {
+        return message.reply(`❌ You need ${price} ${xatEmoji}, but you only have ${balance}.`);
     }
 
-    // Deduct and track ownership
-    addUserXats(userId, -item.price);
-    giveUserItem(userId, item.name);
+addUserXats(userId, -price);
+giveUserItem(userId, item.name);
 
     // Assign role if applicable
     if (item.roleId) {
@@ -49,7 +50,7 @@ export default {
 
       try {
         await member.roles.add(role);
-        return message.reply(`✅ You bought **${item.name}** for ${item.price} ${xatEmoji} and received the role!`);
+        return message.reply(`✅ You bought **${item.name}** for ${price} ${xatEmoji} and received the role!`);
       } catch (err) {
         console.error('[BUY] Failed to assign role:', err);
         return message.reply(`❌ Failed to assign role. Make sure I have permission to manage roles.`);

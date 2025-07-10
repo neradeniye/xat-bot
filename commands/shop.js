@@ -1,7 +1,7 @@
 import fs from 'fs';
 
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
-const { xatEmoji } = config;
+const { xatEmoji, colorRolePrice } = config;
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 
 export default {
@@ -10,7 +10,8 @@ export default {
     let reply = `🛒 **Available Items:**\n`;
 
     for (const item of shopItems) {
-      reply += `• ${item.name} (${item.type}) — ${item.price} ${xatEmoji}\n`;
+      const price = item.type === 'color' ? colorRolePrice : item.price;
+      reply += `• ${item.name} (${item.type}) — ${price} ${xatEmoji}\n`;
     }
 
     message.reply(reply);
