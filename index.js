@@ -26,6 +26,11 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 
+client.once('ready', () => {
+  console.log(`🟢 Logged in as ${client.user.tag}`);
+  client.user.setActivity('for .x', { type: 3 }); // 👀 Watching for .x
+});
+
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
 
