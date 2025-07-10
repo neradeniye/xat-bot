@@ -4,7 +4,7 @@ export default {
   name: 'help',
   execute(message) {
     const embed = new EmbedBuilder()
-      .setTitle('📖 Xat-Bot Commands')
+      .setTitle('<:xat:1385788399788621854> Xat-Bot Commands')
       .setColor(0x00bcd4)
       .setDescription('Here are all the available commands, sorted by category:')
       .addFields(
