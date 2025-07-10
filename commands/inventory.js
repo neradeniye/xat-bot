@@ -24,14 +24,14 @@ export default {
 
     let colorSection = '';
     for (const color of ownedColors) {
-      const active = hasRole(color.roleId) ? '✅ ' : '▫️ ';
+      const active = hasRole(color.roleId) ? '🟢 ' : '🔴 ';
       colorSection += `${active}<@&${color.roleId}>\n`;
     }
     if (colorSection === '') colorSection = 'You do not own any color roles.';
 
     let itemSection = '';
     for (const item of ownedItems) {
-      const active = hasRole(item.roleId) ? '✅ ' : '▫️ ';
+      const active = hasRole(item.roleId) ? '🟢 ' : '🔴 ';
       itemSection += `${active}${item.name}\n`;
     }
     if (itemSection === '') itemSection = 'You do not own any items.';
