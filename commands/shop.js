@@ -7,7 +7,7 @@ const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 
 export default {
   name: 'shop',
-  execute(message, args) {
+  async execute(message, args) {
     const input = args[0]?.toLowerCase();
 
     let type = null;
@@ -29,18 +29,23 @@ export default {
 
     for (const item of filtered) {
       const price = item.type === 'color' ? colorRolePrice : item.price;
-      const name = item.type === 'color' ? `<@&${item.roleId}>` : item.name;
+
+      let fieldName = item.name;
+
+      if (item.type === 'color') {
+        const role = message.guild.roles.cache.get(item.roleId);
+        const hex = role ? role.hexColor : '#000000';
+
+        fieldName = `${item.name} — \`${hex.toUpperCase()}\``;
+      }
 
       embed.addFields({
-        name,
+        name: fieldName,
         value: `${price} ${xatEmoji}`,
         inline: true
       });
     }
 
-    message.reply({
-      embeds: [embed],
-      allowedMentions: { parse: ['roles'] }
-    });
+    message.reply({ embeds: [embed] });
   }
 };
