@@ -43,12 +43,14 @@ const embed = new EmbedBuilder()
       const roleDisplay = item.type === 'color' ? `<@&${item.roleId}>` : item.name;
 
       embed.addFields({
-        name: roleDisplay,
-        value: `${price} ${xatEmoji}`,
-        inline: true
-      });
+  name: item.type === 'color' ? `<@&${item.roleId}>` : item.name,
+  value: `${price} ${xatEmoji}`,
+  inline: true
+});
     }
 
-message.reply({ embeds: [embed] });
-  }
+message.reply({
+  embeds: [embed],
+  allowedMentions: { parse: ['roles'] }
+});
 };
