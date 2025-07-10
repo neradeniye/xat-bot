@@ -31,7 +31,7 @@ export default {
       const price = item.type === 'color' ? colorRolePrice : item.price;
       const name = item.type === 'color' ? `<@&${item.roleId}>` : item.name;
 
-      embed.addFields({
+      embed.setDescription({
         name,
         value: `${price} ${xatEmoji}`,
         inline: true
