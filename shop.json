@@ -5,20 +5,45 @@
     "roleId": "1386977735846527087"
   },
   {
+    "name": "Orange",
+    "type": "color",
+    "roleId": "1386977739101306950"
+  },
+  {
+    "name": "Yellow",
+    "type": "color",
+    "roleId": "1386977742389772398"
+  },
+  {
+    "name": "Green",
+    "type": "color",
+    "roleId": "1386977746361520148"
+  },
+  {
     "name": "Blue",
     "type": "color",
     "roleId": "1386977749721157712"
   },
   {
+    "name": "Indigo",
+    "type": "color",
+    "roleId": "1386977752334205009"
+  },
+  {
+    "name": "Violet",
+    "type": "color",
+    "roleId": "1386977755748634635"
+  },
+  {
     "name": "Pink Pawn",
     "type": "item",
-    "price": 1,
+    "price": 500,
     "roleId": "1392263894449524767"
   },
   {
     "name": "Cyan Pawn",
     "type": "item",
-    "price": 1,
+    "price": 500,
     "roleId": "1392731162819952700"
   }
 ]
