@@ -46,6 +46,10 @@ export function giveUserItem(userId, itemName) {
   db.prepare('INSERT OR IGNORE INTO user_items (userId, itemName) VALUES (?, ?)').run(userId, itemName);
 }
 
+export function removeUserItem(userId, itemName) {
+  db.prepare('DELETE FROM user_items WHERE user_id = ? AND item_name = ?').run(userId, itemName);
+}
+
 export function clearAllData() {
   const deletedUsers = db.prepare('DELETE FROM users').run();
   const deletedItems = db.prepare('DELETE FROM user_items').run();
