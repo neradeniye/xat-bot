@@ -7,18 +7,22 @@ const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 export default {
   name: 'shop',
   execute(message, args) {
-    const category = args[0]?.toLowerCase();
+    const input = args[0]?.toLowerCase();
 
-    if (!['colors', 'items'].includes(category)) {
+    let type = null;
+    if (input === 'colors') type = 'color';
+    else if (input === 'items') type = 'item';
+    else {
       return message.reply(`🛍️ Please specify a category:\n> \`.x shop colors\`\n> \`.x shop items\``);
     }
 
-    const filtered = shopItems.filter(i => i.type === category);
+    const filtered = shopItems.filter(i => i.type === type);
+
     if (filtered.length === 0) {
-      return message.reply(`❌ No ${category} are currently available.`);
+      return message.reply(`❌ No ${input} are currently available.`);
     }
 
-    let reply = `🛒 **Available ${category.charAt(0).toUpperCase() + category.slice(1)}:**\n`;
+    let reply = `🛒 **Available ${input.charAt(0).toUpperCase() + input.slice(1)}:**\n`;
 
     for (const item of filtered) {
       const price = item.type === 'color' ? colorRolePrice : item.price;
