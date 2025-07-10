@@ -49,9 +49,6 @@ const embed = new EmbedBuilder()
       });
     }
 
-    message.reply({
-  embeds: [embed],
-  allowedMentions: { parse: ['roles'] }
-});
+message.reply({ embeds: [embed] });
   }
 };
