@@ -55,24 +55,28 @@
     "name": "Yellow Pawn",
     "type": "item",
     "price": 500,
-    "roleId": "1393320708121038979"
+    "roleId": "1393320708121038979",
+     "emoji": "<:yellow:1393334434836648110>"
   },
   {
     "name": "Blueman Pawn",
     "type": "item",
     "price": 500,
-    "roleId": "1392731162819952700"
+    "roleId": "1392731162819952700",
+    "emoji": "<:blueman:1393334476930809969>"
   },
   {
     "name": "Purple Pawn",
     "type": "item",
     "price": 1000,
-    "roleId": "1393143174385369098"
+    "roleId": "1393143174385369098",
+    "emoji": "<:purple:1393334458190532788>"
   },
   {
     "name": "Gold Pawn",
     "type": "item",
     "price": 2000,
-    "roleId": "1392761383917064262"
+    "roleId": "1392761383917064262",
+    "emoji": "<:gold:1393334562691481840>"
   }
 ]
