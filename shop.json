@@ -50,6 +50,12 @@
     "price": 500,
     "roleId": "1392263894449524767"
   },
+    {
+    "name": "Yellow Pawn",
+    "type": "item",
+    "price": 500,
+    "roleId": "1393320708121038979"
+  },
   {
     "name": "Blueman Pawn",
     "type": "item",
