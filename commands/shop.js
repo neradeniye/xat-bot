@@ -25,13 +25,14 @@ export default {
     let description = '';
 
     for (const item of filtered) {
-      const price = item.type === 'color' ? colorRolePrice : item.price;
-      const name = item.type === 'color'
-        ? `<@&${item.roleId}>` // Proper mention syntax
-        : `${emoji} **${item.name}**`;
+  const price = item.type === 'color' ? colorRolePrice : item.price;
 
-      description += `• ${name} — ${price} ${xatEmoji} xats\n`;
-    }
+  const display = item.type === 'color'
+    ? `<@&${item.roleId}>`
+    : `${item.emoji ?? ''} **${item.name}**`;
+
+  description += `• ${display} — ${price} ${xatEmoji} xats\n`;
+}
 
     const embed = new EmbedBuilder()
       .setTitle(`🛒 ${input.charAt(0).toUpperCase() + input.slice(1)} Shop`)
