@@ -28,7 +28,7 @@ export default {
       const price = item.type === 'color' ? colorRolePrice : item.price;
       const name = item.type === 'color'
         ? `<@&${item.roleId}>` // Proper mention syntax
-        : item.name;
+        : `${emoji} **${item.name}**`;
 
       description += `• ${name} — ${price} ${xatEmoji} xats\n`;
     }
