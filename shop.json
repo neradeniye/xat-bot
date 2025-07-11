@@ -35,6 +35,16 @@
     "roleId": "1386977755748634635"
   },
   {
+    "name": "White",
+    "type": "color",
+    "roleId": "1393141908091699241"
+  },
+  {
+    "name": "Black",
+    "type": "color",
+    "roleId": "1393141995169644564"
+  },
+  {
     "name": "Pink Pawn",
     "type": "item",
     "price": 500,
