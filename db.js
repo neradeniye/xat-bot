@@ -27,6 +27,22 @@ db.prepare(`
   );
 `).run();
 
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS daily_rewards (
+    user_id TEXT PRIMARY KEY,
+    last_claim INTEGER
+  );
+`).run();
+
+export function getLastDailyClaim(userId) {
+  const row = db.prepare('SELECT last_claim FROM daily_rewards WHERE user_id = ?').get(userId);
+  return row?.last_claim ?? 0;
+}
+
+export function setLastDailyClaim(userId, timestamp) {
+  db.prepare('INSERT OR REPLACE INTO daily_rewards (user_id, last_claim) VALUES (?, ?)').run(userId, timestamp);
+}
+
 export function getUserColorRole(userId) {
   return db.prepare('SELECT role_id FROM user_custom_colors WHERE user_id = ?').get(userId);
 }
