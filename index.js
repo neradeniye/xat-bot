@@ -51,7 +51,7 @@ client.on('messageCreate', async message => {
 
   const command = commands.get(commandName);
   if (command) {
-    command.execute(message, args);
+    command.execute(message, args, client);
   }
 });
 
