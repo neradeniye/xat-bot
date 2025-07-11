@@ -1,4 +1,5 @@
-import { getUserColorRole, setUserColorRole, removeUserColorRole } from '../db.js';
+import { db } from '../db.js';
+console.log('[DEBUG] DB import check:', typeof db);
 
 export default {
   name: 'setcol',

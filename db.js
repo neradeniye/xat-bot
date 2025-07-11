@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 
-const db = new Database('economy.db');
-//const db = new Database('/var/xat-bot-data/economy.db');
+//const db = new Database('economy.db');
+const db = new Database('/var/xat-bot-data/economy.db');
 
 // ✅ Create users table
 db.prepare(`
@@ -43,8 +43,6 @@ export function removeUserColorRole(userId) {
   db.prepare('DELETE FROM user_custom_colors WHERE user_id = ?').run(userId);
 }
 
-export { db };
-
 export function getUserBalance(userId) {
   let user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
   if (!user) {
@@ -81,3 +79,5 @@ export function clearAllData() {
   const deletedItems = db.prepare('DELETE FROM user_items').run();
   console.log(`[cleardata] Removed ${deletedUsers.changes} users and ${deletedItems.changes} item records.`);
 }
+
+export { db };
