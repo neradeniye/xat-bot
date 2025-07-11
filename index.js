@@ -55,4 +55,31 @@ client.on('messageCreate', async message => {
   }
 });
 
+import { getUserColorRole, removeUserColorRole } from './db.js';
+
+client.on('guildMemberUpdate', async (oldMember, newMember) => {
+  const userId = newMember.id;
+
+  const wasBoosting = oldMember.premiumSince;
+  const isBoosting = newMember.premiumSince;
+
+  // Only act when user stops boosting
+  if (wasBoosting && !isBoosting) {
+    const record = getUserColorRole(userId);
+    if (!record) return;
+
+    try {
+      const role = newMember.guild.roles.cache.get(record.role_id);
+      if (role) {
+        await role.delete('User stopped boosting - removing custom color');
+      }
+
+      removeUserColorRole(userId);
+      console.log(`[BOOSTER CLEANUP] Removed custom role from ${newMember.user.tag}`);
+    } catch (err) {
+      console.error(`[BOOSTER CLEANUP ERROR]`, err);
+    }
+  }
+});
+
 client.login(token);

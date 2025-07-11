@@ -32,13 +32,20 @@ export default {
       }
     }
 
-    // Create a new custom role
-    role = await guild.roles.create({
-      name: `${message.author.username}'s Color`,
-      color: colorCode,
-      mentionable: false,
-      reason: 'Booster custom color'
-    });
+    // Find the bot's own role
+const botMember = await guild.members.fetch(client.user.id);
+const botRole = botMember.roles.highest;
+
+// Create the custom color role just below the bot's highest role
+role = await guild.roles.create({
+  name: `${message.author.username}'s Color`,
+  color: colorCode,
+  mentionable: false,
+  reason: 'Booster custom color'
+});
+
+// Move it to just below the bot's role
+await role.setPosition(botRole.position - 1);
 
     // Save role to DB
     db.prepare(`
