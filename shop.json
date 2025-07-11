@@ -57,6 +57,12 @@
     "roleId": "1392731162819952700"
   },
   {
+    "name": "Purple Pawn",
+    "type": "item",
+    "price": 1000,
+    "roleId": "1393143174385369098"
+  },
+  {
     "name": "Gold Pawn",
     "type": "item",
     "price": 2000,
