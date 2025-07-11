@@ -38,7 +38,7 @@ const botRole = botMember.roles.highest;
 
 // Create the custom color role just below the bot's highest role
 role = await guild.roles.create({
-  name: `${message.author.username}'s Color`,
+  name: `${message.author.username}`,
   color: colorCode,
   mentionable: false,
   reason: 'Booster custom color'
