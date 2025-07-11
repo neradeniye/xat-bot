@@ -20,7 +20,6 @@ db.prepare(`
 `).run();
 
 
-
 export function getUserBalance(userId) {
   let user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
   if (!user) {
@@ -57,4 +56,3 @@ export function clearAllData() {
   const deletedItems = db.prepare('DELETE FROM user_items').run();
   console.log(`[cleardata] Removed ${deletedUsers.changes} users and ${deletedItems.changes} item records.`);
 }
-
