@@ -27,6 +27,22 @@ db.prepare(`
   );
 `).run();
 
+export function getUserColorRole(userId) {
+  return db.prepare('SELECT role_id FROM user_custom_colors WHERE user_id = ?').get(userId);
+}
+
+export function setUserColorRole(userId, roleId) {
+  db.prepare(`
+    INSERT INTO user_custom_colors (user_id, role_id)
+    VALUES (?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET role_id = excluded.role_id
+  `).run(userId, roleId);
+}
+
+export function removeUserColorRole(userId) {
+  db.prepare('DELETE FROM user_custom_colors WHERE user_id = ?').run(userId);
+}
+
 export function getUserBalance(userId) {
   let user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
   if (!user) {
@@ -64,18 +80,3 @@ export function clearAllData() {
   console.log(`[cleardata] Removed ${deletedUsers.changes} users and ${deletedItems.changes} item records.`);
 }
 
-export function getUserColorRole(userId) {
-  return db.prepare('SELECT role_id FROM user_custom_colors WHERE user_id = ?').get(userId);
-}
-
-export function setUserColorRole(userId, roleId) {
-  db.prepare(`
-    INSERT INTO user_custom_colors (user_id, role_id)
-    VALUES (?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET role_id = excluded.role_id
-  `).run(userId, roleId);
-}
-
-export function removeUserColorRole(userId) {
-  db.prepare('DELETE FROM user_custom_colors WHERE user_id = ?').run(userId);
-}
