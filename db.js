@@ -42,6 +42,8 @@ export function removeUserColorRole(userId) {
   db.prepare('DELETE FROM user_custom_colors WHERE user_id = ?').run(userId);
 }
 
+export { db };
+
 export function getUserBalance(userId) {
   let user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
   if (!user) {
