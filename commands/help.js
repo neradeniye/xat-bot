@@ -31,14 +31,18 @@ export default {
           name: '🎨 Roles',
           value: [
             '`x enable <name>` — Activate a color or item role',
-            '`x disable <name>` — Deactivate a color or item role'
+            '`x disable <name>` — Deactivate a color or item role',
+            '`x setcol <#hex>` — Set a custom color (boosters only)',
+            '`x remove custom` — Delete your custom booster color'
           ].join('\n'),
           inline: false
         },
         {
-          name: '🔧 Admin',
+          name: '🛠️ Admin Tools',
           value: [
-            '`x cleardata` — Wipes all user balances and ownership (admin only)'
+            '`x cleardata` — Wipes all user balances and ownership',
+            '`x add xats|item|color @user <amount/name>` — Grant xats or items',
+            '`x remove xats|item|color @user <amount/name>` — Remove xats or items'
           ].join('\n'),
           inline: false
         }
