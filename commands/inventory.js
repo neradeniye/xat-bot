@@ -33,7 +33,7 @@ export default {
     // Build item section with emoji and active status
     let itemSection = '';
     for (const item of ownedItems) {
-      const active = hasRole(item.roleId) ? '[Enabled] 🟢 ' : '[Disabled] 🔴 ';
+      const active = hasRole(item.roleId) ? '🟢 ' : '🔴 ';
       const emoji = item.emoji ?? '';
       itemSection += `${active}${emoji} **${item.name}**\n`;
     }
@@ -46,7 +46,7 @@ export default {
         { name: '🎨 Owned Colors:', value: colorSection, inline: false },
         { name: '🎁 Owned Items:', value: itemSection, inline: false }
       )
-      .setFooter({ text: `Use .x enable or .x disable to activate/deactivate roles.` });
+      .setFooter({ text: `Use .x enable or .x disable to activate/deactivate items or colors.` });
 
     message.reply({
       embeds: [embed],
