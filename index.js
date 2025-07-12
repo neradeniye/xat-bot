@@ -55,7 +55,12 @@ client.on('messageCreate', async message => {
   }
 });
 
-import { getUserColorRole, removeUserColorRole } from './db.js';
+import {
+  getUserColorRole,
+  removeUserColorRole,
+  getUserGradient,
+  removeUserGradient
+} from './db.js';
 
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   const userId = newMember.id;
@@ -65,17 +70,25 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
 
   // Only act when user stops boosting
   if (wasBoosting && !isBoosting) {
-    const record = getUserColorRole(userId);
-    if (!record) return;
-
     try {
-      const role = newMember.guild.roles.cache.get(record.role_id);
-      if (role) {
-        await role.delete('User stopped boosting - removing custom color');
+      // Remove custom color role
+      const colorRecord = getUserColorRole(userId);
+      if (colorRecord) {
+        const colorRole = newMember.guild.roles.cache.get(colorRecord.role_id);
+        if (colorRole) await colorRole.delete('User stopped boosting - removing custom color');
+        removeUserColorRole(userId);
+        console.log(`[BOOSTER CLEANUP] Removed custom color role from ${newMember.user.tag}`);
       }
 
-      removeUserColorRole(userId);
-      console.log(`[BOOSTER CLEANUP] Removed custom role from ${newMember.user.tag}`);
+      // Remove gradient role
+      const gradRecord = getUserGradient(userId);
+      if (gradRecord) {
+        const gradRole = newMember.guild.roles.cache.get(gradRecord.role_id);
+        if (gradRole) await newMember.roles.remove(gradRole);
+        removeUserGradient(userId);
+        console.log(`[BOOSTER CLEANUP] Removed gradient role from ${newMember.user.tag}`);
+      }
+
     } catch (err) {
       console.error(`[BOOSTER CLEANUP ERROR]`, err);
     }

@@ -34,6 +34,29 @@ db.prepare(`
   );
 `).run();
 
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS user_gradients (
+    user_id TEXT PRIMARY KEY,
+    role_id TEXT NOT NULL
+  );
+`).run();
+
+export function setUserGradient(userId, roleId) {
+  db.prepare(`
+    INSERT INTO user_gradients (user_id, role_id)
+    VALUES (?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET role_id = excluded.role_id
+  `).run(userId, roleId);
+}
+
+export function removeUserGradient(userId) {
+  db.prepare(`DELETE FROM user_gradients WHERE user_id = ?`).run(userId);
+}
+
+export function getUserGradient(userId) {
+  return db.prepare(`SELECT role_id FROM user_gradients WHERE user_id = ?`).get(userId);
+}
+
 export function getLastDailyClaim(userId) {
   const row = db.prepare('SELECT last_claim FROM daily_rewards WHERE user_id = ?').get(userId);
   return row?.last_claim ?? 0;
