@@ -35,7 +35,7 @@ export default {
     const price = item.type === 'color' ? config.colorRolePrice : item.price;
     
     if (balance < price) {
-        return message.reply(`❌ You need ${price} ${xatEmoji}, but you only have ${balance}.`);
+        return message.reply(`❌ You need ${price} ${xatEmoji}, but you only have ${balance} xats.`);
     }
 
 addUserXats(userId, -price);
@@ -57,7 +57,7 @@ giveUserItem(userId, item.name);
         await member.roles.remove(sameTypeRoles);
         await member.roles.add(role);
 
-        return message.reply(`✅ You bought **${item.name}** for ${price} ${xatEmoji} and received the role!`);
+        return message.reply(`✅ You bought **${item.name}** for ${price} ${xatEmoji} xats and received the role!`);
       } catch (err) {
         console.error('[BUY] Failed to assign role:', err);
         return message.reply(`❌ Failed to assign role. Make sure I have permission to manage roles.`);
