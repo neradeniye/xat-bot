@@ -4,7 +4,7 @@ export default {
   name: 'help',
   execute(message) {
     const embed = new EmbedBuilder()
-      .setTitle('<:xat:1385788399788621854> Bot Commands')
+      .setTitle('Bot Commands')
       .setColor(0x00bcd4)
       .setDescription('Here are all the available commands, sorted by category:')
       .setThumbnail("https://cdn.discordapp.com/attachments/1367355602459951124/1393698040166092861/xat_embed_thumb.png?ex=68741df2&is=6872cc72&hm=3913c8dcea30099c45b73e18d868670ef88b924e5831e480fc831f26ac8582a3&")
@@ -48,7 +48,7 @@ export default {
           inline: false
         }
       )
-      .setFooter({ text: 'Use .x before each command — e.g. .x balance' });
+      .setFooter({ text: 'Use .x before each command — example .x balance' });
 
     message.reply({ embeds: [embed] });
   }
