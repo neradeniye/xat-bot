@@ -33,7 +33,7 @@ export default {
     // Build item section with emoji and active status
     let itemSection = '';
     for (const item of ownedItems) {
-      const active = hasRole(item.roleId) ? '🟢 ' : '🔴 ';
+      const active = hasRole(item.roleId) ? '[Enabled] 🟢 ' : '[Disabled] 🔴 ';
       const emoji = item.emoji ?? '';
       itemSection += `${active}${emoji} **${item.name}**\n`;
     }
@@ -43,8 +43,8 @@ export default {
       .setTitle(`🎒 ${message.author.username}'s Inventory`)
       .setColor(0x9b59b6)
       .addFields(
-        { name: '🎨 Colors', value: colorSection, inline: false },
-        { name: '🧸 Items', value: itemSection, inline: false }
+        { name: '🎨 Owned Colors:', value: colorSection, inline: false },
+        { name: '🎁 Owned Items:', value: itemSection, inline: false }
       )
       .setFooter({ text: `Use .x enable or .x disable to activate/deactivate roles.` });
 
