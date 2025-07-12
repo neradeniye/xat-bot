@@ -4,15 +4,15 @@ export default {
   name: 'help',
   execute(message) {
     const embed = new EmbedBuilder()
-      .setTitle('<:xat:1385788399788621854> Xat-Bot Commands')
+      .setTitle('<:xat:1385788399788621854> Bot Commands')
       .setColor(0x00bcd4)
       .setDescription('Here are all the available commands, sorted by category:')
       .addFields(
         {
           name: '💰 Economy',
           value: [
-            '`x balance` — Check your xats balance',
-            '`x balance @user` — View another user\'s balance',
+            '`x balance` — Check your current xats balance',
+            '`x balance @user` — View another user\'s xats balance',
             '`x inventory` — View your owned colors and items',
             '`x daily` — Earn 100 xats every 12 hours'
           ].join('\n'),
