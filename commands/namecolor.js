@@ -2,7 +2,7 @@ import { db } from '../db.js';
 console.log('[DEBUG] DB import check:', typeof db);
 
 export default {
-  name: 'setcol',
+  name: 'namecolor',
   async execute(message, args, client) {
     const colorCode = args[0]?.toLowerCase();
     const userId = message.author.id;

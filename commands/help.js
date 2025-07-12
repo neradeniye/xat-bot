@@ -32,8 +32,8 @@ export default {
           value: [
             '`x enable <name>` — Activate a color or item role',
             '`x disable <name>` — Deactivate a color or item role',
-            '`x setcol <#hex>` — Set a custom color (boosters only)',
-            '`x remove custom` — Delete your custom booster color'
+            '`x namecolor <#hex>` — Set a custom color (boosters only)',
+            '`x remove namecolor` — Delete your custom booster color'
           ].join('\n'),
           inline: false
         },

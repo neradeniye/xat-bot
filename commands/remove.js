@@ -10,7 +10,7 @@ export default {
     const type = args[0]?.toLowerCase();
 
     // === USER SELF-REMOVE CUSTOM COLOR ===
-    if (type === 'custom' && args.length === 1) {
+    if (type === 'namecolor' && args.length === 1) {
       const userId = message.author.id;
       const guild = message.guild;
 
