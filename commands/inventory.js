@@ -8,45 +8,49 @@ const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 
 export default {
   name: 'inventory',
-  execute(message) {
+  async execute(message) {
     const userId = message.author.id;
-    const ownedItems = getUserItems(userId);
+    const member = message.guild.members.cache.get(userId) || await message.guild.members.fetch(userId);
 
-    const colors = ownedItems.filter(name =>
-      shopItems.find(i => i.name.toLowerCase() === name.toLowerCase() && i.type === 'color')
+    const ownedColors = shopItems.filter(
+      i => i.type === 'color' && userOwnsItem(userId, i.name)
     );
 
-    const items = ownedItems.filter(name =>
-      shopItems.find(i => i.name.toLowerCase() === name.toLowerCase() && i.type === 'item')
+    const ownedItems = shopItems.filter(
+      i => i.type === 'item' && userOwnsItem(userId, i.name)
     );
+
+    const hasRole = roleId => member.roles.cache.has(roleId);
+
+    // Build color section with active/inactive status
+    let colorSection = '';
+    for (const color of ownedColors) {
+      const active = hasRole(color.roleId) ? '🟢 ' : '🔴 ';
+      colorSection += `${active}<@&${color.roleId}>\n`;
+    }
+    if (colorSection === '') colorSection = 'You do not own any color roles.';
+
+    // Build item section with emoji and active status
+    let itemSection = '';
+    for (const item of ownedItems) {
+      const active = hasRole(item.roleId) ? '🟢 ' : '🔴 ';
+      const emoji = item.emoji ?? '';
+      itemSection += `${active}${emoji} **${item.name}**\n`;
+    }
+    if (itemSection === '') itemSection = 'You do not own any items.';
 
     const embed = new EmbedBuilder()
       .setTitle(`🎒 ${message.author.username}'s Inventory`)
-      .setColor(0x00bcd4);
+      .setColor(0x9b59b6)
+      .addFields(
+        { name: '🎨 Colors', value: colorSection, inline: false },
+        { name: '🧸 Items', value: itemSection, inline: false }
+      )
+      .setFooter({ text: `Use .x enable or .x disable to activate/deactivate roles.` });
 
-    if (colors.length > 0) {
-      const colorDisplay = colors.map(name => {
-        const item = shopItems.find(i => i.name.toLowerCase() === name.toLowerCase());
-        return item ? `<@&${item.roleId}>` : name;
-      }).join('\n');
-
-      embed.addFields({ name: '🎨 Colors', value: colorDisplay, inline: false });
-    }
-
-    if (items.length > 0) {
-      const itemDisplay = items.map(name => {
-        const item = shopItems.find(i => i.name.toLowerCase() === name.toLowerCase());
-        const emoji = item?.emoji ?? '';
-        return `${emoji} **${name}**`;
-      }).join('\n');
-
-      embed.addFields({ name: '🔹 Items', value: itemDisplay, inline: false });
-    }
-
-    if (colors.length === 0 && items.length === 0) {
-      embed.setDescription('You don’t own any colors or items yet.');
-    }
-
-    message.reply({ embeds: [embed], allowedMentions: { parse: ['roles'] } });
+    message.reply({
+      embeds: [embed],
+      allowedMentions: { parse: ['roles'] }
+    });
   }
 };
