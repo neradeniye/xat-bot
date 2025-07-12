@@ -37,15 +37,6 @@ export default {
             '`x remove namecolor` — Delete your custom booster color'
           ].join('\n'),
           inline: false
-        },
-        {
-          name: '🛠️ Admin Tools',
-          value: [
-            '`x cleardata` — Wipes all user balances and ownership',
-            '`x add xats|item|color @user <amount/name>` — Grant xats or items',
-            '`x remove xats|item|color @user <amount/name>` — Remove xats or items'
-          ].join('\n'),
-          inline: false
         }
       )
       .setFooter({ text: 'Use .x before each command — example .x balance' });
