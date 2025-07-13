@@ -47,14 +47,14 @@
   {
     "name": "Pink Pawn",
     "type": "item",
-    "price": 500,
+    "price": 250,
     "roleId": "1392263894449524767",
     "emoji": "<:pink:1393334400397348976>"
   },
   {
     "name": "White Pawn",
     "type": "item",
-    "price": 500,
+    "price": 250,
     "roleId": "1393381153163051109",
     "emoji": "<:white:1393381385535881257>"
   },
