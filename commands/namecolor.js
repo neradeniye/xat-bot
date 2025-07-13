@@ -9,7 +9,7 @@ export default {
     const guild = message.guild;
     const member = await guild.members.fetch(userId);
 
-    // Handle removal
+    // === REMOVE ===
     if (input === 'remove') {
       const record = db.prepare('SELECT role_id FROM user_custom_colors WHERE user_id = ?').get(userId);
       if (!record) {
@@ -25,13 +25,51 @@ export default {
       }
     }
 
-    // Handle creation/update
+    // === RESTORE ===
+    if (input === 'restore') {
+      const record = db.prepare('SELECT role_id FROM user_custom_colors WHERE user_id = ?').get(userId);
+      if (!record) {
+        return message.reply('⚠️ No saved namecolor role found to restore.');
+      }
+
+      const roleId = record.role_id;
+      const oldRole = guild.roles.cache.get(roleId) || await guild.roles.fetch(roleId).catch(() => null);
+
+      if (oldRole) {
+        await member.roles.add(oldRole);
+        return message.reply('✅ Your custom namecolor has been restored.');
+      } else {
+        // Create new role fallback if deleted
+        const hasBoosterRole = member.premiumSince || member.roles.cache.some(role => role.tags?.premiumSubscriber);
+        if (!hasBoosterRole) {
+          return message.reply('🚫 Only **server boosters** can restore a custom color.');
+        }
+
+        const botMember = await guild.members.fetch(client.user.id);
+        const botRole = botMember.roles.highest;
+
+        const restored = await guild.roles.create({
+          name: `${message.author.username}`,
+          color: '#ff66cc',
+          mentionable: false,
+          reason: 'Restored booster custom color'
+        });
+
+        await restored.setPosition(botRole.position - 1);
+        await member.roles.add(restored);
+
+        db.prepare(`UPDATE user_custom_colors SET role_id = ? WHERE user_id = ?`).run(restored.id, userId);
+
+        return message.reply(`✅ Custom namecolor role restored with default color **#ff66cc**.`);
+      }
+    }
+
+    // === CREATE/UPDATE ===
     const colorCode = input;
     if (!/^#[0-9a-f]{6}$/.test(colorCode)) {
       return message.reply('❌ Invalid hex color. Use format like `#ff66cc`.');
     }
 
-    // Check if user is boosting
     const hasBoosterRole = member.premiumSince || member.roles.cache.some(role => role.tags?.premiumSubscriber);
     if (!hasBoosterRole) {
       return message.reply('🚫 This feature is only available to **server boosters**.');
@@ -48,7 +86,6 @@ export default {
       }
     }
 
-    // Create new role
     const botMember = await guild.members.fetch(client.user.id);
     const botRole = botMember.roles.highest;
 
