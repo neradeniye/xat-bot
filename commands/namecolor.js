@@ -4,50 +4,63 @@ console.log('[DEBUG] DB import check:', typeof db);
 export default {
   name: 'namecolor',
   async execute(message, args, client) {
-    const colorCode = args[0]?.toLowerCase();
+    const input = args[0]?.toLowerCase();
     const userId = message.author.id;
-    const member = await message.guild.members.fetch(userId);
+    const guild = message.guild;
+    const member = await guild.members.fetch(userId);
 
+    // Handle removal
+    if (input === 'remove') {
+      const record = db.prepare('SELECT role_id FROM user_custom_colors WHERE user_id = ?').get(userId);
+      if (!record) {
+        return message.reply('❌ You do not have a namecolor set.');
+      }
+
+      const role = guild.roles.cache.get(record.role_id);
+      if (role && member.roles.cache.has(role.id)) {
+        await member.roles.remove(role);
+        return message.reply('🗑️ Your custom namecolor has been removed (still saved).');
+      } else {
+        return message.reply('ℹ️ You already have no namecolor role assigned.');
+      }
+    }
+
+    // Handle creation/update
+    const colorCode = input;
     if (!/^#[0-9a-f]{6}$/.test(colorCode)) {
       return message.reply('❌ Invalid hex color. Use format like `#ff66cc`.');
     }
 
-    // Check if the user is boosting (Discord built-in role)
+    // Check if user is boosting
     const hasBoosterRole = member.premiumSince || member.roles.cache.some(role => role.tags?.premiumSubscriber);
-
     if (!hasBoosterRole) {
       return message.reply('🚫 This feature is only available to **server boosters**.');
     }
 
-    const guild = message.guild;
     const existing = db.prepare('SELECT role_id FROM user_custom_colors WHERE user_id = ?').get(userId);
-
     let role;
 
     if (existing) {
-      role = guild.roles.cache.get(existing.role_id) || await guild.roles.fetch(existing.role_id);
+      role = guild.roles.cache.get(existing.role_id) || await guild.roles.fetch(existing.role_id).catch(() => null);
       if (role) {
         await role.setColor(colorCode);
         return message.reply(`🎨 Your custom color has been updated to **${colorCode}**.`);
       }
     }
 
-    // Find the bot's own role
-const botMember = await guild.members.fetch(client.user.id);
-const botRole = botMember.roles.highest;
+    // Create new role
+    const botMember = await guild.members.fetch(client.user.id);
+    const botRole = botMember.roles.highest;
 
-// Create the custom color role just below the bot's highest role
-role = await guild.roles.create({
-  name: `${message.author.username}`,
-  color: colorCode,
-  mentionable: false,
-  reason: 'Booster custom color'
-});
+    role = await guild.roles.create({
+      name: `${message.author.username}`,
+      color: colorCode,
+      mentionable: false,
+      reason: 'Booster custom color'
+    });
 
-// Move it to just below the bot's role
-await role.setPosition(botRole.position - 1);
+    await role.setPosition(botRole.position - 1);
 
-    // Save role to DB
     db.prepare(`
       INSERT INTO user_custom_colors (user_id, role_id)
       VALUES (?, ?)
