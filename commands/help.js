@@ -33,10 +33,10 @@ export default {
           value: [
             '`x enable <name>` — Activate a color or item role',
             '`x disable <name>` — Deactivate a color or item role',
-            '`x namecolor <#hexcode>` — Set a custom color (boosters only)',
+            '`x namecolor <#hexcode>` — Set a custom color **(boosters only)**',
             '`x remove namecolor` — Delete your custom booster color',
-            '`x namegrad` — List of name gradients you can set (boosters only)',
-            '`x namegrad <name>` — Set name gradient color (boosters only)',
+            '`x namegrad` — List of name gradients you can set **(boosters only)**',
+            '`x namegrad <name>` — Set name gradient color',
             '`x namegrad remove` — Remove current name gradient color'
           ].join('\n'),
           inline: false
