@@ -80,6 +80,13 @@
     "emoji": "<:purple:1393334458190532788>"
   },
   {
+    "name": "Cyan Pawn",
+    "type": "item",
+    "price": 1500,
+    "roleId": "1393837063299661886",
+    "emoji": "<:cyan:1393836845539790918>"
+  },
+  {
     "name": "Gold Pawn",
     "type": "item",
     "price": 2000,
