@@ -28,7 +28,7 @@ const client = new Client({
 
 client.once('ready', () => {
   console.log(`🟢 Logged in as ${client.user.tag}`);
-  client.user.setActivity('for .x', { type: 3 }); // 👀 Watching for .x
+  client.user.setActivity('for .x help', { type: 3 }); // 👀 Watching for .x
 });
 
 client.on('messageCreate', async message => {
