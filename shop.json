@@ -45,11 +45,18 @@
     "roleId": "1393141995169644564"
   },
   {
-    "name": "Pink Pawn",
+    "name": "Green Pawn",
     "type": "item",
     "price": 250,
-    "roleId": "1392263894449524767",
-    "emoji": "<:pink:1393334400397348976>"
+    "roleId": "1394590696677179392",
+    "emoji": "<:green:1394590550388244500>"
+  },
+  {
+    "name": "Blue Pawn",
+    "type": "item",
+    "price": 250,
+    "roleId": "1394590765216436314",
+    "emoji": "<:blue:1394590552124555284>"
   },
   {
     "name": "White Pawn",
@@ -57,6 +64,20 @@
     "price": 250,
     "roleId": "1393381153163051109",
     "emoji": "<:white:1393381385535881257>"
+  },
+   {
+    "name": "Orange Pawn",
+    "type": "item",
+    "price": 250,
+    "roleId": "1394590952433127475",
+    "emoji": "<:orange:1394590554171510834>"
+  },
+    {
+    "name": "Pink Pawn",
+    "type": "item",
+    "price": 250,
+    "roleId": "1392263894449524767",
+    "emoji": "<:pink:1393334400397348976>"
   },
     {
     "name": "Yellow Pawn",
