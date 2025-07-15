@@ -21,9 +21,9 @@ for (const file of commandFiles) {
   commands.set(command.name, command);
 }
 
-if (command.aliases && Array.isArray(command.aliases)) {
-    for (const alias of command.aliases) {
-      commands.set(alias, command);
+if (commands.aliases && Array.isArray(commands.aliases)) {
+    for (const alias of commands.aliases) {
+      commands.set(alias, commands);
     }
   }
 
