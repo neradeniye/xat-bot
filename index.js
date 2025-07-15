@@ -19,13 +19,14 @@ const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('
 for (const file of commandFiles) {
   const command = (await import(`./commands/${file}`)).default;
   commands.set(command.name, command);
-}
 
-if (commands.aliases && Array.isArray(commands.aliases)) {
-    for (const alias of commands.aliases) {
-      commands.set(alias, commands);
+  // Handle aliases
+  if (Array.isArray(command.aliases)) {
+    for (const alias of command.aliases) {
+      commands.set(alias, command);
     }
   }
+}
 
 // Set up bot
 const client = new Client({
