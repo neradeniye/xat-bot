@@ -19,15 +19,6 @@ const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('
 for (const file of commandFiles) {
   const command = (await import(`./commands/${file}`)).default;
   commands.set(command.name, command);
-
-  // Register aliases (they won’t overwrite existing keys)
-  if (Array.isArray(command.aliases)) {
-    for (const alias of command.aliases) {
-      if (!commands.has(alias)) {
-        commands.set(alias, command);
-      }
-    }
-  }
 }
 
 // Set up bot
@@ -58,13 +49,7 @@ client.on('messageCreate', async message => {
   const args = message.content.slice(prefix.length).trim().split(/\s+/);
   const commandName = args.shift()?.toLowerCase();
 
-  let command = commands.get(commandName);
-
-  // Alias fallback (redundant with above alias registration but safe fallback)
-  if (!command) {
-    command = [...commands.values()].find(cmd => cmd.aliases?.includes(commandName));
-  }
-
+  const command = commands.get(commandName);
   if (command) {
     command.execute(message, args, client);
   }
