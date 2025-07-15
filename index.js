@@ -21,6 +21,12 @@ for (const file of commandFiles) {
   commands.set(command.name, command);
 }
 
+if (command.aliases && Array.isArray(command.aliases)) {
+    for (const alias of command.aliases) {
+      commands.set(alias, command);
+    }
+  }
+
 // Set up bot
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
