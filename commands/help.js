@@ -15,7 +15,8 @@ export default {
             '`x balance` — Check your current xats balance',
             '`x balance @user` — View another user\'s xats balance',
             '`x inventory` — View your owned colors and items',
-            '`x daily` — Earn 100 xats every 12 hours'
+            '`x daily` — Earn 100 xats every 12 hours',
+            '`x transfer` — Transfer xats to another user'
           ].join('\n'),
           inline: false
         },
