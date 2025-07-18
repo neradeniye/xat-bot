@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 
-//const db = new Database('economy.db');
-const db = new Database('/var/xat-bot-data/economy.db');
+const db = new Database('economy.db');
+//const db = new Database('/var/xat-bot-data/economy.db');
 
 // ✅ Create users table
 db.prepare(`
@@ -142,8 +142,7 @@ export function getTopMessageUser() {
   return db.prepare('SELECT user_id, count FROM message_counts ORDER BY count DESC LIMIT 1').get();
 }
 
-// ✅ Reset all message counts
-export function resetAllMessageCounts() {
+export function resetMessageCounts() {
   db.prepare('DELETE FROM message_counts').run();
 }
 
