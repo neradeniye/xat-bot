@@ -3,12 +3,19 @@ import fs from 'fs';
 import { Client, GatewayIntentBits } from 'discord.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { addUserXats } from './db.js';
+import {
+  getTopMessageUser,
+  resetMessageCounts,
+  addUserXats,
+  // existing imports...
+} from './db.js';
 
+const REWARD_CHANNEL_ID = '1385719618886434927'; // Replace with your channel ID
 const cooldowns = new Map(); // userId → timestamp
 
+
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
-const { prefix } = config;
+const { prefix, announcementChannel } = config;
 const token = process.env.DISCORD_TOKEN;
 
 // Load commands
@@ -29,10 +36,41 @@ const client = new Client({
 client.once('ready', () => {
   console.log(`🟢 Logged in as ${client.user.tag}`);
   client.user.setActivity('for .x help', { type: 3 }); // 👀 Watching for .x
+
+// Give reward every 12 hours (43,200,000 ms)
+setInterval(async () => {
+  const topUser = getTopMessageUser();
+  if (!topUser) {
+    console.log('[Reward] No top user found.');
+    return;
+  }
+
+  try {
+    const guild = client.guilds.cache.first(); // or use specific ID if needed
+    const member = await guild.members.fetch(topUser.user_id).catch(() => null);
+    const channel = guild.channels.cache.get(REWARD_CHANNEL_ID);
+
+    if (!member || !channel) {
+      console.error('[Reward] Could not fetch member or channel.');
+      return;
+    }
+
+    addUserXats(topUser.user_id, 200);
+    await channel.send(`🎉 Congratulations ${member} — you've earned **200 xats** for being the most active in the last 12 hours!`);
+
+    console.log(`[Reward] Given to ${member.user.tag}`);
+    resetMessageCounts();
+  } catch (err) {
+    console.error('[Reward Loop Error]', err);
+  }
+}, 60_000); // 12 hours
 });
 
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
+
+  const current = messageCounts.get(message.author.id) || 0;
+  messageCounts.set(message.author.id, current + 1);
 
   // Earn 1 xat per 10 seconds
   const now = Date.now();
