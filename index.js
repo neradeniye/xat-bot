@@ -3,12 +3,19 @@ import fs from 'fs';
 import { Client, GatewayIntentBits } from 'discord.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { addUserXats } from './db.js';
+import {
+  getTopMessageUser,
+  resetMessageCounts,
+  addUserXats,
+  // existing imports...
+} from './db.js';
 
+const messageCounts = new Map(); // userId → message count
 const cooldowns = new Map(); // userId → timestamp
 
+
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
-const { prefix } = config;
+const { prefix, announcementChannel } = config;
 const token = process.env.DISCORD_TOKEN;
 
 // Load commands
@@ -29,10 +36,30 @@ const client = new Client({
 client.once('ready', () => {
   console.log(`🟢 Logged in as ${client.user.tag}`);
   client.user.setActivity('for .x help', { type: 3 }); // 👀 Watching for .x
+
+  setInterval(async () => {
+  const top = getTopMessageUser();
+  if (!top) return;
+
+  const guild = client.guilds.cache.first(); // Adjust if you have multiple guilds
+  const member = await guild.members.fetch(top.user_id).catch(() => null);
+  if (!member) return;
+
+  addUserXats(top.user_id, 200);
+  const channel = guild.systemChannel || guild.channels.cache.find(c => c.isTextBased() && c.permissionsFor(guild.members.me).has('SendMessages'));
+  if (channel) {
+    announcementChannel.send(`🎉 Congratulations <@${top.user_id}>! You've earned **200 xats** for being the most active user in the past 12 hours!`);
+  }
+
+  resetMessageCounts();
+}, 1000 * 60); // 1 minute for testing
 });
 
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
+
+  const current = messageCounts.get(message.author.id) || 0;
+  messageCounts.set(message.author.id, current + 1);
 
   // Earn 1 xat per 10 seconds
   const now = Date.now();
