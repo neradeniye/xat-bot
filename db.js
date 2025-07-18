@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 
-const db = new Database('economy.db');
-//const db = new Database('/var/xat-bot-data/economy.db');
+//const db = new Database('economy.db');
+const db = new Database('/var/xat-bot-data/economy.db');
 
 // ✅ Create users table
 db.prepare(`
@@ -129,12 +129,11 @@ export function clearAllData() {
 
 // ✅ Increment a user's message count
 export function incrementMessageCount(userId) {
-  const exists = db.prepare('SELECT 1 FROM message_counts WHERE user_id = ?').get(userId);
-  if (exists) {
-    db.prepare('UPDATE message_counts SET count = count + 1 WHERE user_id = ?').run(userId);
-  } else {
-    db.prepare('INSERT INTO message_counts (user_id, count) VALUES (?, 1)').run(userId);
-  }
+  db.prepare(`
+    INSERT INTO message_counts (user_id, count)
+    VALUES (?, 1)
+    ON CONFLICT(user_id) DO UPDATE SET count = count + 1
+  `).run(userId);
 }
 
 // ✅ Get top user by message count

@@ -7,11 +7,14 @@ import {
   getTopMessageUser,
   resetMessageCounts,
   addUserXats,
+  incrementMessageCount
   // existing imports...
 } from './db.js';
 
+const messageCounts = new Map(); // userId → message count
 const REWARD_CHANNEL_ID = '1385719618886434927'; // Replace with your channel ID
 const cooldowns = new Map(); // userId → timestamp
+const EXCLUDED_ROLE_ID = '1385722392764092558';
 
 
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
@@ -48,6 +51,10 @@ setInterval(async () => {
   try {
     const guild = client.guilds.cache.first(); // or use specific ID if needed
     const member = await guild.members.fetch(topUser.user_id).catch(() => null);
+    if (!member || member.roles.cache.has(EXCLUDED_ROLE_ID)) {
+    console.log(`[Reward] User ${top.user_id} has excluded role. Skipping reward.`);
+    return;
+  }
     const channel = guild.channels.cache.get(REWARD_CHANNEL_ID);
 
     if (!member || !channel) {
@@ -55,7 +62,7 @@ setInterval(async () => {
       return;
     }
 
-    addUserXats(topUser.user_id, 1);
+    addUserXats(topUser.user_id, 200);
     await channel.send(`🎉 Congratulations ${member} — you've earned **200 xats** for being the most active in the last 12 hours!`);
 
     console.log(`[Reward] Given to ${member.user.tag}`);
@@ -63,14 +70,15 @@ setInterval(async () => {
   } catch (err) {
     console.error('[Reward Loop Error]', err);
   }
-}, 60_000); // 12 hours
+}, 43_200_000); // 12 hours
 });
 
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
 
-  const current = messageCounts.get(message.author.id) || 0;
-  messageCounts.set(message.author.id, current + 1);
+  if (!message.author.bot) {
+  incrementMessageCount(message.author.id);
+}
 
   // Earn 1 xat per 10 seconds
   const now = Date.now();
