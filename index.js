@@ -55,7 +55,7 @@ setInterval(async () => {
       return;
     }
 
-    addUserXats(topUser.user_id, 200);
+    addUserXats(topUser.user_id, 1);
     await channel.send(`🎉 Congratulations ${member} — you've earned **200 xats** for being the most active in the last 12 hours!`);
 
     console.log(`[Reward] Given to ${member.user.tag}`);
