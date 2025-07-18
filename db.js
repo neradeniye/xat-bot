@@ -41,14 +41,6 @@ db.prepare(`
   );
 `).run();
 
-// ✅ Create message_counts table
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS message_counts (
-    user_id TEXT PRIMARY KEY,
-    count INTEGER DEFAULT 0
-  );
-`).run();
-
 export function setUserGradient(userId, roleId) {
   db.prepare(`
     INSERT INTO user_gradients (user_id, role_id)
@@ -125,25 +117,6 @@ export function clearAllData() {
   const deletedUsers = db.prepare('DELETE FROM users').run();
   const deletedItems = db.prepare('DELETE FROM user_items').run();
   console.log(`[cleardata] Removed ${deletedUsers.changes} users and ${deletedItems.changes} item records.`);
-}
-
-// ✅ Increment a user's message count
-export function incrementMessageCount(userId) {
-  const exists = db.prepare('SELECT 1 FROM message_counts WHERE user_id = ?').get(userId);
-  if (exists) {
-    db.prepare('UPDATE message_counts SET count = count + 1 WHERE user_id = ?').run(userId);
-  } else {
-    db.prepare('INSERT INTO message_counts (user_id, count) VALUES (?, 1)').run(userId);
-  }
-}
-
-// ✅ Get top user by message count
-export function getTopMessageUser() {
-  return db.prepare('SELECT user_id, count FROM message_counts ORDER BY count DESC LIMIT 1').get();
-}
-
-export function resetMessageCounts() {
-  db.prepare('DELETE FROM message_counts').run();
 }
 
 export { db };
