@@ -101,13 +101,6 @@
     "emoji": "<:purple:1393334458190532788>"
   },
   {
-    "name": "Cyan Pawn",
-    "type": "item",
-    "price": 1500,
-    "roleId": "1393837063299661886",
-    "emoji": "<:cyan:1393836845539790918>"
-  },
-  {
     "name": "Gold Pawn",
     "type": "item",
     "price": 2000,
@@ -120,6 +113,13 @@
     "price": 3000,
     "roleId": "1396584331702435850",
     "emoji": "<:ruby:1396584128509513818>"
+  },
+  {
+    "name": "Cyan Pawn",
+    "type": "item",
+    "price": 4000,
+    "roleId": "1393837063299661886",
+    "emoji": "<:cyan:1393836845539790918>"
   },
   {
     "name": "Black Pawn",
