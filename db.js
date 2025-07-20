@@ -118,7 +118,7 @@ export function giveUserItem(userId, itemName) {
 }
 
 export function removeUserItem(userId, itemName) {
-  db.prepare('DELETE FROM user_items WHERE userId = ? AND item_name = ?').run(userId, itemName);
+  db.prepare('DELETE FROM user_items WHERE userId = ? AND itemName = ?').run(userId, itemName);
 }
 
 export function clearAllData() {
