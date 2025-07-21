@@ -115,6 +115,13 @@
     "emoji": "<:ruby:1396584128509513818>"
   },
   {
+    "name": "Diamond Pawn",
+    "type": "item",
+    "price": 3500,
+    "roleId": "1396671717803298906",
+    "emoji": "<:diamond:1396671445601488936>"
+  },
+  {
     "name": "Cyan Pawn",
     "type": "item",
     "price": 4000,
