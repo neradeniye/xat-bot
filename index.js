@@ -78,14 +78,14 @@ setInterval(async () => {
 });
 
 function scheduleLootbox() {
-  const delay = 60 * 1000; // 1 minute for testing
+  const delay = 60 * 1000; // 1 minute for testing — change back later
 
   setTimeout(async () => {
     const guild = client.guilds.cache.first();
     const channel = guild.channels.cache.get(LOOTBOX_CHANNEL_ID);
     if (!channel) {
       console.error('[Lootbox] Could not find lootbox channel.');
-      return scheduleLootbox(); // Schedule next even if this one fails
+      return scheduleLootbox(); // Schedule next even if failed
     }
 
     global.lootboxActive = true;
@@ -94,7 +94,16 @@ function scheduleLootbox() {
     await channel.send('🎁 A lootbox has appeared! Type `.x claim` to get the reward!');
     console.log('[Lootbox] Spawned.');
 
-    scheduleLootbox(); // Chain next spawn
+    // ⏳ 30-second timeout to expire the lootbox
+    setTimeout(async () => {
+      if (!global.lootboxClaimed) {
+        global.lootboxActive = false;
+        await channel.send('💥 Sorry! Nobody claimed the lootbox. It has been destroyed!');
+        console.log('[Lootbox] Timed out and destroyed.');
+      }
+    }, 30_000); // 30 seconds
+
+    scheduleLootbox(); // Chain next box
   }, delay);
 }
 
