@@ -11,8 +11,12 @@ import {
   // existing imports...
 } from './db.js';
 
+global.lootboxActive = false;
+global.lootboxClaimed = false;
+
 const messageCounts = new Map(); // userId → message count
-const REWARD_CHANNEL_ID = '1391230063600730272'; // Replace with your channel ID
+const REWARD_CHANNEL_ID = '1385719618886434927'; // Replace with your channel ID
+const LOOTBOX_CHANNEL_ID = '1391230063600730272'; // Replace with your specific lootbox channel ID
 const cooldowns = new Map(); // userId → timestamp
 const EXCLUDED_ROLE_ID = '1385722392764092558';
 
@@ -72,6 +76,29 @@ setInterval(async () => {
   }
 }, 43_200_000); // 12 hours
 });
+
+function scheduleLootbox() {
+  const delay = 60 * 1000; // 1 minute for testing
+
+  setTimeout(async () => {
+    const guild = client.guilds.cache.first();
+    const channel = guild.channels.cache.get(LOOTBOX_CHANNEL_ID);
+    if (!channel) {
+      console.error('[Lootbox] Could not find lootbox channel.');
+      return scheduleLootbox(); // Schedule next even if this one fails
+    }
+
+    global.lootboxActive = true;
+    global.lootboxClaimed = false;
+
+    await channel.send('🎁 A lootbox has appeared! Type `.x claim` to get the reward!');
+    console.log('[Lootbox] Spawned.');
+
+    scheduleLootbox(); // Chain next spawn
+  }, delay);
+}
+
+scheduleLootbox(); // Start the loop
 
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
