@@ -16,7 +16,7 @@ global.lootboxClaimed = false;
 
 const messageCounts = new Map(); // userId → message count
 const REWARD_CHANNEL_ID = '1391230063600730272'; // Replace with your channel ID
-const LOOTBOX_CHANNEL_ID = '1385719618886434927'; // Replace with your specific lootbox channel ID
+const LOOTBOX_CHANNEL_ID = '1391230063600730272'; // Replace with your specific lootbox channel ID
 const cooldowns = new Map(); // userId → timestamp
 const EXCLUDED_ROLE_ID = '1385722392764092558';
 
@@ -78,7 +78,7 @@ setInterval(async () => {
 });
 
 function scheduleLootbox() {
-  const delay = 60 * 1000; // 1 minute for testing — change back later
+  const delay = Math.floor(Math.random() * (8 - 4 + 1) + 4) * 60 * 60 * 1000;
 
   setTimeout(async () => {
     const guild = client.guilds.cache.first();
