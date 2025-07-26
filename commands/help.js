@@ -16,7 +16,8 @@ export default {
             '`x balance @user` — View another user\'s xats balance',
             '`x inventory` — View your owned colors and items',
             '`x daily` — Earn 100 xats every 12 hours',
-            '`x transfer` — Transfer xats to another user'
+            '`x transfer` — Transfer xats to another user',
+            '`x claim` — Claim an active lootbox when it appears! (30 seconds or less.)'
           ].join('\n'),
           inline: false
         },
