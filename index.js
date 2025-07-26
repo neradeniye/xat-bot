@@ -15,8 +15,8 @@ global.lootboxActive = false;
 global.lootboxClaimed = false;
 
 const messageCounts = new Map(); // userId → message count
-const REWARD_CHANNEL_ID = '1385719618886434927'; // Replace with your channel ID
-const LOOTBOX_CHANNEL_ID = '1391230063600730272'; // Replace with your specific lootbox channel ID
+const REWARD_CHANNEL_ID = '1391230063600730272'; // Replace with your channel ID
+const LOOTBOX_CHANNEL_ID = '1385719618886434927'; // Replace with your specific lootbox channel ID
 const cooldowns = new Map(); // userId → timestamp
 const EXCLUDED_ROLE_ID = '1385722392764092558';
 
