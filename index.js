@@ -78,7 +78,7 @@ setInterval(async () => {
 });
 
 function scheduleLootbox() {
-  const delay = Math.floor(Math.random() * (8 - 4 + 1) + 4) * 60 * 60 * 1000;
+  const delay = Math.floor(Math.random() * (6 - 2 + 1) + 2) * 60 * 60 * 1000; // 2–6 hours
 
   setTimeout(async () => {
     const guild = client.guilds.cache.first();
