@@ -7,7 +7,7 @@ export default {
       return message.reply('❌ There is no lootbox to claim right now.');
     }
 
-    const reward = Math.floor(Math.random() * (200 - 50 + 1)) + 50;
+    const reward = Math.floor(Math.random() * (300 - 50 + 1)) + 50;
 
     global.lootboxClaimed = true;
     global.lootboxActive = false;

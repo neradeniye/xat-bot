@@ -78,7 +78,7 @@ setInterval(async () => {
 });
 
 function scheduleLootbox() {
-  const delay = Math.floor(Math.random() * (6 - 2 + 1) + 2) * 60 * 60 * 1000; // 2–6 hours
+  const delay = Math.floor(Math.random() * (4 - 2 + 1) + 2) * 60 * 60 * 1000; // 2–6 hours
 
   setTimeout(async () => {
     const guild = client.guilds.cache.first();
@@ -98,10 +98,10 @@ function scheduleLootbox() {
     setTimeout(async () => {
       if (!global.lootboxClaimed) {
         global.lootboxActive = false;
-        await channel.send('💥 Sorry! Nobody claimed the lootbox. It has been destroyed!');
+        await channel.send('💥 Sorry! Nobody claimed the lootbox. It has been destroyed! You lose. You get nothing. Good day sir.');
         console.log('[Lootbox] Timed out and destroyed.');
       }
-    }, 30_000); // 30 seconds
+    }, 15_000); // 15 seconds
 
     scheduleLootbox(); // Chain next box
   }, delay);
