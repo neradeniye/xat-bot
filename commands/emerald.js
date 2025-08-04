@@ -5,7 +5,7 @@ import { EmbedBuilder } from 'discord.js';
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 const emeraldRoles = JSON.parse(fs.readFileSync('./emerald_roles.json', 'utf-8'));
 
-const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'Emerald Pawn');
+const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'emerald pawn');
 
 export default {
   name: 'emerald',
@@ -23,7 +23,7 @@ export default {
     }
 
     // Check that Emerald is enabled (via .x enable emerald)
-    if (!setItemEnabled(userId, emeraldPawn.name)) {
+    if (!setItemEnabled(userId, emeraldPawn)) {
       return message.reply('⚠️ You must enable **emerald** first using `.x enable emerald`.');
     }
 
