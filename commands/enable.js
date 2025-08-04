@@ -38,18 +38,18 @@ if (isPawn) {
     clearItemEnabled(message.author.id, other.name);
   }
 
-  // ✅ ALSO: Remove emerald roles if enabling something other than Emerald Pawn
+  // ✅ Always remove emerald roles unless we're enabling Emerald Pawn
   const isEmeraldPawn = item.name.toLowerCase() === 'emerald pawn';
 
-if (!isEmeraldPawn) {
-  for (const role of emeraldRoles) {
-    const r = message.guild.roles.cache.get(role.roleId);
-    if (r && member.roles.cache.has(r.id)) {
-      await member.roles.remove(r).catch(() => {});
-      console.log(`[DEBUG] Removed emerald role: ${r.name}`);
+  if (!isEmeraldPawn) {
+    for (const role of emeraldRoles) {
+      const emeraldRole = message.guild.roles.cache.get(role.roleId);
+      if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
+        await member.roles.remove(emeraldRole).catch(() => {});
+        console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
+      }
     }
   }
-}
 }
 
     // Determine role conflict group
