@@ -60,7 +60,8 @@ db.prepare(`
 
 export function isItemEnabled(userId, itemName) {
   const row = db.prepare(`
-    SELECT 1 FROM enabled_items WHERE userId = ? AND itemName = ?
+    SELECT 1 FROM enabled_items
+    WHERE lower(userId) = lower(?) AND lower(itemName) = lower(?)
   `).get(userId, itemName);
   return !!row;
 }
