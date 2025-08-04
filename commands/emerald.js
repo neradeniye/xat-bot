@@ -21,6 +21,10 @@ export default {
     if (!userOwnsItem(userId, emeraldPawn.name)) {
       return message.reply('🚫 You must own the **Emerald Pawn** item from the shop to use this command.');
     }
+console.log('[DEBUG] Checking enablement for:', {
+  userId,
+  itemName: emeraldPawn.name
+});
 
     // Check that Emerald is enabled (via .x enable emerald)
     if (!isItemEnabled(userId, emeraldPawn.name)) {
