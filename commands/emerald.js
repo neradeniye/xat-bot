@@ -22,29 +22,10 @@ export default {
       return message.reply('🚫 You must own the **Emerald Pawn** item from the shop to use this command.');
     }
 
-    // Check if another pawn is enabled (conflict)
-    const otherPawnEnabled = shopItems.find(i =>
-      i.name !== emeraldPawn.name &&
-      i.name.toLowerCase().includes('pawn') &&
-      isItemEnabled(userId, i.name)
-    );
-
-    if (otherPawnEnabled) {
-      // Remove emerald roles if any
-      for (const role of emeraldRoles) {
-        const r = message.guild.roles.cache.get(role.roleId);
-        if (r && member.roles.cache.has(r.id)) {
-          await member.roles.remove(r).catch(() => {});
-        }
-      }
-
-      return message.reply(`🚫 You currently have **${otherPawnEnabled.name}** enabled. You must disable it before using Emerald roles.`);
-    }
-
-    // Check that Emerald Pawn is enabled
+    // Check that Emerald is enabled (via .x enable emerald)
     if (!isItemEnabled(userId, emeraldPawn.name)) {
-      return message.reply('⚠️ You must enable **Emerald Pawn** first using `.x enable emerald pawn`.');
-    }
+    return message.reply('⚠️ You must enable **Emerald Pawn** first using `.x enable emerald pawn`.');
+}
 
     // No args = show list
     if (!args.length) {
