@@ -40,7 +40,9 @@ export default {
         const emeraldRole = message.guild.roles.cache.get(role.roleId);
         if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
           await member.roles.remove(emeraldRole).catch(() => {});
-          console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
+          await member.roles.remove(emeraldRole).catch(err => {
+  console.error(`[ERROR] Failed to remove emerald role ${emeraldRole.name}:`, err);
+});
         }
       }
     }
