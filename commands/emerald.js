@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { userOwnsItem, setItemEnabled } from '../db.js';
+import { userOwnsItem, isItemEnabled } from '../db.js';
 import { EmbedBuilder } from 'discord.js';
 
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
@@ -23,9 +23,9 @@ export default {
     }
 
     // Check that Emerald is enabled (via .x enable emerald)
-    if (!setItemEnabled(userId, emeraldPawn)) {
-      return message.reply('⚠️ You must enable **emerald** first using `.x enable emerald`.');
-    }
+    if (!isItemEnabled(userId, emeraldPawn.name)) {
+    return message.reply('⚠️ You must enable **Emerald Pawn** first using `.x enable emerald pawn`.');
+}
 
     // No args = show list
     if (!args.length) {
