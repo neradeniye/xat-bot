@@ -5,7 +5,7 @@ import { EmbedBuilder } from 'discord.js';
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 const emeraldRoles = JSON.parse(fs.readFileSync('./emerald_roles.json', 'utf-8'));
 
-const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'emerald pawn');
+const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'Emerald Pawn');
 
 export default {
   name: 'emerald',

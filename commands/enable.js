@@ -30,7 +30,6 @@ export default {
       await member.roles.add(item.roleId);
       setItemEnabled(message.author.id, item.name);
       return message.reply(`✅ **${item.name}** has been enabled.`);
-      return message.reply(`[ENABLE DEBUG] Enabled item for ${message.author.tag}: "${item.name}"`);
     } catch (err) {
       console.error('[enable] error:', err);
       return message.reply(`❌ Failed to enable **${item.name}**. Check my permissions.`);
