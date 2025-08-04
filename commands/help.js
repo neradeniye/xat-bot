@@ -39,7 +39,8 @@ export default {
             '`x remove namecolor` — Delete your custom booster color',
             '`x namegrad` — List of name gradients',
             '`x namegrad <name>` — Set name gradient color **(boosters only)**',
-            '`x namegrad remove` — Remove current name gradient color'
+            '`x namegrad remove` — Remove current name gradient color',
+            '`x emerald` — Shows emerald commands. Must own emerald item'
           ].join('\n'),
           inline: false
         }
