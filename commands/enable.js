@@ -19,21 +19,19 @@ export default {
     }
 
     const member = message.guild.members.cache.get(message.author.id) ||
-                   await message.guild.members.fetch(message.author.id);
+    await message.guild.members.fetch(message.author.id);
 
     const isPawn = item.name.toLowerCase().includes('pawn');
     const isEmeraldPawn = item.name.toLowerCase() === 'emerald pawn';
 
     // ✅ If enabling any non-emerald pawn, clear emerald pawn + emerald roles
     if (isPawn && !isEmeraldPawn) {
-      const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'blue emerald');
-      if (emeraldPawn) {
-        const emeraldPawnRole = message.guild.roles.cache.get(emeraldPawn.roleId);
-        if (emeraldPawnRole && member.roles.cache.has(emeraldPawnRole.id)) {
-          await member.roles.remove(emeraldPawnRole).catch(() => {});
-          console.log(`[DEBUG] Removed Emerald Pawn role`);
+      for (const role of emeraldRoles) {
+        const emeraldRole = message.guild.roles.cache.get(role.roleId);
+        if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
+          await member.roles.remove(emeraldRole).catch(() => {});
+          console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
         }
-        clearItemEnabled(message.author.id, emeraldPawn.name);
       }
     }
 
