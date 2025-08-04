@@ -8,7 +8,7 @@ const emeraldRoles = JSON.parse(fs.readFileSync('./emerald_roles.json', 'utf-8')
 
 // Find Emerald Pawn item
 const emeraldPawn = shopItems.find(
-  item => item.name.toLowerCase() === 'emerald pawn'
+  item => item.name.toLowerCase() === 'Emerald Pawn'
 );
 
 export default {
