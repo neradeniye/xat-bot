@@ -23,29 +23,38 @@ export default {
 
     const isEmeraldPawn = item.name.toLowerCase() === 'emerald pawn';
 
-if (!isEmeraldPawn) {
-  // ✅ Remove "Emerald Pawn" role if user has it
-  const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'emerald pawn');
-  if (emeraldPawn) {
-    const emeraldPawnRole = message.guild.roles.cache.get(emeraldPawn.roleId);
-    if (emeraldPawnRole && member.roles.cache.has(emeraldPawnRole.id)) {
-      await member.roles.remove(emeraldPawnRole).catch(() => {});
-      console.log(`[DEBUG] Removed Emerald Pawn role`);
+    // ✅ If enabling emerald pawn, remove any leftover emerald display roles
+    if (isEmeraldPawn) {
+      for (const role of emeraldRoles) {
+        const emeraldRole = message.guild.roles.cache.get(role.roleId);
+        if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
+          await member.roles.remove(emeraldRole).catch(() => {});
+          console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
+        }
+      }
     }
 
-    // ✅ Clear from enabled_items
-    clearItemEnabled(message.author.id, emeraldPawn.name);
-  }
+    // ✅ If enabling any other pawn, remove Emerald Pawn + emerald roles
+    if (!isEmeraldPawn && item.name.toLowerCase().includes('pawn')) {
+      const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'emerald pawn');
+      if (emeraldPawn) {
+        const emeraldPawnRole = message.guild.roles.cache.get(emeraldPawn.roleId);
+        if (emeraldPawnRole && member.roles.cache.has(emeraldPawnRole.id)) {
+          await member.roles.remove(emeraldPawnRole).catch(() => {});
+          console.log(`[DEBUG] Removed Emerald Pawn role`);
+        }
 
-  // ✅ Also remove emerald display roles
-  for (const role of emeraldRoles) {
-    const emeraldRole = message.guild.roles.cache.get(role.roleId);
-    if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
-      await member.roles.remove(emeraldRole).catch(() => {});
-      console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
+        clearItemEnabled(message.author.id, emeraldPawn.name);
+      }
+
+      for (const role of emeraldRoles) {
+        const emeraldRole = message.guild.roles.cache.get(role.roleId);
+        if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
+          await member.roles.remove(emeraldRole).catch(() => {});
+          console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
+        }
+      }
     }
-  }
-}
 
     // Determine role conflict group
     const typeGroup = item.type === 'color'
