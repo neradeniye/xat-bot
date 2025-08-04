@@ -1,6 +1,7 @@
 import fs from 'fs';
-import { clearItemEnabled } from '../db.js'; // ✅ Add this
+import { clearItemEnabled } from '../db.js';
 
+const emeraldRoles = JSON.parse(fs.readFileSync('./emerald_roles.json', 'utf-8'));
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 
 export default {
@@ -17,9 +18,18 @@ export default {
 
     try {
       await member.roles.remove(item.roleId);
-
-      // ✅ Clear from enabled_items
       clearItemEnabled(message.author.id, item.name);
+
+      // ✅ Also remove emerald display roles if disabling Emerald Pawn
+      if (item.name.toLowerCase() === 'emerald pawn') {
+        for (const role of emeraldRoles) {
+          const emeraldRole = message.guild.roles.cache.get(role.roleId);
+          if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
+            await member.roles.remove(emeraldRole).catch(() => {});
+            console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
+          }
+        }
+      }
 
       return message.reply(`✅ **${item.name}** has been disabled.`);
     } catch (err) {
