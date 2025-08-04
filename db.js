@@ -49,6 +49,22 @@ db.prepare(`
   );
 `).run();
 
+// Track enabled items
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS enabled_items (
+    userId TEXT NOT NULL,
+    itemName TEXT NOT NULL,
+    PRIMARY KEY (userId, itemName)
+  );
+`).run();
+
+export function isItemEnabled(userId, itemName) {
+  const row = db.prepare(`
+    SELECT 1 FROM enabled_items WHERE userId = ? AND itemName = ?
+  `).get(userId, itemName);
+  return !!row;
+}
+
 export function setUserGradient(userId, roleId) {
   db.prepare(`
     INSERT INTO user_gradients (user_id, role_id)
