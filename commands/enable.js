@@ -24,10 +24,14 @@ export default {
     const isPawn = item.name.toLowerCase().includes('pawn');
     const isEmeraldPawn = item.name.toLowerCase() === 'emerald pawn';
 
-    const testRoleId = '1401823745441796189'; // 👈 Replace with actual role ID
-    const testRole = message.guild.roles.cache.get(testRoleId);
+    // Determine role conflict group
+    const typeGroup = item.type === 'color'
+      ? shopItems.filter(i => i.type === 'color').map(i => i.roleId)
+      : shopItems.filter(i => i.type === 'item').map(i => i.roleId);
 
-    // ✅ If enabling any non-emerald pawn, clear emerald pawn + emerald roles
+    try {
+      await member.roles.remove(typeGroup);
+      // ✅ If enabling any non-emerald pawn, clear emerald pawn + emerald roles
     if (isPawn && !isEmeraldPawn) {
       const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'emerald pawn');
       if (emeraldPawn) {
@@ -47,15 +51,6 @@ export default {
         }
       }
     }
-
-    // Determine role conflict group
-    const typeGroup = item.type === 'color'
-      ? shopItems.filter(i => i.type === 'color').map(i => i.roleId)
-      : shopItems.filter(i => i.type === 'item').map(i => i.roleId);
-
-    try {
-      await member.roles.remove(typeGroup);
-      await member.roles.remove(testRole);
       await member.roles.add(item.roleId);
       setItemEnabled(message.author.id, item.name);
       return message.reply(`✅ **${item.name}** has been enabled.`);
