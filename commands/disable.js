@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { clearItemEnabled } from '../db.js'; // ✅ Add this
 
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 
@@ -16,6 +17,10 @@ export default {
 
     try {
       await member.roles.remove(item.roleId);
+
+      // ✅ Clear from enabled_items
+      clearItemEnabled(message.author.id, item.name);
+
       return message.reply(`✅ **${item.name}** has been disabled.`);
     } catch (err) {
       console.error('[disable] error:', err);

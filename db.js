@@ -72,6 +72,10 @@ export function setItemEnabled(userId, itemName) {
   `).run(userId, itemName);
 }
 
+export function clearItemEnabled(userId, itemName) {
+  db.prepare('DELETE FROM enabled_items WHERE userId = ? AND itemName = ?').run(userId, itemName);
+}
+
 export function setUserGradient(userId, roleId) {
   db.prepare(`
     INSERT INTO user_gradients (user_id, role_id)
