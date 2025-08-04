@@ -23,5 +23,15 @@
     "name": "Ruby",
     "roleId": "1401875460585160715",
     "emoji": "<:ruby_emerald:1401874877463527475>"
+  },
+  {
+    "name": "Gold",
+    "roleId": "1401991260138504312",
+    "emoji": "<:gold_emerald:1401991052990218251>"
+  },
+  {
+    "name": "White",
+    "roleId": "1401991588720148501",
+    "emoji": "<:white_emerald:1401991893612757043>"
   }
 ]
