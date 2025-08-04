@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { userOwnsItem, setItemEnabled, isItemEnabled, clearItemEnabled } from '../db.js';
 
+const emeraldRoles = JSON.parse(fs.readFileSync('./emerald_roles.json', 'utf-8'));
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 
@@ -35,6 +36,16 @@ if (isPawn) {
       await member.roles.remove(roleToRemove).catch(() => {});
     }
     clearItemEnabled(message.author.id, other.name);
+  }
+
+  // ✅ ALSO: Remove emerald roles if enabling something other than Emerald Pawn
+  if (item.name.toLowerCase() !== 'emerald pawn') {
+    for (const role of emeraldRoles) {
+      const r = message.guild.roles.cache.get(role.roleId);
+      if (r && member.roles.cache.has(r.id)) {
+        await member.roles.remove(r).catch(() => {});
+      }
+    }
   }
 }
 
