@@ -23,7 +23,7 @@ export default {
     }
 
     // Check that Emerald is enabled (via .x enable emerald)
-    if (!setItemEnabled(userId, 'emerald')) {
+    if (!setItemEnabled(userId, 'emerald pawn')) {
       return message.reply('⚠️ You must enable **emerald** first using `.x enable emerald`.');
     }
 
