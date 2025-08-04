@@ -5,6 +5,9 @@ const emeraldRoles = JSON.parse(fs.readFileSync('./emerald_roles.json', 'utf-8')
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 
+const testRoleId = '1401823745441796189'; // 👈 Replace with actual role ID
+const testRole = message.guild.roles.cache.get(testRoleId);
+
 export default {
   name: 'enable',
   async execute(message, args) {
@@ -24,15 +27,27 @@ export default {
     const isPawn = item.name.toLowerCase().includes('pawn');
     const isEmeraldPawn = item.name.toLowerCase() === 'emerald pawn';
 
-    const testRoleId = '1401823745441796189';
-    const testRole = message.guild.roles.cache.get(testRoleId);
-
     // ✅ If enabling any non-emerald pawn, clear emerald pawn + emerald roles
-          await member.roles.remove(testRole).catch(() => {});
-        //}
-      
-    
+    if (isPawn && !isEmeraldPawn) {
+      const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'emerald pawn');
+      if (emeraldPawn) {
+        const emeraldPawnRole = message.guild.roles.cache.get(emeraldPawn.roleId);
+        if (emeraldPawnRole && member.roles.cache.has(emeraldPawnRole.id)) {
+          await member.roles.remove(emeraldPawnRole).catch(() => {});
+          console.log(`[DEBUG] Removed Emerald Pawn role`);
+        }
+        clearItemEnabled(message.author.id, emeraldPawn.name);
+      }
 
+      for (const role of emeraldRoles) {
+        const emeraldRole = message.guild.roles.cache.get(role.roleId);
+        if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
+          await member.roles.remove(emeraldRole).catch(() => {});
+          console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
+        }
+      }
+    }
+    
     // Determine role conflict group
     const typeGroup = item.type === 'color'
       ? shopItems.filter(i => i.type === 'color').map(i => i.roleId)
@@ -40,6 +55,7 @@ export default {
 
     try {
       await member.roles.remove(typeGroup);
+      await member.roles.remove(testRole).catch(() => {});
       await member.roles.add(item.roleId);
       setItemEnabled(message.author.id, item.name);
       return message.reply(`✅ **${item.name}** has been enabled.`);
