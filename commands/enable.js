@@ -31,10 +31,10 @@ export default {
     if (isPawn && !isEmeraldPawn) {
       for (const role of emeraldRoles) {
         const emeraldRole = message.guild.roles.cache.get(role.roleId);
-        if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
+        //if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
           await member.roles.remove(testRole).catch(() => {});
           console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
-        }
+        //}
       }
     }
 
