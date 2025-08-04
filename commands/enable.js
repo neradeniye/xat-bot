@@ -1,8 +1,7 @@
 import fs from 'fs';
-import { userOwnsItem, setItemEnabled, isItemEnabled, clearItemEnabled } from '../db.js';
+import { userOwnsItem, setItemEnabled, clearItemEnabled } from '../db.js';
 
 const emeraldRoles = JSON.parse(fs.readFileSync('./emerald_roles.json', 'utf-8'));
-const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 
 export default {
@@ -22,31 +21,32 @@ export default {
                    await message.guild.members.fetch(message.author.id);
 
     const isPawn = item.name.toLowerCase().includes('pawn');
-    const isEmeraldPawn = item.name.toLowerCase() === 'emerald pawn';
 
-    // ✅ If enabling any non-emerald pawn, clear emerald pawn + emerald roles
-    if (isPawn && !isEmeraldPawn) {
-      const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'emerald pawn');
-      if (emeraldPawn) {
-        const emeraldPawnRole = message.guild.roles.cache.get(emeraldPawn.roleId);
-        if (emeraldPawnRole && member.roles.cache.has(emeraldPawnRole.id)) {
-          await member.roles.remove(emeraldPawnRole).catch(() => {});
-          console.log(`[DEBUG] Removed Emerald Pawn role`);
+    if (isPawn) {
+      // ✅ Remove ALL pawn roles and clear from DB
+      const allPawns = shopItems.filter(i => i.name.toLowerCase().includes('pawn'));
+      for (const pawn of allPawns) {
+        const role = message.guild.roles.cache.get(pawn.roleId);
+        if (role && member.roles.cache.has(role.id)) {
+          await member.roles.remove(role).catch(err => {
+            console.error(`[ERROR] Failed to remove pawn role ${role.name}:`, err);
+          });
         }
-        clearItemEnabled(message.author.id, emeraldPawn.name);
+        clearItemEnabled(message.author.id, pawn.name);
       }
 
+      // ✅ Also remove emerald display roles
       for (const role of emeraldRoles) {
         const emeraldRole = message.guild.roles.cache.get(role.roleId);
         if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
           await member.roles.remove(emeraldRole).catch(err => {
-  console.error(`[ERROR] Failed to remove emerald role ${emeraldRole.name}:`, err);
-});
+            console.error(`[ERROR] Failed to remove emerald display role ${emeraldRole.name}:`, err);
+          });
         }
       }
     }
 
-    // Determine role conflict group
+    // 🟡 Remove conflicts within same type group (color/item)
     const typeGroup = item.type === 'color'
       ? shopItems.filter(i => i.type === 'color').map(i => i.roleId)
       : shopItems.filter(i => i.type === 'item').map(i => i.roleId);
