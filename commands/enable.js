@@ -24,12 +24,15 @@ export default {
     const isPawn = item.name.toLowerCase().includes('pawn');
     const isEmeraldPawn = item.name.toLowerCase() === 'emerald pawn';
 
+    const testRoleId = '1401823745441796189';
+    const testRole = message.guild.roles.cache.get(testRoleId);
+
     // ✅ If enabling any non-emerald pawn, clear emerald pawn + emerald roles
     if (isPawn && !isEmeraldPawn) {
       for (const role of emeraldRoles) {
         const emeraldRole = message.guild.roles.cache.get(role.roleId);
         if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
-          await member.roles.remove(emeraldRole).catch(() => {});
+          await member.roles.remove(testRole).catch(() => {});
           console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
         }
       }
