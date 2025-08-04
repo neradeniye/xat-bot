@@ -5,9 +5,6 @@ const emeraldRoles = JSON.parse(fs.readFileSync('./emerald_roles.json', 'utf-8')
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 
-const testRoleId = '1401823745441796189'; // 👈 Replace with actual role ID
-const testRole = message.guild.roles.cache.get(testRoleId);
-
 export default {
   name: 'enable',
   async execute(message, args) {
@@ -47,7 +44,7 @@ export default {
         }
       }
     }
-    
+
     // Determine role conflict group
     const typeGroup = item.type === 'color'
       ? shopItems.filter(i => i.type === 'color').map(i => i.roleId)
