@@ -26,7 +26,7 @@ export default {
 
     // ✅ If enabling any non-emerald pawn, clear emerald pawn + emerald roles
     if (isPawn && !isEmeraldPawn) {
-      const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'emerald pawn');
+      const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'blue emerald');
       if (emeraldPawn) {
         const emeraldPawnRole = message.guild.roles.cache.get(emeraldPawn.roleId);
         if (emeraldPawnRole && member.roles.cache.has(emeraldPawnRole.id)) {
