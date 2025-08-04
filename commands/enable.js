@@ -21,33 +21,28 @@ export default {
     const member = message.guild.members.cache.get(message.author.id) ||
                    await message.guild.members.fetch(message.author.id);
 
-    const isPawn = item.name.toLowerCase().includes('pawn');
+    const isEmeraldPawn = item.name.toLowerCase() === 'emerald pawn';
 
-if (isPawn) {
-  const otherEnabledPawns = shopItems.filter(i =>
-    i.name !== item.name &&
-    i.name.toLowerCase().includes('pawn') &&
-    isItemEnabled(message.author.id, i.name)
-  );
-
-  for (const other of otherEnabledPawns) {
-    const roleToRemove = message.guild.roles.cache.get(other.roleId);
-    if (roleToRemove && member.roles.cache.has(roleToRemove.id)) {
-      await member.roles.remove(roleToRemove).catch(() => {});
+if (!isEmeraldPawn) {
+  // ✅ Remove "Emerald Pawn" role if user has it
+  const emeraldPawn = shopItems.find(i => i.name.toLowerCase() === 'emerald pawn');
+  if (emeraldPawn) {
+    const emeraldPawnRole = message.guild.roles.cache.get(emeraldPawn.roleId);
+    if (emeraldPawnRole && member.roles.cache.has(emeraldPawnRole.id)) {
+      await member.roles.remove(emeraldPawnRole).catch(() => {});
+      console.log(`[DEBUG] Removed Emerald Pawn role`);
     }
-    clearItemEnabled(message.author.id, other.name);
+
+    // ✅ Clear from enabled_items
+    clearItemEnabled(message.author.id, emeraldPawn.name);
   }
 
-  // ✅ Always remove emerald roles unless we're enabling Emerald Pawn
-  const isEmeraldPawn = item.name.toLowerCase() === 'emerald pawn';
-
-  if (!isEmeraldPawn) {
-    for (const role of emeraldRoles) {
-      const emeraldRole = message.guild.roles.cache.get(role.roleId);
-      if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
-        await member.roles.remove(emeraldRole).catch(() => {});
-        console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
-      }
+  // ✅ Also remove emerald display roles
+  for (const role of emeraldRoles) {
+    const emeraldRole = message.guild.roles.cache.get(role.roleId);
+    if (emeraldRole && member.roles.cache.has(emeraldRole.id)) {
+      await member.roles.remove(emeraldRole).catch(() => {});
+      console.log(`[DEBUG] Removed emerald display role: ${emeraldRole.name}`);
     }
   }
 }
