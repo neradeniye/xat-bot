@@ -8,7 +8,7 @@ const emeraldRoles = JSON.parse(fs.readFileSync('./emerald_roles.json', 'utf-8')
 
 // Find Emerald Pawn item
 const emeraldPawn = shopItems.find(
-  item => item.name.toLowerCase() === 'Emerald Pawn'
+  item => item.name.toLowerCase() === 'emerald pawn'
 );
 
 export default {
@@ -20,7 +20,7 @@ export default {
       return message.reply('⚠️ Emerald Pawn item is missing or misconfigured in `shop.json`.');
     }
 
-    if (!userOwnsItem(userId, emeraldPawn.roleId)) {
+    if (!userOwnsItem(userId, emeraldPawn.name)) {
       return message.reply('🚫 You must own the **Emerald Pawn** item from the shop to use this command.');
     }
 
