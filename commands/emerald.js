@@ -26,9 +26,13 @@ console.log('[DEBUG] Checking enablement for:', {
   itemName: emeraldPawn.name
 });
 
-    // Check that Emerald is enabled (via .x enable emerald)
-    if (!isItemEnabled(userId, emeraldPawn.name)) {
-    return message.reply('⚠️ You must enable **Emerald Pawn** first using `.x enable emerald pawn`.');
+    // Check that Emerald is enabled (via .x enable emerald pawn)
+const hasEmeraldEnabled = isItemEnabled(userId, emeraldPawn.name);
+const emeraldRole = message.guild.roles.cache.get(emeraldPawn.roleId);
+const hasEmeraldRole = emeraldRole && member.roles.cache.has(emeraldRole.id);
+
+if (!hasEmeraldEnabled || !hasEmeraldRole) {
+  return message.reply('⚠️ You must enable **Emerald Pawn** first using `.x enable emerald pawn`.');
 }
 
     // No args = show list
