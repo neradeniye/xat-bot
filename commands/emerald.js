@@ -28,7 +28,7 @@ export default {
     let description = '';
 for (const role of emeraldRoles) {
   const emoji = role.emoji ?? '';
-  description += `• ${emoji} <@&${role.roleId}> — \`.x emerald ${role.name.toLowerCase()}\`\n`;
+  description += `• ${emoji} **${role.name}** — \`.x emerald ${role.name.toLowerCase()}\`\n`;
 }
 
     const embed = new EmbedBuilder()
