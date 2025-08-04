@@ -33,5 +33,10 @@
     "name": "White",
     "roleId": "1401991588720148501",
     "emoji": "<:white_emerald:1401991893612757043>"
+  },
+  {
+    "name": "Black",
+    "roleId": "1401995054775664749",
+    "emoji": "<:black_emerald:1401995283960823827>"
   }
 ]
