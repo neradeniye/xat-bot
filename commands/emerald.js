@@ -29,9 +29,8 @@ console.log('[DEBUG] Checking enablement for:', {
     // Check that Emerald is enabled (via .x enable emerald pawn)
 const hasEmeraldEnabled = isItemEnabled(userId, emeraldPawn.name);
 const emeraldRole = message.guild.roles.cache.get(emeraldPawn.roleId);
-const hasEmeraldRole = emeraldRole && member.roles.cache.has(emeraldRole.id);
 
-if (!hasEmeraldEnabled || !hasEmeraldRole) {
+if (!hasEmeraldEnabled) {
   return message.reply('⚠️ You must enable **Emerald Pawn** first using `.x enable emerald pawn`.');
 }
 
