@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 
-//const db = new Database('economy.db');
-const db = new Database('/var/xat-bot-data/economy.db');
+const db = new Database('economy.db');
+//const db = new Database('/var/xat-bot-data/economy.db');
 
 // ✅ Create users table
 db.prepare(`
@@ -60,10 +60,16 @@ db.prepare(`
 
 export function isItemEnabled(userId, itemName) {
   const row = db.prepare(`
-    SELECT 1 FROM enabled_items
-    WHERE lower(userId) = lower(?) AND lower(itemName) = lower(?)
+    SELECT 1 FROM enabled_items WHERE userId = ? AND itemName = ?
   `).get(userId, itemName);
   return !!row;
+}
+
+export function setItemEnabled(userId, itemName) {
+  db.prepare(`
+    INSERT OR REPLACE INTO enabled_items (userId, itemName)
+    VALUES (?, ?)
+  `).run(userId, itemName);
 }
 
 export function setUserGradient(userId, roleId) {
