@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { userOwnsItem, setItemEnabled } from '../db.js';
+import { userOwnsItem, setItemEnabled, isItemEnabled, clearItemEnabled } from '../db.js';
 
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
@@ -19,6 +19,24 @@ export default {
 
     const member = message.guild.members.cache.get(message.author.id) ||
                    await message.guild.members.fetch(message.author.id);
+
+    const isPawn = item.name.toLowerCase().includes('pawn');
+
+if (isPawn) {
+  const otherEnabledPawns = shopItems.filter(i =>
+    i.name !== item.name &&
+    i.name.toLowerCase().includes('pawn') &&
+    isItemEnabled(message.author.id, i.name)
+  );
+
+  for (const other of otherEnabledPawns) {
+    const roleToRemove = message.guild.roles.cache.get(other.roleId);
+    if (roleToRemove && member.roles.cache.has(roleToRemove.id)) {
+      await member.roles.remove(roleToRemove).catch(() => {});
+    }
+    clearItemEnabled(message.author.id, other.name);
+  }
+}
 
     // Determine role conflict group
     const typeGroup = item.type === 'color'
