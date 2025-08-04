@@ -58,7 +58,7 @@ db.prepare(`
   );
 `).run();
 
-export function isItemEnabled(userId, itemName) {
+export function setItemEnabled(userId, itemName) {
   const row = db.prepare(`
     SELECT 1 FROM enabled_items WHERE userId = ? AND itemName = ?
   `).get(userId, itemName);
