@@ -55,7 +55,6 @@ export default {
 
     try {
       await member.roles.remove(typeGroup);
-      await member.roles.remove(testRole).catch(() => {});
       await member.roles.add(item.roleId);
       setItemEnabled(message.author.id, item.name);
       return message.reply(`✅ **${item.name}** has been enabled.`);
