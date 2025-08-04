@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { userOwnsItem } from '../db.js';
+import { userOwnsItem, setItemEnabled } from '../db.js';
 
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
@@ -28,6 +28,7 @@ export default {
     try {
       await member.roles.remove(typeGroup);
       await member.roles.add(item.roleId);
+      setItemEnabled(message.author.id, item.name);
       return message.reply(`✅ **${item.name}** has been enabled.`);
     } catch (err) {
       console.error('[enable] error:', err);
