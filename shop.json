@@ -50,6 +50,13 @@
     "roleId": "1393141995169644564"
   },
   {
+    "name": "Brown Pawn",
+    "type": "item",
+    "price": 250,
+    "roleId": "1402336263792627814",
+    "emoji": "<:brown:1402336202345943183>"
+  },
+  {
     "name": "Green Pawn",
     "type": "item",
     "price": 250,
