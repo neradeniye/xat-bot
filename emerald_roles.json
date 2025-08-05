@@ -1,5 +1,10 @@
 [
   {
+    "name": "Brown",
+    "roleId": "1402338199673507861",
+    "emoji": "<:brown_emerald:1402337553046048809>"
+  },
+  {
     "name": "Green",
     "roleId": "1399300914359173160",
     "emoji": "<:emerald:1399300789050282035>"
@@ -8,6 +13,16 @@
     "name": "Blue",
     "roleId": "1401823745441796189",
     "emoji": "<:blue_emerald:1401823964740718594>"
+  },
+    {
+    "name": "White",
+    "roleId": "1401991588720148501",
+    "emoji": "<:white_emerald:1401991893612757043>"
+  },
+  {
+    "name": "Orange",
+    "roleId": "1402338077854269581",
+    "emoji": "<:orange_emerald:1402338045356933293>"
   },
   {
     "name": "Pink",
@@ -19,29 +34,24 @@
     "roleId": "1401875458240413776",
     "emoji": "<:purple_emerald:1401874875886469160>"
   },
-  {
-    "name": "Ruby",
-    "roleId": "1401875460585160715",
-    "emoji": "<:ruby_emerald:1401874877463527475>"
-  },
-  {
+    {
     "name": "Gold",
     "roleId": "1401991260138504312",
     "emoji": "<:gold_emerald:1401991052990218251>"
   },
   {
-    "name": "White",
-    "roleId": "1401991588720148501",
-    "emoji": "<:white_emerald:1401991893612757043>"
+    "name": "Ruby",
+    "roleId": "1401875460585160715",
+    "emoji": "<:ruby_emerald:1401874877463527475>"
+  },
+    {
+    "name": "Cyan",
+    "roleId": "1402042076144730232",
+    "emoji": "<:cyan_emerald:1402042015318802571>"
   },
   {
     "name": "Black",
     "roleId": "1401995054775664749",
     "emoji": "<:black_emerald:1401995283960823827>"
-  },
-  {
-    "name": "Cyan",
-    "roleId": "1402042076144730232",
-    "emoji": "<:cyan_emerald:1402042015318802571>"
   }
 ]
