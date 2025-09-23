@@ -34,7 +34,7 @@ export default {
     if (existing) {
       role = guild.roles.cache.get(existing.role_id) || await guild.roles.fetch(existing.role_id);
       if (role) {
-        await role.setColor(color1, color2); // Discord only supports 1 color
+        await role.setColor(color1); // Discord only supports 1 color
         db.prepare(`
           UPDATE user_custom_colors
           SET role_id = ?, color1 = ?, color2 = ?
