@@ -60,6 +60,24 @@ db.prepare(`
   );
 `).run();
 
+// Ensure user_custom_colors has color1 and color2
+try {
+  const cols = db.prepare("PRAGMA table_info('user_custom_colors')").all();
+  const colNames = cols.map(c => c.name);
+
+  if (!colNames.includes('color1')) {
+    db.prepare("ALTER TABLE user_custom_colors ADD COLUMN color1 TEXT").run();
+    console.log('[DB] Added column color1 to user_custom_colors');
+  }
+
+  if (!colNames.includes('color2')) {
+    db.prepare("ALTER TABLE user_custom_colors ADD COLUMN color2 TEXT").run();
+    console.log('[DB] Added column color2 to user_custom_colors');
+  }
+} catch (err) {
+  console.error('[DB MIGRATION ERROR]', err);
+}
+
 export function isItemEnabled(userId, itemName) {
   const row = db.prepare(`
     SELECT 1 FROM enabled_items WHERE userId = ? AND itemName = ?
@@ -109,7 +127,7 @@ export function getUserColorRole(userId) {
 
 export function setUserColorRole(userId, roleId, color1, color2) {
   db.prepare(`
-    INSERT INTO user_custom_colors (user_id, role_id)
+    INSERT INTO user_custom_colors (user_id, role_id, color1, color2)
     VALUES (?, ?, ?, ?)
     ON CONFLICT(user_id) DO UPDATE SET role_id = excluded.role_id
   `).run(userId, roleId);
