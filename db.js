@@ -24,6 +24,8 @@ db.prepare(`
   CREATE TABLE IF NOT EXISTS user_custom_colors (
     user_id TEXT PRIMARY KEY,
     role_id TEXT NOT NULL
+    color1 TEXT,
+    color2 TEXT
   );
 `).run();
 
@@ -105,10 +107,10 @@ export function getUserColorRole(userId) {
   return db.prepare('SELECT role_id FROM user_custom_colors WHERE user_id = ?').get(userId);
 }
 
-export function setUserColorRole(userId, roleId) {
+export function setUserColorRole(userId, roleId, color1, color2) {
   db.prepare(`
     INSERT INTO user_custom_colors (user_id, role_id)
-    VALUES (?, ?)
+    VALUES (?, ?, ?, ?)
     ON CONFLICT(user_id) DO UPDATE SET role_id = excluded.role_id
   `).run(userId, roleId);
 }
