@@ -24,6 +24,8 @@ db.prepare(`
   CREATE TABLE IF NOT EXISTS user_custom_colors (
     user_id TEXT PRIMARY KEY,
     role_id TEXT NOT NULL
+    color1 TEXT,
+    color2 TEXT
   );
 `).run();
 
