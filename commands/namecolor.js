@@ -52,7 +52,8 @@ export default {
     // Create role
     role = await guild.roles.create({
       name: `${message.author.username}`,
-      color: color1, color2,// Discord role color = first color
+      color: color1,
+      color2: color2,// Discord role color = first color
       mentionable: false,
       reason: 'Booster custom color'
     });
