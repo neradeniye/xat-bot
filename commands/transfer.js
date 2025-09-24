@@ -6,6 +6,8 @@ import {
   removeUserItem 
 } from '../db.js';
 
+const itemName = thing.toLowerCase();
+
 export default {
   name: 'transfer',
   aliases: ['give', 'send'],
