@@ -156,25 +156,16 @@ export function addUserXats(userId, amount = 1) {
 }
 
 export function userOwnsItem(userId, itemName) {
-  itemName = itemName.toLowerCase();
-  const row = db.prepare(
-    'SELECT 1 FROM user_items WHERE userId = ? AND itemName = ?'
-  ).get(userId, itemName);
+  const row = db.prepare('SELECT 1 FROM user_items WHERE userId = ? AND itemName = ?').get(userId, itemName);
   return !!row;
 }
 
 export function giveUserItem(userId, itemName) {
-  itemName = itemName.toLowerCase();
-  db.prepare(
-    'INSERT OR IGNORE INTO user_items (userId, itemName) VALUES (?, ?)'
-  ).run(userId, itemName);
+  db.prepare('INSERT OR IGNORE INTO user_items (userId, itemName) VALUES (?, ?)').run(userId, itemName);
 }
 
 export function removeUserItem(userId, itemName) {
-  itemName = itemName.toLowerCase();
-  db.prepare(
-    'DELETE FROM user_items WHERE userId = ? AND itemName = ?'
-  ).run(userId, itemName);
+  db.prepare('DELETE FROM user_items WHERE userId = ? AND itemName = ?').run(userId, itemName);
 }
 
 export function clearAllData() {
