@@ -119,6 +119,13 @@
     "roleId": "1392761383917064262",
     "emoji": "<:gold:1400679438026276875>"
   },
+    {
+    "name": "Clear Pawn",
+    "type": "item",
+    "price": 2500,
+    "roleId": "1420199724039798927",
+    "emoji": "<:clear:1420199424700711023>"
+  },
   {
     "name": "Ruby Pawn",
     "type": "item",
