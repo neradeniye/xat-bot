@@ -2,6 +2,11 @@
 import { db } from '../db.js';
 import { Buffer } from 'buffer';
 
+db.prepare(`
+  ALTER TABLE user_custom_roles
+  ADD COLUMN role_emoji TEXT;
+`).run();
+
 export default {
   name: 'custom',
   async execute(message, args, client) {
