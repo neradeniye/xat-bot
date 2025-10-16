@@ -2,11 +2,6 @@
 import { db } from '../db.js';
 import { Buffer } from 'buffer';
 
-db.prepare(`
-  ALTER TABLE user_custom_roles
-  ADD COLUMN role_emoji TEXT;
-`).run();
-
 export default {
   name: 'custom',
   async execute(message, args, client) {
@@ -14,7 +9,16 @@ export default {
     const userId = message.author.id;
     const member = await guild.members.fetch(userId);
 
-     // Check for existing record
+    // ✅ Check if user owns the "Custom" item
+    const ownsCustomItem = db
+      .prepare('SELECT COUNT(*) AS count FROM inventory WHERE user_id = ? AND item_name = ?')
+      .get(userId, 'Custom').count > 0;
+
+    if (!ownsCustomItem) {
+      return message.reply('🚫 You must own the **Custom** item to use this command.');
+    }
+
+    // Check for existing record
     const existing = db.prepare('SELECT role_id, role_emoji FROM user_custom_roles WHERE user_id = ?').get(userId);
 
     // If user typed "disable"
@@ -38,7 +42,6 @@ export default {
     let emojiArg = null;
     let roleNameParts = [...args];
 
-    // Detect URL
     const isUrl = /^(https?:\/\/)/i.test(lastArg);
     const isUnicodeEmoji = /[^\u0000-\u007F]/.test(lastArg);
     const customEmojiMatch = lastArg.match(/^<a?:\w+:(\d+)>$/);
@@ -50,7 +53,6 @@ export default {
 
     const roleName = roleNameParts.join(' ').trim();
     if (!roleName) return message.reply('❌ Please include a valid role name.');
-
     if (roleName.length > 100) {
       return message.reply('❌ Role name must be 100 characters or fewer.');
     }
@@ -104,12 +106,10 @@ export default {
 
     let savedEmoji = emojiArg || null;
 
-    // If emoji is unicode, prefix it to role name
     if (emojiArg && isUnicodeEmoji) {
       roleData.name = `${emojiArg} ${roleName}`.slice(0, 100);
     }
 
-    // If emoji is an image URL
     if (emojiArg && isUrl) {
       try {
         const res = await fetch(emojiArg);
@@ -127,12 +127,10 @@ export default {
       }
     }
 
-    // Create and position the role
     role = await guild.roles.create(roleData);
     await role.setPosition(botRole.position - 1).catch(() => {});
     await member.roles.add(role).catch(() => {});
 
-    // Save role
     db.prepare(`
       INSERT INTO user_custom_roles (user_id, role_id, role_name, role_emoji)
       VALUES (?, ?, ?, ?)
