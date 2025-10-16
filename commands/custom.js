@@ -2,6 +2,9 @@
 import { db } from '../db.js';
 import { Buffer } from 'buffer';
 
+// (Optional one-time migration)
+// db.prepare(`ALTER TABLE user_custom_roles ADD COLUMN role_emoji TEXT;`).run();
+
 export default {
   name: 'custom',
   async execute(message, args, client) {
@@ -9,10 +12,10 @@ export default {
     const userId = message.author.id;
     const member = await guild.members.fetch(userId);
 
-    // ✅ Check if user owns the "Custom" item
+    // ✅ Correct check for "Custom" item ownership using your actual table and columns
     const ownsCustomItem = db
-      .prepare('SELECT COUNT(*) AS count FROM inventory WHERE user_id = ? AND item_name = ?')
-      .get(userId, 'Custom').count > 0;
+      .prepare('SELECT 1 FROM user_items WHERE userId = ? AND itemName = ?')
+      .get(userId, 'Custom');
 
     if (!ownsCustomItem) {
       return message.reply('🚫 You must own the **Custom** item to use this command.');
