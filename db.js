@@ -30,6 +30,14 @@ db.prepare(`
 `).run();
 
 db.prepare(`
+  CREATE TABLE IF NOT EXISTS user_custom_roles (
+    user_id TEXT PRIMARY KEY,
+    role_id TEXT NOT NULL,
+    role_name TEXT
+  )
+`).run();
+
+db.prepare(`
   CREATE TABLE IF NOT EXISTS daily_rewards (
     user_id TEXT PRIMARY KEY,
     last_claim INTEGER
