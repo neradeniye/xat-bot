@@ -1,6 +1,5 @@
 // commands/custom.js
 import { db } from '../db.js';
-import fetch from 'node-fetch';
 import { Buffer } from 'buffer';
 
 export default {
