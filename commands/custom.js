@@ -25,8 +25,8 @@ export default {
     const existing = db.prepare('SELECT role_id, role_emoji FROM user_custom_roles WHERE user_id = ?').get(userId);
 
     // If user typed "disable"
-    if (args[0]?.toLowerCase() === 'disable') {
-      if (!existing) return message.reply('⚠️ You don’t currently have a custom role to disable.');
+    if (args[0]?.toLowerCase() === 'remove') {
+      if (!existing) return message.reply('⚠️ You don’t currently have a custom role to remove.');
 
       const role = guild.roles.cache.get(existing.role_id) || await guild.roles.fetch(existing.role_id).catch(() => null);
       if (role) await role.delete('User disabled custom role').catch(() => {});
@@ -37,7 +37,7 @@ export default {
 
     // Must include at least a name
     if (args.length < 1) {
-      return message.reply('❌ Please provide a name for your custom role.\nExample: `.x custom Pink Pawn 💖` or `.x custom disable` to remove.');
+      return message.reply('❌ Please provide a name for your custom role.\nExample: `.x custom Pink Pawn 💖` or to add a custom icon `.x custom NameHere https://cdn.discordapp.com/emojis/XXXXXXXXXXXX.webp?size=160` (but rename the .webp to png) and to remove: `.x custom remove` to remove the role.');
     }
 
     // Parse role name and optional emoji/url

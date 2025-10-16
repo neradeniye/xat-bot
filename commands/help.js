@@ -40,7 +40,8 @@ export default {
             '`x namegrad` — List of name gradients',
             '`x namegrad <name>` — Set name gradient color **(boosters only)**',
             '`x namegrad remove` — Remove current name gradient color',
-            '`x emerald` — Shows emerald commands. Must own emerald item'
+            '`x emerald` — Shows emerald commands. Must own emerald item',
+            '`x custom` — Allows you to assign a custom role + emoji'
           ].join('\n'),
           inline: false
         }
