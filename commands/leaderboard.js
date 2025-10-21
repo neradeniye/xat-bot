@@ -27,7 +27,7 @@ export default {
       const embed = new EmbedBuilder()
         .setTitle('🏆 Top 10 Richest Users')
         .setDescription(leaderboardText)
-        .setColor(0xff66cc)
+        .setColor(0x00bcd4)
         .setTimestamp();
 
       await message.channel.send({ embeds: [embed] });
