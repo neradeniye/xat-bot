@@ -9,7 +9,7 @@ export default {
     try {
       // Fetch top 5 users by balance
       const topUsers = db
-        .prepare('SELECT id, balance FROM users ORDER BY balance DESC LIMIT 5')
+        .prepare('SELECT id, balance FROM users ORDER BY balance DESC LIMIT 10')
         .all();
 
       if (topUsers.length === 0) {
@@ -25,7 +25,7 @@ export default {
       }
 
       const embed = new EmbedBuilder()
-        .setTitle('🏆 Top 5 Richest Users')
+        .setTitle('🏆 Top 10 Richest Users')
         .setDescription(leaderboardText)
         .setColor(0x00AE86)
         .setTimestamp();
