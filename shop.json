@@ -49,6 +49,13 @@
     "type": "color",
     "roleId": "1393141995169644564"
   },
+{
+    "name": "Red Pawn",
+    "type": "item",
+    "price": 250,
+    "roleId": "1432123721044201675",
+    "emoji": "<:red:1432123673812144208>"
+  },
   {
     "name": "Brown Pawn",
     "type": "item",
