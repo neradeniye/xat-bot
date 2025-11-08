@@ -1,4 +1,3 @@
-js// commands/clone.js
 import { db } from '../db.js';
 
 export default {
