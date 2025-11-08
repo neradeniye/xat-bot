@@ -1,11 +1,19 @@
-import { EmbedBuilder, AttachmentBuilder } from 'discord.js';
-import { getUserBalance, getUserProfile } from '../db.js';
-import fs from 'fs';
+import { EmbedBuilder } from 'discord.js';
+import { getUserBalance, getUserProfile, db } from '../db.js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
-const DEFAULT_BANNER = 'https://i.imgur.com/8e1Z3.jpg'; // <- replace with your own later
+// Fix config loading for ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const config = JSON.parse(readFileSync(path.join(__dirname, '../config.json'), 'utf-8'));
+
+const DEFAULT_BANNER = 'https://i.imgur.com/8e1Z3.jpg';
 const BANNER_MAP = {
   default: 'https://i.imgur.com/8e1Z3.jpg',
-  // we'll add premium ones later like: vip: 'https://i.imgur.com/premium.jpg'
+  // vip: 'https://i.imgur.com/vip.jpg',
+  // diamond: 'https://i.imgur.com/diamond.jpg'
 };
 
 export default {
@@ -18,15 +26,21 @@ export default {
 
     if (message.mentions.users.size > 0) {
       target = message.mentions.users.first();
-      member = message.guild.members.cache.get(target.id);
+      member = message.guild.members.cache.get(target.id)
+        || await message.guild.members.fetch(target.id).catch(() => null);
+      
+      if (!member) return message.reply('User not found in this server.');
     }
 
     const userId = target.id;
     const balance = getUserBalance(userId);
-    const profile = getUserProfile(userId) || { status: 'No status set ~ use .x setstatus', banner: 'default' };
+    const profile = getUserProfile(userId) || { 
+      status: 'No status set ~ use .x setstatus', 
+      banner: 'default' 
+    };
 
-    // Count owned items
-    const ownedItems = db.prepare('SELECT COUNT(*) as count FROM user_items WHERE userId = ?').get(userId)?.count || 0;
+    const ownedItems = db.prepare('SELECT COUNT(*) as count FROM user_items WHERE userId = ?')
+      .get(userId)?.count || 0;
 
     const bannerUrl = BANNER_MAP[profile.banner] || DEFAULT_BANNER;
 
@@ -35,17 +49,22 @@ export default {
         name: `${target.username}'s Profile`,
         iconURL: target.displayAvatarURL({ dynamic: true, size: 512 })
       })
-      .setDescription(`**"${profile.status}"**`)
+      .setDescription(`> **"${profile.status}"**`)
       .setImage(bannerUrl)
       .setColor(0x9b59b6)
       .addFields(
         { name: 'Xats', value: `${balance.toLocaleString()} ${config.xatEmoji}`, inline: true },
         { name: 'Items Owned', value: ownedItems.toString(), inline: true },
-        { name: 'Rank', value: '#420', inline: true } // placeholder — we’ll make real leaderboard later
+        { name: 'Rank', value: '#420', inline: true }
       )
-      .setFooter({ text: 'Use .x setstatus <text> to flex • Banners coming soon!' })
+      .setFooter({ 
+        text: 'Use .x setstatus <text> • Banners coming soon!' 
+      })
       .setTimestamp();
 
-    await message.reply({ embeds: [embed] });
+    await message.reply({ 
+      embeds: [embed],
+      allowedMentions: { repliedUser: false }
+    });
   }
 };
