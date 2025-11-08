@@ -8,10 +8,33 @@ const shopItems = JSON.parse(fs.readFileSync('./shop.json', 'utf-8'));
 
 export default {
   name: 'inventory',
-  async execute(message) {
-    const userId = message.author.id;
-    const member = message.guild.members.cache.get(userId) || await message.guild.members.fetch(userId);
+  description: 'View yours or someone else\'s inventory',
+  usage: '.x inventory [@user]',
 
+  async execute(message, args) {
+    // Determine target user
+    let targetMember;
+    let targetUser;
+
+    if (args.length === 0 || !message.mentions.users.size) {
+      // No mention → show own inventory
+      targetMember = message.member;
+      targetUser = message.author;
+    } else {
+      // Mentioned user
+      targetUser = message.mentions.users.first();
+      targetMember = message.guild.members.cache.get(targetUser.id)
+        || await message.guild.members.fetch(targetUser.id).catch(() => null);
+
+      if (!targetMember) {
+        return message.reply('That user isn\'t in this server or couldn\'t be found.');
+      }
+    }
+
+    const userId = targetUser.id;
+    const hasRole = roleId => targetMember?.roles.cache.has(roleId);
+
+    // Filter owned items
     const ownedColors = shopItems.filter(
       i => i.type === 'color' && userOwnsItem(userId, i.name)
     );
@@ -20,37 +43,40 @@ export default {
       i => i.type === 'item' && userOwnsItem(userId, i.name)
     );
 
-    const hasRole = roleId => member.roles.cache.has(roleId);
-
-    // Build color section with active/inactive status
+    // Build color section
     let colorSection = '';
     for (const color of ownedColors) {
-      const active = hasRole(color.roleId) ? '🟢 ' : '🔴 ';
-      colorSection += `${active}<@&${color.roleId}>\n`;
+      const active = hasRole(color.roleId) ? 'Active' : 'Inactive';
+      colorSection += `${active} <@&${color.roleId}>\n`;
     }
-    if (colorSection === '') colorSection = 'You do not own any color roles.';
+    if (!colorSection) colorSection = '_None_';
 
-    // Build item section with emoji and active status
+    // Build item section
     let itemSection = '';
     for (const item of ownedItems) {
-      const active = hasRole(item.roleId) ? '🟢 ' : '🔴 ';
+      const active = hasRole(item.roleId) ? 'Active' : 'Inactive';
       const emoji = item.emoji ?? '';
-      itemSection += `${active}${emoji} **${item.name}**\n`;
+      itemSection += `${active} ${emoji} **${item.name}**\n`;
     }
-    if (itemSection === '') itemSection = 'You do not own any items.';
+    if (!itemSection) itemSection = '_None_';
 
     const embed = new EmbedBuilder()
-      .setTitle(`🎒 ${message.author.username}'s Inventory`)
+      .setTitle(`${targetUser.username}'s Inventory`)
+      .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
       .setColor(0x9b59b6)
       .addFields(
-        { name: '🎨 Owned Colors:', value: colorSection, inline: false },
-        { name: '🎁 Owned Items:', value: itemSection, inline: false }
+        { name: 'Owned Colors', value: colorSection, inline: false },
+        { name: 'Owned Items', value: itemSection, inline: false }
       )
-      .setFooter({ text: `Use .x enable or .x disable to activate/deactivate items or colors.` });
+      .setFooter({
+        text: targetUser.id === message.author.id
+          ? 'Use .x enable / .x disable to toggle items'
+          : 'This is a public view — only you can toggle your own items'
+      });
 
-    message.reply({
+    await message.reply({
       embeds: [embed],
-      allowedMentions: { parse: ['roles'] }
+      allowedMentions: { repliedUser: false }
     });
   }
 };
