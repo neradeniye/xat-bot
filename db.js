@@ -68,6 +68,15 @@ db.prepare(`
   );
 `).run();
 
+// === PROFILES SYSTEM ===
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS user_profiles (
+    user_id TEXT PRIMARY KEY,
+    status TEXT DEFAULT 'No status set ~ use .x setstatus',
+    banner TEXT DEFAULT 'default'
+  );
+`).run();
+
 // Ensure user_custom_colors has color1 and color2
 try {
   const cols = db.prepare("PRAGMA table_info('user_custom_colors')").all();
@@ -198,6 +207,27 @@ export function getTopMessageUser() {
 
 export function resetMessageCounts() {
   db.prepare('DELETE FROM message_counts').run();
+}
+
+export function getUserProfile(userId) {
+  return db.prepare('SELECT * FROM user_profiles WHERE user_id = ?').get(userId);
+}
+
+export function setUserStatus(userId, status) {
+  if (status.length > 100) status = status.slice(0, 97) + '...';
+  db.prepare(`
+    INSERT INTO user_profiles (user_id, status) 
+    VALUES (?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET status = excluded.status
+  `).run(userId, status);
+}
+
+export function setUserBanner(userId, bannerName) {
+  db.prepare(`
+    INSERT INTO user_profiles (user_id, banner) 
+    VALUES (?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET banner = excluded.banner
+  `).run(userId, bannerName);
 }
 
 export { db };
