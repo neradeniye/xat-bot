@@ -32,6 +32,15 @@ export default {
           inline: false
         },
         {
+          name: '💬 Social',
+          value: [
+            '`x profile` — Display your profile card in the server',
+            '`x marry — Marry someone you choose from the server',
+            '`x divorce — Divorce someone you married or has married you'
+          ].join('\n'),
+          inline: false
+        },
+        {
           name: '🎨 Roles',
           value: [
             '`x enable <name>` — Activate a color or item role',
