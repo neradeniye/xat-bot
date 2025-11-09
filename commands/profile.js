@@ -105,7 +105,7 @@ export default {
     const spouseId = getSpouse(target.id);
     if (spouseId) {
         const spouse = await message.client.users.fetch(spouseId);
-        ctx.fillText(`♥ ${spouse.username}`, 292, 158);
+        ctx.fillText(`${spouse.username}`, 292, 158);
     } else {
         ctx.fillText('Single', 292, 158);
 }
