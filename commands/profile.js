@@ -111,9 +111,7 @@ export default {
     ctx.fillStyle = 'white';
     ctx.font = '28px Arial';
     const status = profile.status.length > 85 ? profile.status.slice(0, 82) + '...' : profile.status;
-    ctx.fillText(status, 40, 445);
-
-    /*
+    ctx.fillText(status, 40, 245);
 
     // Heart + username
     const heartImg = await loadImg(EMOJI.heart);
@@ -121,8 +119,6 @@ export default {
     ctx.fillStyle = 'white';
     ctx.font = 'bold 32px Arial';
     ctx.fillText('thecuteone255', 90, 240);
-
-    */
 
     // Coins + balance
     const coinsImg = await loadImg(EMOJI.coins);
