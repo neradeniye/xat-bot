@@ -104,7 +104,7 @@ export default {
 
     // Status bar
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    roundRect(ctx, 20, 200, 860, 80, 10);
+    roundRect(ctx, 10, 200, 860, 80, 15);
     ctx.fill();
 
     // Status text
