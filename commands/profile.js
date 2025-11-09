@@ -122,7 +122,7 @@ export default {
 
     // Coins + balance
     const coinsImg = await loadImg(EMOJI.coins);
-    ctx.drawImage(coinsImg, 700, 240, 50, 50);
+    ctx.drawImage(coinsImg, 750, 210, 50, 50);
     ctx.fillStyle = '#f1c40f';
     ctx.font = 'bold 36px Arial';
     ctx.fillText(balance.toLocaleString(), 745, 245);
