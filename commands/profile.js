@@ -103,8 +103,8 @@ export default {
     ctx.fillText(target.username.slice(0, 18), 260, 125);
 
     // Status bar
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    roundRect(ctx, 20, 200, 860, 80, 20);
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    roundRect(ctx, 20, 200, 855, 80, 20);
     ctx.fill();
 
     // Status text
