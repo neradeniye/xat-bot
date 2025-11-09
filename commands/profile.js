@@ -111,7 +111,7 @@ export default {
     ctx.fillStyle = 'white';
     ctx.font = '28px Arial';
     const status = profile.status.length > 85 ? profile.status.slice(0, 82) + '...' : profile.status;
-    ctx.fillText(status, 25, 725);
+    ctx.fillText(status, 50, 525);
 
     /*
 
