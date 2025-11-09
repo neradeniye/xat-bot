@@ -99,8 +99,8 @@ export default {
 
     // Username
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 64px Arial';
-    ctx.fillText(target.username.slice(0, 18), 260, 125);
+    ctx.font = 'bold 44px Arial';
+    ctx.fillText(target.username.slice(0, 18), 250, 125);
 
     // Status bar
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
