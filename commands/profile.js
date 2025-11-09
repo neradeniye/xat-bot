@@ -65,7 +65,7 @@ export default {
     const ctx = canvas.getContext('2d');
 
     // Background
-    const banner = await loadImg('https://wallpapercave.com/wp/wp8944221.jpg');
+    const banner = await loadImg('https://r4.wallpaperflare.com/wallpaper/297/18/527/digital-art-artwork-illustration-science-fiction-planet-hd-wallpaper-f866fda820201cf8104c711e982214fa.jpg');
     ctx.drawImage(banner, 0, 0, 900, 300);
 
     // Overlays
