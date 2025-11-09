@@ -77,8 +77,8 @@ export default {
     ctx.drawImage(banner, 0, 0, 900, 300);
 
     // Dark overlay
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.fillRect(0, 0, 900, 300);
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillRect(0, 0, 900, 100);
 
     /*
 
@@ -105,11 +105,13 @@ export default {
     ctx.fillStyle = 'white';
     ctx.font = 'bold 44px Arial';
     ctx.fillText(target.username.slice(0, 18), 250, 125);
-
+/*
     // Status bar
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
     roundRect(ctx, 20, 200, 860, 60, 15);
     ctx.fill();
+
+*/
 
     // Status text
     ctx.fillStyle = 'white';
