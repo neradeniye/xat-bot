@@ -2,12 +2,12 @@ import { EmbedBuilder } from 'discord.js';
 import {
   getUserBalance,
   addUserXats,
-  getLastDailyClaim,
-  setLastDailyClaim
+  getLastGamble,
+  setLastGamble
 } from '../db.js';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const config = require('../config.json'); // <-- this works everywhere
+const config = require('../config.json');
 
 const COOLDOWN_HOURS = 6;
 const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
@@ -20,18 +20,20 @@ export default {
     const userId = message.author.id;
     const now = Date.now();
 
-    // === COOLDOWN CHECK ===
-    const lastGamble = getLastDailyClaim(userId) || 0;
+    // === INDEPENDENT 6-HOUR COOLDOWN ===
+    const lastGamble = getLastGamble(userId);
     const timeLeft = COOLDOWN_MS - (now - lastGamble);
 
     if (timeLeft > 0) {
       const hours = Math.floor(timeLeft / (1000 * 60 * 60));
       const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+      
       return message.reply({
         embeds: [new EmbedBuilder()
           .setColor('#ff3366')
-          .setTitle('Too Fast!')
-          .setDescription(`You can gamble again in **${hours}h ${minutes}m**.`)
+          .setTitle('Slow Down, Gambler!')
+          .setDescription(`Next gamble in **${hours}h ${minutes}m ${seconds}s**`)
         ]
       });
     }
@@ -41,19 +43,19 @@ export default {
 
     let amount;
     if (win) {
-      amount = Math.floor(Math.random() * 101) + 50; // 50–150
+      amount = Math.floor(Math.random() * 101) + 50; // +50 to +150
     } else {
       amount = -(Math.floor(Math.random() * 401) + 100); // -100 to -500
     }
 
-    // === UPDATE BALANCE ===
+    // === UPDATE BALANCE & COOLDOWN ===
     addUserXats(userId, amount);
-    setLastDailyClaim(userId, now); // reuse daily_rewards table
+    setLastGamble(userId, now); // This is now completely separate from daily!
 
     const newBalance = getUserBalance(userId);
 
     const embed = new EmbedBuilder()
-      .setColor(win ? '#00ff00' : '#ff0000')
+      .setColor(win ? '#00ff88' : '#ff0055')
       .setAuthor({
         name: message.author.tag,
         iconURL: message.author.displayAvatarURL({ dynamic: true })
@@ -61,12 +63,17 @@ export default {
       .setTitle(win ? 'JACKPOT!' : 'BUSTED!')
       .setDescription(win
         ? `You won **${amount}** ${config.xatEmoji}!`
-        : `You lost **${Math.abs(amount)}** ${config.xatEmoji}... ouch.`
+        : `You lost **${Math.abs(amount)}** ${config.xatEmoji}... RIP wallet.`
       )
       .addFields(
-        { name: 'New Balance', value: `${newBalance} ${config.xatEmoji}`, inline: true }
+        { name: 'New Balance', value: `${newBalance} ${config.xatEmoji}`, inline: true },
+        { name: 'Next Gamble', value: 'In 6 hours', inline: true }
       )
-      .setFooter({ text: 'Next gamble in 6 hours' })
+      .setThumbnail(win 
+        ? 'https://i.imgur.com/8eK1mYP.gif'  // winning gif
+        : 'https://i.imgur.com/3j7wj0q.gif'  // losing gif
+      )
+      .setFooter({ text: 'Feeling lucky? Come back in 6 hours!' })
       .setTimestamp();
 
     message.reply({ embeds: [embed] });

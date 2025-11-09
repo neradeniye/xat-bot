@@ -68,6 +68,14 @@ db.prepare(`
   );
 `).run();
 
+// Add this block in db.js, right after the other CREATE TABLE statements
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS gamble_cooldowns (
+    user_id TEXT PRIMARY KEY,
+    last_gamble INTEGER
+  );
+`).run();
+
 // SAFE PROFILE TABLE — AUTO-HEALS CORRUPTED STATUS
 try {
   db.prepare('SELECT 1 FROM user_profiles LIMIT 1').run();
@@ -283,6 +291,15 @@ export function setUserBanner(userId, bannerName) {
     VALUES (?, ?)
     ON CONFLICT(user_id) DO UPDATE SET banner = excluded.banner
   `).run(userId, bannerName);
+}
+
+export function getLastGamble(userId) {
+  const row = db.prepare('SELECT last_gamble FROM gamble_cooldowns WHERE user_id = ?').get(userId);
+  return row?.last_gamble ?? 0;
+}
+
+export function setLastGamble(userId, timestamp) {
+  db.prepare('INSERT OR REPLACE INTO gamble_cooldowns (user_id, last_gamble) VALUES (?, ?)').run(userId, timestamp);
 }
 
 export { db };
