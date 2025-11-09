@@ -93,9 +93,9 @@ export default {
     const avatar = await loadImg(target.displayAvatarURL({ size: 256, format: 'png', dynamic: false }));
     ctx.save();
     ctx.beginPath();
-    ctx.arc(150, 115, 75, 0, Math.PI * 2);
+    ctx.arc(150, 115, 35, 0, Math.PI * 2);
     ctx.clip();
-    ctx.drawImage(avatar, 35, 40, 150, 150);
+    ctx.drawImage(avatar, 75, 40, 150, 150);
     ctx.restore();
     ctx.lineWidth = 6;
     ctx.strokeStyle = 'white';
@@ -104,7 +104,7 @@ export default {
     // Username
     ctx.fillStyle = 'white';
     ctx.font = 'bold 44px Arial';
-    ctx.fillText(target.username.slice(0, 18), 200, 125);
+    ctx.fillText(target.username.slice(0, 18), 250, 125);
 
     // Status bar
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
