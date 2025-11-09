@@ -68,14 +68,22 @@ db.prepare(`
   );
 `).run();
 
-// === PROFILES SYSTEM ===
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS user_profiles (
-    user_id TEXT PRIMARY KEY,
-    status TEXT DEFAULT 'No status set ~ use .x setstatus',
-    banner TEXT DEFAULT 'default'
-  );
-`).run();
+// SAFE PROFILE TABLE — AUTO-HEALS CORRUPTED STATUS
+try {
+  db.prepare('SELECT 1 FROM user_profiles LIMIT 1').run();
+  console.log('user_profiles table exists and is healthy');
+} catch (err) {
+  console.log('BROKEN user_profiles table detected — REBUILDING...');
+  db.prepare('DROP TABLE IF EXISTS user_profiles').run();
+  db.prepare(`
+    CREATE TABLE user_profiles (
+      user_id TEXT PRIMARY KEY,
+      status TEXT DEFAULT 'Use .x setstatus <text>',
+      banner TEXT DEFAULT 'default'
+    )
+  `).run();
+  console.log('CORRUPTED STATUS PURGED. TABLE REBUILT. BOT IS SAFE.');
+}
 
 // Ensure user_custom_colors has color1 and color2
 try {
@@ -210,16 +218,28 @@ export function resetMessageCounts() {
 }
 
 export function getUserProfile(userId) {
-  return db.prepare('SELECT * FROM user_profiles WHERE user_id = ?').get(userId);
+  try {
+    return db.prepare('SELECT * FROM user_profiles WHERE user_id = ?').get(userId);
+  } catch (err) {
+    console.log('Safe fallback: status column broken, returning default');
+    return { status: 'Use .x setstatus <text>', banner: 'default' };
+  }
 }
 
 export function setUserStatus(userId, status) {
-  if (status.length > 100) status = status.slice(0, 97) + '...';
-  db.prepare(`
-    INSERT INTO user_profiles (user_id, status) 
-    VALUES (?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET status = excluded.status
-  `).run(userId, status);
+  let clean = status.trim();
+  clean = clean.replace(/'/g, "''"); // escape quotes
+  if (clean.length > 100) clean = clean.slice(0, 97) + '...';
+
+  try {
+    db.prepare(`
+      INSERT INTO user_profiles (user_id, status) 
+      VALUES (?, ?)
+      ON CONFLICT(user_id) DO UPDATE SET status = excluded.status
+    `).run(userId, clean);
+  } catch (err) {
+    console.error('Failed to save status (table may be broken):', err.message);
+  }
 }
 
 export function setUserBanner(userId, bannerName) {
