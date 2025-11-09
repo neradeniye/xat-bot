@@ -5,7 +5,9 @@ import {
   getLastDailyClaim,
   setLastDailyClaim
 } from '../db.js';
-import config from '../config.json' assert { type: 'json' };
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const config = require('../config.json'); // <-- this works everywhere
 
 const COOLDOWN_HOURS = 6;
 const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
@@ -18,7 +20,7 @@ export default {
     const userId = message.author.id;
     const now = Date.now();
 
-    // Check cooldown
+    // === COOLDOWN CHECK ===
     const lastGamble = getLastDailyClaim(userId) || 0;
     const timeLeft = COOLDOWN_MS - (now - lastGamble);
 
@@ -34,8 +36,8 @@ export default {
       });
     }
 
-    // Roll the dice
-    const win = Math.random() < 0.45; // 45% win rate
+    // === ROLL THE DICE ===
+    const win = Math.random() < 0.45; // 45% win chance
 
     let amount;
     if (win) {
@@ -44,9 +46,9 @@ export default {
       amount = -(Math.floor(Math.random() * 401) + 100); // -100 to -500
     }
 
-    // Update balance
+    // === UPDATE BALANCE ===
     addUserXats(userId, amount);
-    setLastDailyClaim(userId, now); // reuse daily_rewards table as cooldown tracker
+    setLastDailyClaim(userId, now); // reuse daily_rewards table
 
     const newBalance = getUserBalance(userId);
 
