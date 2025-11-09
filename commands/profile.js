@@ -125,7 +125,7 @@ export default {
     ctx.drawImage(coinsImg, 700, 210, 50, 50);
     ctx.fillStyle = '#f1c40f';
     ctx.font = 'bold 36px Arial';
-    ctx.fillText(balance.toLocaleString(), 580, 245);
+    ctx.fillText(balance.toLocaleString(), 680, 245);
 
     // Pawn flex
     if (bestPawn && EMOJI.pawns[bestPawn]) {
