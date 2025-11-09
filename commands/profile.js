@@ -93,7 +93,7 @@ export default {
     const avatar = await loadImg(target.displayAvatarURL({ size: 256, format: 'png', dynamic: false }));
     ctx.save();
     ctx.beginPath();
-    ctx.arc(50, 115, 75, 0, Math.PI * 2);
+    ctx.arc(120, 85, 75, 0, Math.PI * 2);
     ctx.clip();
     ctx.drawImage(avatar, 75, 40, 150, 150);
     ctx.restore();
