@@ -65,7 +65,7 @@ export default {
     const ctx = canvas.getContext('2d');
 
     // Background
-    const banner = await loadImg('https://cdn.discordapp.com/attachments/1385719618886434927/1436997359438663700/profile_bg.png');
+    const banner = await loadImg('https://i.imgur.com/EGllplR.png');
     ctx.drawImage(banner, 0, 0, 900, 300);
 
     // Overlays
