@@ -93,7 +93,7 @@ export default {
     const avatar = await loadImg(target.displayAvatarURL({ size: 256, format: 'png', dynamic: false }));
     ctx.save();
     ctx.beginPath();
-    ctx.arc(120, 85, 75, 0, Math.PI * 2);
+    ctx.arc(150, 115, 75, 0, Math.PI * 2);
     ctx.clip();
     ctx.drawImage(avatar, 75, 40, 150, 150);
     ctx.restore();
@@ -122,7 +122,7 @@ export default {
     ctx.drawImage(heartImg, 40, 210, 40, 40);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 32px Arial';
-    ctx.fillText('Coming Later', 90, 240);
+    ctx.fillText('Single', 90, 240);
 
     // Coins + balance
     const coinsImg = await loadImg(EMOJI.coins);
