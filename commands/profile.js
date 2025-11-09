@@ -95,7 +95,7 @@ export default {
     ctx.beginPath();
     ctx.arc(150, 115, 75, 0, Math.PI * 2);
     ctx.clip();
-    ctx.drawImage(avatar, 75, 40, 100, 150);
+    ctx.drawImage(avatar, 35, 40, 150, 150);
     ctx.restore();
     ctx.lineWidth = 6;
     ctx.strokeStyle = 'white';
