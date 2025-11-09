@@ -80,10 +80,14 @@ export default {
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.fillRect(0, 0, 900, 300);
 
+    /*
+
     // Rank
     ctx.fillStyle = '#a0a0ff';
     ctx.font = 'bold 36px Arial';
     ctx.fillText('#471', 30, 55);
+
+    */
 
     // Avatar
     const avatar = await loadImg(target.displayAvatarURL({ size: 256, format: 'png', dynamic: false }));
@@ -118,7 +122,7 @@ export default {
     ctx.drawImage(heartImg, 40, 210, 40, 40);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 32px Arial';
-    ctx.fillText('thecuteone255', 90, 240);
+    ctx.fillText('Coming Later', 90, 240);
 
     // Coins + balance
     const coinsImg = await loadImg(EMOJI.coins);
