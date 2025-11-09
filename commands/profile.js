@@ -2,7 +2,7 @@
 import { AttachmentBuilder } from 'discord.js';
 import { createCanvas, loadImage } from 'canvas';
 import sharp from 'sharp';
-import { getUserBalance, getUserProfile, db } from '../db.js';
+import { getUserBalance, getUserProfile, db, getSpouse } from '../db.js';
 
 const EMOJI = {
   heart: 'https://cdn.discordapp.com/emojis/1386783891150602411.png',
