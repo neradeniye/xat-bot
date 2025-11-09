@@ -1,13 +1,12 @@
-// commands/profile.js
+// commands/profile.js — FINAL GOD TIER VERSION
 import { AttachmentBuilder } from 'discord.js';
 import { createCanvas, loadImage } from 'canvas';
 import sharp from 'sharp';
 import { getUserBalance, getUserProfile, db } from '../db.js';
 
-// === CONFIG: YOUR CUSTOM EMOJIS (REPLACE WITH YOUR SERVER'S) ===
 const EMOJI = {
-  heart: 'https://cdn.discordapp.com/emojis/1386783891150602411.png', // your heart
-  coins: 'https://cdn.discordapp.com/emojis/1387149871987036260.png', // your coins
+  heart: 'https://cdn.discordapp.com/emojis/1386783891150602411.png',
+  coins: 'https://cdn.discordapp.com/emojis/1387149871987036260.png',
   pawns: {
     'Red Pawn': 'https://cdn.discordapp.com/emojis/1432123673812144208.png',
     'Brown Pawn': 'https://cdn.discordapp.com/emojis/1402336202345943183.png',
@@ -29,7 +28,6 @@ const EMOJI = {
   }
 };
 
-// === PAWN VALUE ORDER (HIGHEST TO LOWEST) ===
 const PAWN_ORDER = [
   'Emerald Pawn', 'Black Pawn', 'Diamond Pawn', 'Cyan Pawn', 'Ruby Pawn',
   'Clear Pawn', 'Gold Pawn', 'Purple Pawn', 'Blueman Pawn', 'Yellow Pawn',
@@ -43,9 +41,9 @@ async function loadImg(url) {
     if (!res.ok) throw 1;
     const buf = Buffer.from(await res.arrayBuffer());
     return await loadImage(await sharp(buf).png().toBuffer());
-  } catch {
-    const fallback = await sharp({ create: { width: 64, height: 64, channels: 4, background: '#00000000' } }).png().toBuffer();
-    return await loadImage(fallback);
+  } catch (e) {
+    console.log('Failed to load image:', url);
+    return await loadImage(await sharp({ create: { width: 1, height: 1, channels: 4, background: '#0000' } }).png().toBuffer());
   }
 }
 
@@ -59,39 +57,22 @@ export default {
     const balance = getUserBalance(userId);
     const profile = getUserProfile(userId) || { status: 'Use .x setstatus <text>', banner: 'default' };
 
-    // === FIND RAREST PAWN ===
-    const ownedItems = db.prepare('SELECT itemName FROM user_items WHERE userId = ?').all(userId);
-    let bestPawn = null;
-    for (const pawn of PAWN_ORDER) {
-      if (ownedItems.some(i => i.itemName === pawn)) {
-        bestPawn = pawn;
-        break;
-      }
-    }
+    // Find rarest pawn
+    const owned = db.prepare('SELECT itemName FROM user_items WHERE userId = ?').all(userId);
+    const bestPawn = PAWN_ORDER.find(pawn => owned.some(i => i.itemName === pawn));
 
     const canvas = createCanvas(900, 300);
     const ctx = canvas.getContext('2d');
 
-    // Banner
+    // Background
     const banner = await loadImg('https://wallpapercave.com/wp/wp8944221.jpg');
     ctx.drawImage(banner, 0, 0, 900, 300);
 
-    // Dark overlay
+    // Overlays
     ctx.fillStyle = 'rgba(0,0,0,0.65)';
     ctx.fillRect(0, 0, 900, 300);
-
-    // Dark overlay
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.fillRect(0, 270, 900, 50);
-
-    /*
-
-    // Rank
-    ctx.fillStyle = '#a0a0ff';
-    ctx.font = 'bold 36px Arial';
-    ctx.fillText('#471', 30, 55);
-
-    */
+    ctx.fillRect(0, 270, 900, 30);
 
     // Avatar
     const avatar = await loadImg(target.displayAvatarURL({ size: 256, format: 'png', dynamic: false }));
@@ -108,39 +89,32 @@ export default {
     // Username
     ctx.fillStyle = 'white';
     ctx.font = 'bold 44px Arial';
-    ctx.fillText(target.username.slice(0, 18), 250, 125);
-/*
-    // Status bar
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    roundRect(ctx, 20, 200, 860, 60, 15);
-    ctx.fill();
+    ctx.fillText(target.username.slice(0, 20), 250, 125);
 
-*/
-
-    // Status text
+    // Status
     ctx.fillStyle = 'white';
     ctx.font = '18px Arial';
-    const status = profile.status.length > 85 ? profile.status.slice(0, 82) + '...' : profile.status;
+    const status = profile.status.length > 90 ? profile.status.slice(0, 87) + '...' : profile.status;
     ctx.fillText(status, 20, 290);
 
-    // Heart + username
-    const heartImg = await loadImg(EMOJI.heart);
-    ctx.drawImage(heartImg, 250, 130, 35, 35);
+    // Relationship Status (Single)
+    const heart = await loadImg(EMOJI.heart);
+    ctx.drawImage(heart, 250, 130, 35, 35);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 32px Arial';
-    ctx.fillText('Single', 292, 160);
+    ctx.fillText('Single', 292, 158);
 
-    // Coins + balance
-    const coinsImg = await loadImg(EMOJI.coins);
-    ctx.drawImage(coinsImg, 30, 210, 50, 50);
+    // Balance
+    const coins = await loadImg(EMOJI.coins);
+    ctx.drawImage(coins, 30, 210, 50, 50);
     ctx.fillStyle = '#f1c40f';
     ctx.font = 'bold 36px Arial';
     ctx.fillText(balance.toLocaleString(), 85, 245);
 
-    // Pawn flex
+    // Rarest Pawn
     if (bestPawn && EMOJI.pawns[bestPawn]) {
-      const pawnImg = await loadImg(EMOJI.pawns[bestPawn]);
-      ctx.drawImage(pawnImg, 800, 50, 80, 80);
+      const pawn = await loadImg(EMOJI.pawns[bestPawn]);
+      ctx.drawImage(pawn, 800, 40, 90, 90);
     }
 
     // Send
@@ -151,13 +125,3 @@ export default {
     });
   }
 };
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
