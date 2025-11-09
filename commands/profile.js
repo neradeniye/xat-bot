@@ -9,9 +9,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const config = JSON.parse(readFileSync(path.join(__dirname, '../config.json'), 'utf-8'));
 
-const DEFAULT_BANNER = 'https://i.imgur.com/8e1Z3.jpg';
+const DEFAULT_BANNER = 'https://wallpapercave.com/wp/wp8944221.jpg';
 const BANNER_MAP = {
-  default: 'https://i.imgur.com/8e1Z3.jpg',
+  default: 'https://wallpapercave.com/wp/wp8944221.jpg',
   // vip: 'https://i.imgur.com/vip.jpg',
   // diamond: 'https://i.imgur.com/diamond.jpg'
 };
