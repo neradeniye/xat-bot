@@ -125,7 +125,7 @@ export default {
 
     // Send
     await message.reply({
-      content: `**${target.username}'s Profile**`,
+      content: `**${target.username}'s server card**`,
       files: [new AttachmentBuilder(canvas.toBuffer(), { name: 'profile.png' })],
       allowedMentions: { repliedUser: false }
     });
