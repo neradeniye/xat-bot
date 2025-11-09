@@ -126,10 +126,10 @@ export default {
 
     // Coins + balance
     const coinsImg = await loadImg(EMOJI.coins);
-    ctx.drawImage(coinsImg, 690, 210, 50, 50);
+    ctx.drawImage(coinsImg, 90, 210, 50, 50);
     ctx.fillStyle = '#f1c40f';
     ctx.font = 'bold 36px Arial';
-    ctx.fillText(balance.toLocaleString(), 745, 245);
+    ctx.fillText(balance.toLocaleString(), 45, 245);
 
     // Pawn flex
     if (bestPawn && EMOJI.pawns[bestPawn]) {
