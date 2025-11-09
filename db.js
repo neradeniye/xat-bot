@@ -85,6 +85,41 @@ try {
   console.log('CORRUPTED STATUS PURGED. TABLE REBUILT. BOT IS SAFE.');
 }
 
+// MARRIAGE SYSTEM — LOVE IS EXPENSIVE
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS marriages (
+    user1 TEXT NOT NULL,
+    user2 TEXT NOT NULL,
+    married_at INTEGER DEFAULT (strftime('%s', 'now')),
+    PRIMARY KEY (user1, user2)
+  )
+`).run();
+
+// Get spouse
+export function getSpouse(userId) {
+  const row = db.prepare(`
+    SELECT user2 as spouse FROM marriages WHERE user1 = ?
+    UNION
+    SELECT user1 as spouse FROM marriages WHERE user2 = ?
+  `).get(userId, userId);
+  return row?.spouse || null;
+}
+
+// Marry (cost 1000 xats)
+export function marry(user1, user2) {
+  db.prepare(`
+    INSERT INTO marriages (user1, user2) VALUES (?, ?)
+  `).run(user1, user2);
+}
+
+// Divorce
+export function divorce(userId) {
+  db.prepare(`
+    DELETE FROM marriages 
+    WHERE user1 = ? OR user2 = ? OR user1 = ? OR user2 = ?
+  `).run(userId, userId, userId, userId);
+}
+
 // Ensure user_custom_colors has color1 and color2
 try {
   const cols = db.prepare("PRAGMA table_info('user_custom_colors')").all();

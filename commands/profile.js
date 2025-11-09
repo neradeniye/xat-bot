@@ -102,7 +102,13 @@ export default {
     ctx.drawImage(heart, 250, 130, 35, 35);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 32px Arial';
-    ctx.fillText('Single', 292, 158);
+    const spouseId = getSpouse(target.id);
+    if (spouseId) {
+        const spouse = await message.client.users.fetch(spouseId);
+        ctx.fillText(`♥ ${spouse.username}`, 292, 158);
+    } else {
+        ctx.fillText('Single', 292, 158);
+}
 
     // Balance
     const coins = await loadImg(EMOJI.coins);
