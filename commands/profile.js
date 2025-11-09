@@ -119,7 +119,7 @@ export default {
 
     // Heart + username
     const heartImg = await loadImg(EMOJI.heart);
-    ctx.drawImage(heartImg, 210, 140, 40, 40);
+    ctx.drawImage(heartImg, 240, 120, 40, 40);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 32px Arial';
     ctx.fillText('Single', 285, 160);
