@@ -69,10 +69,6 @@ export default {
         { name: 'New Balance', value: `${newBalance} ${config.xatEmoji}`, inline: true },
         { name: 'Next Gamble', value: 'In 6 hours', inline: true }
       )
-      .setThumbnail(win 
-        ? 'https://i.imgur.com/8eK1mYP.gif'  // winning gif
-        : 'https://i.imgur.com/3j7wj0q.gif'  // losing gif
-      )
       .setFooter({ text: 'Feeling lucky? Come back in 6 hours!' })
       .setTimestamp();
 
