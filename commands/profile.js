@@ -1,92 +1,115 @@
-import { EmbedBuilder } from 'discord.js';
-import { getUserBalance, getUserProfile, db } from '../db.js';
-import { readFileSync } from 'fs';
+import { AttachmentBuilder } from 'discord.js';
+import { createCanvas, loadImage, registerFont } from 'canvas';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { getUserBalance, getUserProfile, db } from '../db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const config = JSON.parse(readFileSync(path.join(__dirname, '../config.json'), 'utf-8'));
 
-const BANNER_MAP = {
-  default: 'https://cdn.discordapp.com/attachments/1385719618886434927/1436918693211668731/wp8944221.png', // change this
-  vip: 'https://cdn.discordapp.com/attachments/1234567890/vip-banner.png',
-  diamond: 'https://cdn.discordapp.com/attachments/1234567890/diamond-banner.png'
+// Register font
+registerFont(path.join(__dirname, '../fonts/Poppins-Bold.ttf'), { family: 'Poppins' });
+
+const BANNERS = {
+  default: 'https://i.imgur.com/removed.png',
+  vip: 'https://i.imgur.com/vipbanner.jpg',
+  diamond: 'https://i.imgur.com/diamondbanner.jpg'
 };
 
 export default {
   name: 'profile',
   async execute(message, args) {
     let target = message.author;
-    if (message.mentions.users.size) {
-      target = message.mentions.users.first();
-    }
+    if (message.mentions.users.size) target = message.mentions.users.first();
 
     const userId = target.id;
     const balance = getUserBalance(userId);
-    const profile = getUserProfile(userId) || { status: 'No status set ~ .x setstatus', banner: 'default' };
+    const profile = getUserProfile(userId) || { status: 'Use .x setstatus <text>', banner: 'default' };
     const items = db.prepare('SELECT COUNT(*) as c FROM user_items WHERE userId = ?').get(userId)?.c || 0;
 
-    const bannerUrl = BANNER_MAP[profile.banner] || BANNER_MAP.default;
+    // Create canvas
+    const canvas = createCanvas(800, 300);
+    const ctx = canvas.getContext('2d');
 
-    // 🔥 MESSAGE.STYLE MASTERPIECE 🔥
-    const html = `
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap');
-      body { margin:0; padding:20px; background:#1a1a2e; font-family:'Poppins',sans-serif; }
-      .card { 
-        width:450px; height:600px; background:linear-gradient(135deg,#16213e,#0f3460); 
-        border-radius:28px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.6);
-        position:relative; border:4px solid #6e44ff;
-      }
-      .banner { width:100%; height:180px; object-fit:cover; }
-      .avatar { 
-        width:140px; height:140px; border-radius:50%; border:8px solid #6e44ff;
-        position:absolute; top:120px; left:155px; box-shadow:0 10px 30px rgba(0,0,0,0.8);
-      }
-      .name { 
-        text-align:center; color:white; font-size:32px; font-weight:800; margin-top:80px;
-        text-shadow:0 4px 10px rgba(0,0,0,0.8);
-      }
-      .status { 
-        text-align:center; color:#a29bfe; font-size:18px; margin:10px 40px; 
-        background:rgba(110,68,255,0.2); padding:12px; border-radius:14px;
-      }
-      .stats { 
-        display:flex; justify-content:space-around; margin-top:30px; color:white;
-      }
-      .stat { text-align:center; }
-      .num { font-size:36px; font-weight:800; color:#6e44ff; }
-      .label { font-size:14px; color:#bbb; }
-    </style>
-    <div class="card">
-      <img src="${bannerUrl}" class="banner">
-      <img src="${target.displayAvatarURL({ size: 512, format: 'png' })}" class="avatar">
-      <div class="name">${target.username}</div>
-      <div class="status">"${profile.status}"</div>
-      <div class="stats">
-        <div class="stat">
-          <div class="num">${balance.toLocaleString()}</div>
-          <div class="label">XATS</div>
-        </div>
-        <div class="stat">
-          <div class="num">${items}</div>
-          <div class="label">ITEMS</div>
-        </div>
-        <div class="stat">
-          <div class="num">#1</div>
-          <div class="label">RANK</div>
-        </div>
-      </div>
-    </div>`;
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, 800, 300);
+    gradient.addColorStop(0, '#16213e');
+    gradient.addColorStop(1, '#0f3460');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 800, 300);
 
-    const url = `https://message.style/app/editor#${btoa(unescape(encodeURIComponent(html)))}`;
+    // Banner (top)
+    try {
+      const banner = await loadImage(BANNERS[profile.banner] || BANNERS.default);
+      ctx.drawImage(banner, 0, 0, 800, 140);
+    } catch (e) {
+      ctx.fillStyle = '#6e44ff';
+      ctx.fillRect(0, 0, 800, 140);
+    }
 
-    const embed = new EmbedBuilder()
-      .setColor(0x9b59b6)
-      .setImage(url)
-      .setFooter({ text: 'Click the image to enlarge • .x setstatus to flex' });
+    // Avatar
+    const avatar = await loadImage(target.displayAvatarURL({ size: 256, format: 'png' }));
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(100, 150, 70, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(avatar, 30, 80, 140, 140);
+    ctx.restore();
 
-    await message.reply({ embeds: [embed] });
+    // Avatar border
+    ctx.strokeStyle = '#6e44ff';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+
+    // Username
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 48px Poppins';
+    ctx.fillText(target.username, 210, 120);
+
+    // Status
+    ctx.fillStyle = '#a29bfe';
+    ctx.font = '28px Poppins';
+    ctx.fillText(`"${profile.status}"`, 210, 170);
+
+    // Stats background
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.roundRect(210, 190, 560, 90, 20).fill();
+
+    // Stats
+    ctx.fillStyle = '#6e44ff';
+    ctx.font = 'bold 36px Poppins';
+    ctx.fillText(balance.toLocaleString(), 280, 250);
+    ctx.fillText(items, 480, 250);
+    ctx.fillText('#1', 680, 250);
+
+    ctx.fillStyle = '#ccc';
+    ctx.font = '20px Poppins';
+    ctx.fillText('XATS', 280, 280);
+    ctx.fillText('ITEMS', 480, 280);
+    ctx.fillText('RANK', 680, 280);
+
+    // Send
+    const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'profile.png' });
+
+    await message.reply({
+      content: `**${target.username}'s Profile**`,
+      files: [attachment],
+      allowedMentions: { repliedUser: false }
+    });
   }
+};
+
+// Helper for rounded rect
+CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
+  this.beginPath();
+  this.moveTo(x + r, y);
+  this.arcTo(x + w, y, x + w, y + h, r);
+  this.arcTo(x + w, y + h, x, y + h, r);
+  this.arcTo(x, y + h, x, y, r);
+  this.arcTo(x, y, x + w, y, r);
+  this.closePath();
+  return this;
 };
