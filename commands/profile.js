@@ -81,7 +81,7 @@ export default {
     ctx.fillRect(0, 0, 900, 300);
 
     // Dark overlay
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.fillRect(0, 270, 900, 50);
 
     /*
