@@ -122,7 +122,7 @@ export default {
     ctx.drawImage(heartImg, 250, 130, 35, 35);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 32px Arial';
-    ctx.fillText('Single', 295, 162);
+    ctx.fillText('Single', 292, 160);
 
     // Coins + balance
     const coinsImg = await loadImg(EMOJI.coins);
