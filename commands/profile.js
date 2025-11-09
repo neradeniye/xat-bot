@@ -109,9 +109,9 @@ export default {
 
     // Status text
     ctx.fillStyle = 'white';
-    ctx.font = '28px Arial';
+    ctx.font = '22px Arial';
     const status = profile.status.length > 85 ? profile.status.slice(0, 82) + '...' : profile.status;
-    ctx.fillText(status, 40, 300);
+    ctx.fillText(status, 40, 297);
 
     // Heart + username
     const heartImg = await loadImg(EMOJI.heart);
