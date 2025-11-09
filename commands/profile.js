@@ -119,10 +119,10 @@ export default {
 
     // Heart + username
     const heartImg = await loadImg(EMOJI.heart);
-    ctx.drawImage(heartImg, 250, 125, 40, 40);
+    ctx.drawImage(heartImg, 250, 130, 35, 35);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 32px Arial';
-    ctx.fillText('Single', 295, 160);
+    ctx.fillText('Single', 295, 165);
 
     // Coins + balance
     const coinsImg = await loadImg(EMOJI.coins);
