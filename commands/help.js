@@ -35,7 +35,7 @@ export default {
           name: '💬 Social',
           value: [
             '`x profile` — Display your profile card in the server',
-            '`x marry` — Marry someone you choose from the server',
+            '`x marry <@user>` — Marry someone you choose from the server',
             '`x divorce` — Divorce someone you had married or has married you'
           ].join('\n'),
           inline: false
