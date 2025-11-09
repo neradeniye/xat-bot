@@ -73,12 +73,12 @@ export default {
     const ctx = canvas.getContext('2d');
 
     // Banner
-    const banner = await loadImg('https://c4.wallpaperflare.com/wallpaper/297/18/527/digital-art-artwork-illustration-science-fiction-planet-hd-wallpaper-preview.jpg');
+    const banner = await loadImg('https://wallpapercave.com/wp/wp8944221.jpg');
     ctx.drawImage(banner, 0, 0, 900, 300);
 
     // Dark overlay
     ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.fillRect(0, 0, 900, 200);
+    ctx.fillRect(0, 0, 900, -200);
 
     /*
 
