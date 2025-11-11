@@ -1,12 +1,12 @@
 import { setUserStatus } from '../db.js';
 
 export default {
-  name: 'setstatus',
+  name: 'status',
   description: 'Set your profile status (100 chars max)',
 
   async execute(message, args) {
     if (args.length === 0) {
-      return message.reply('Usage: `.x setstatus I own 7 emeralds`');
+      return message.reply('Usage: `.x status I own 7 emeralds`');
     }
 
     const status = args.join(' ').trim();

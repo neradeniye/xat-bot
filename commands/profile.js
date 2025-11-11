@@ -57,7 +57,7 @@ export default {
 
     const userId = target.id;
     const balance = getUserBalance(userId);
-    const profile = getUserProfile(userId) || { status: 'Use .x setstatus <text>', banner: 'default' };
+    const profile = getUserProfile(userId) || { status: 'Use .x status <text>', banner: 'default' };
 
     // Find rarest pawn
     const owned = db.prepare('SELECT itemName FROM user_items WHERE userId = ?').all(userId);
