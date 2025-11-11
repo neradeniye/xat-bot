@@ -3,6 +3,8 @@ import { AttachmentBuilder } from 'discord.js';
 import { createCanvas, loadImage } from 'canvas';
 import sharp from 'sharp';
 import { getUserBalance, getUserProfile, db, getSpouse } from '../db.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
 const EMOJI = {
   heart: 'https://cdn.discordapp.com/emojis/1386783891150602411.png',
@@ -47,6 +49,10 @@ async function loadImg(url) {
   }
 }
 
+// Get __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 export default {
   name: 'profile',
   async execute(message, args) {
@@ -64,8 +70,9 @@ export default {
     const canvas = createCanvas(900, 300);
     const ctx = canvas.getContext('2d');
 
-    // Background
-    const banner = await loadImg('https://cdn.discordapp.com/attachments/1385719618886434927/1436998667620974632/profile_bg.png?ex=6911a4cc&is=6910534c&hm=55a48b80e3988f33e67f77b050ff88f92cb1e9a80589a34717718e04e8711b6c&');
+    // Load local background
+    const bgPath = path.join(__dirname, '..', 'assets', 'profile_bg.png');
+    const banner = await loadImage(bgPath);
     ctx.drawImage(banner, 0, 0, 900, 300);
 
     // Overlays
