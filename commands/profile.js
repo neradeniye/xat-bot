@@ -1,4 +1,4 @@
-// commands/profile.js — FINAL GOD TIER VERSION
+// commands/profile.js — FINAL GOD TIER VERSION (LOCAL BACKGROUND ONLY)
 import { AttachmentBuilder } from 'discord.js';
 import { createCanvas, loadImage } from 'canvas';
 import sharp from 'sharp';
@@ -49,10 +49,6 @@ async function loadImg(url) {
   }
 }
 
-// Get __dirname in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 export default {
   name: 'profile',
   async execute(message, args) {
@@ -70,9 +66,22 @@ export default {
     const canvas = createCanvas(900, 300);
     const ctx = canvas.getContext('2d');
 
-    // Load local background
+    // ──────────────────────────────────────────────────────────────
+    // LOCAL BACKGROUND ONLY (ONLY CHANGE YOU REQUESTED)
+    // ──────────────────────────────────────────────────────────────
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
     const bgPath = path.join(__dirname, '..', 'assets', 'profile_bg.png');
-    const banner = await loadImage(bgPath);
+    let banner;
+    try {
+      banner = await loadImage(bgPath);
+    } catch (err) {
+      console.warn('[Profile] Local background not found:', bgPath);
+      // Fallback: solid dark gray
+      banner = await loadImage(await sharp({
+        create: { width: 900, height: 300, channels: 4, background: '#2f3136' }
+      }).png().toBuffer());
+    }
     ctx.drawImage(banner, 0, 0, 900, 300);
 
     // Overlays
@@ -115,7 +124,7 @@ export default {
         ctx.fillText(`${spouse.username}`, 292, 158);
     } else {
         ctx.fillText('Single', 292, 158);
-}
+    }
 
     // Balance
     const coins = await loadImg(EMOJI.coins);
