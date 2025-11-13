@@ -99,7 +99,7 @@ export default {
     // 🔥 NEW: PINK BORDER FOR BOOSTERS/SUBSCRIBERS
     if (isVIP) {
       ctx.strokeStyle = '#ff69b4'; // Hot pink
-      ctx.lineWidth = 12;
+      ctx.lineWidth = 5;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.strokeRect(6, 6, 888, 288); // Border inside canvas edges
