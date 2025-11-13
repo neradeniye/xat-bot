@@ -1,4 +1,4 @@
-// commands/profile.js — PINK OUTER BORDER FOR VIPs
+// commands/profile.js — GRADIENT GLOW BORDER FOR VIPs
 import { AttachmentBuilder } from 'discord.js';
 import { createCanvas, loadImage } from 'canvas';
 import sharp from 'sharp';
@@ -70,13 +70,11 @@ export default {
     const owned = db.prepare('SELECT itemName FROM user_items WHERE userId = ?').all(userId);
     const bestPawn = PAWN_ORDER.find(pawn => owned.some(i => i.itemName === pawn));
 
-    // ──────────────────────────────────────────────────────────────
-    // CANVAS: 920×320 (900×300 card + 10px padding)
-    // ──────────────────────────────────────────────────────────────
+    // Canvas: 920×320 (900×300 + 10px padding)
     const canvas = createCanvas(920, 320);
     const ctx = canvas.getContext('2d');
 
-    // ── LOCAL BACKGROUND (900×300, centered at 10,10) ──
+    // LOCAL BACKGROUND
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     const bgPath = path.join(__dirname, '..', 'assets', 'profile_bg.png');
@@ -89,9 +87,9 @@ export default {
         create: { width: 900, height: 300, channels: 4, background: '#2f3136' }
       }).png().toBuffer());
     }
-    ctx.drawImage(banner, 10, 10, 900, 300); // ← centered with 10px margin
+    ctx.drawImage(banner, 10, 10, 900, 300);
 
-    // Overlays (on inner card)
+    // Overlays
     ctx.fillStyle = 'rgba(0,0,0,0.65)';
     ctx.fillRect(10, 10, 900, 300);
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
@@ -101,9 +99,9 @@ export default {
     const avatar = await loadImg(target.displayAvatarURL({ size: 256, format: 'png', dynamic: false }));
     ctx.save();
     ctx.beginPath();
-    ctx.arc(160, 125, 75, 0, Math.PI * 2); // +10
+    ctx.arc(160, 125, 75, 0, Math.PI * 2);
     ctx.clip();
-    ctx.drawImage(avatar, 85, 50, 150, 150); // +10
+    ctx.drawImage(avatar, 85, 50, 150, 150);
     ctx.restore();
     ctx.lineWidth = 6;
     ctx.strokeStyle = 'white';
@@ -112,50 +110,65 @@ export default {
     // Username
     ctx.fillStyle = 'white';
     ctx.font = 'bold 44px Arial';
-    ctx.fillText(target.username.slice(0, 20), 260, 135); // +10
+    ctx.fillText(target.username.slice(0, 20), 260, 135);
 
     // Status
     ctx.fillStyle = 'white';
     ctx.font = '18px Arial';
     const status = profile.status.length > 90 ? profile.status.slice(0, 87) + '...' : profile.status;
-    ctx.fillText(status, 30, 300); // +10
+    ctx.fillText(status, 30, 300);
 
     // Relationship
     const heart = await loadImg(EMOJI.heart);
-    ctx.drawImage(heart, 260, 140, 35, 35); // +10
+    ctx.drawImage(heart, 260, 140, 35, 35);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 32px Arial';
     const spouseId = getSpouse(target.id);
     if (spouseId) {
       const spouse = await message.client.users.fetch(spouseId);
-      ctx.fillText(`${spouse.username}`, 302, 168); // +10
+      ctx.fillText(`${spouse.username}`, 302, 168);
     } else {
       ctx.fillText('Single', 302, 168);
     }
 
     // Balance
     const coins = await loadImg(EMOJI.coins);
-    ctx.drawImage(coins, 40, 220, 50, 50); // +10
+    ctx.drawImage(coins, 40, 220, 50, 50);
     ctx.fillStyle = '#f1c40f';
     ctx.font = 'bold 36px Arial';
-    ctx.fillText(balance.toLocaleString(), 95, 255); // +10
+    ctx.fillText(balance.toLocaleString(), 95, 255);
 
     // Pawn
     if (isVIP) {
       const subscriberPawn = await loadImg(EMOJI.subscriber);
-      ctx.drawImage(subscriberPawn, 810, 50, 90, 90); // +10
+      ctx.drawImage(subscriberPawn, 810, 50, 90, 90);
     } else if (bestPawn && EMOJI.pawns[bestPawn]) {
       const pawn = await loadImg(EMOJI.pawns[bestPawn]);
       ctx.drawImage(pawn, 810, 50, 90, 90);
     }
 
-    // ── PINK OUTER BORDER (drawn last) ──
+    // GRADIENT GLOW BORDER (VIP ONLY)
     if (isVIP) {
-      ctx.strokeStyle = '#c184e3';
-      ctx.lineWidth = 6;
+      const gradient = ctx.createLinearGradient(0, 0, 920, 320);
+      gradient.addColorStop(0, '#ff69b4');    // Hot Pink
+      gradient.addColorStop(0.3, '#d946ef');  // Purple
+      gradient.addColorStop(0.7, '#8b5cf6');  // Violet
+      gradient.addColorStop(1, '#3b82f6');    // Blue
+
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 5;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.strokeRect(5, 5, 910, 310); // full canvas - 5px inset
+
+      // Glow
+      ctx.shadowColor = '#ff69b4';
+      ctx.shadowBlur = 20;
+
+      // Draw outer stroke
+      ctx.strokeRect(6, 6, 908, 308); // 920-12, 320-12
+
+      // Reset shadow
+      ctx.shadowBlur = 0;
     }
 
     // Send
