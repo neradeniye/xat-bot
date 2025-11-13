@@ -1,4 +1,4 @@
-// commands/profile.js — FINAL GOD TIER VERSION (LOCAL BACKGROUND ONLY)
+// commands/profile.js — BOOSTER/SUBSCRIBER PINK BORDER + EXCLUSIVE PAWN
 import { AttachmentBuilder } from 'discord.js';
 import { createCanvas, loadImage } from 'canvas';
 import sharp from 'sharp';
@@ -9,6 +9,7 @@ import path from 'path';
 const EMOJI = {
   heart: 'https://cdn.discordapp.com/emojis/1386783891150602411.png',
   coins: 'https://cdn.discordapp.com/emojis/1387149871987036260.png',
+  subscriber: 'https://cdn.discordapp.com/emojis/1396632869673107556.png', // subscriber pawn
   pawns: {
     'Red Pawn': 'https://cdn.discordapp.com/emojis/1432123673812144208.png',
     'Brown Pawn': 'https://cdn.discordapp.com/emojis/1402336202345943183.png',
@@ -57,9 +58,15 @@ export default {
 
     const userId = target.id;
     const balance = getUserBalance(userId);
-    const profile = getUserProfile(userId) || { status: 'Use .x status <text>', banner: 'default' };
+    const profile = getUserProfile(userId) || { status: 'Use .x setstatus <text>', banner: 'default' };
 
-    // Find rarest pawn
+    // 🔥 NEW: Check if booster/subscriber
+    const member = await message.guild.members.fetch(userId);
+    const isBooster = member.premiumSince !== null;
+    const isSubscriber = member.roles.cache.has('1396682174408822885'); // subscriber role ID from gradients.json
+    const isVIP = isBooster || isSubscriber;
+
+    // Find rarest pawn (SKIP if VIP)
     const owned = db.prepare('SELECT itemName FROM user_items WHERE userId = ?').all(userId);
     const bestPawn = PAWN_ORDER.find(pawn => owned.some(i => i.itemName === pawn));
 
@@ -67,7 +74,7 @@ export default {
     const ctx = canvas.getContext('2d');
 
     // ──────────────────────────────────────────────────────────────
-    // LOCAL BACKGROUND ONLY (ONLY CHANGE YOU REQUESTED)
+    // LOCAL BACKGROUND (unchanged)
     // ──────────────────────────────────────────────────────────────
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -77,7 +84,6 @@ export default {
       banner = await loadImage(bgPath);
     } catch (err) {
       console.warn('[Profile] Local background not found:', bgPath);
-      // Fallback: solid dark gray
       banner = await loadImage(await sharp({
         create: { width: 900, height: 300, channels: 4, background: '#2f3136' }
       }).png().toBuffer());
@@ -89,6 +95,15 @@ export default {
     ctx.fillRect(0, 0, 900, 300);
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.fillRect(0, 270, 900, 30);
+
+    // 🔥 NEW: PINK BORDER FOR BOOSTERS/SUBSCRIBERS
+    if (isVIP) {
+      ctx.strokeStyle = '#ff69b4'; // Hot pink
+      ctx.lineWidth = 12;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeRect(6, 6, 888, 288); // Border inside canvas edges
+    }
 
     // Avatar
     const avatar = await loadImg(target.displayAvatarURL({ size: 256, format: 'png', dynamic: false }));
@@ -133,15 +148,20 @@ export default {
     ctx.font = 'bold 36px Arial';
     ctx.fillText(balance.toLocaleString(), 85, 245);
 
-    // Rarest Pawn
-    if (bestPawn && EMOJI.pawns[bestPawn]) {
+    // 🔥 UPDATED: Rarest Pawn OR Subscriber Pawn
+    if (isVIP) {
+      // VIP gets exclusive subscriber pawn
+      const subscriberPawn = await loadImg(EMOJI.subscriber);
+      ctx.drawImage(subscriberPawn, 800, 40, 90, 90);
+    } else if (bestPawn && EMOJI.pawns[bestPawn]) {
+      // Regular users get their best pawn
       const pawn = await loadImg(EMOJI.pawns[bestPawn]);
       ctx.drawImage(pawn, 800, 40, 90, 90);
     }
 
     // Send
     await message.reply({
-      content: `**${target.username}'s server card**`,
+      content: `**${target.username}'s server card**${isVIP ? ' ✨ **VIP**' : ''}`,
       files: [new AttachmentBuilder(canvas.toBuffer(), { name: 'profile.png' })],
       allowedMentions: { repliedUser: false }
     });
