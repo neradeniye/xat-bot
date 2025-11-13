@@ -1,4 +1,4 @@
-// commands/profile.js — BOOSTER/SUBSCRIBER PINK BORDER + EXCLUSIVE PAWN
+// commands/profile.js — PINK OUTER BORDER FOR VIPs
 import { AttachmentBuilder } from 'discord.js';
 import { createCanvas, loadImage } from 'canvas';
 import sharp from 'sharp';
@@ -9,7 +9,7 @@ import path from 'path';
 const EMOJI = {
   heart: 'https://cdn.discordapp.com/emojis/1386783891150602411.png',
   coins: 'https://cdn.discordapp.com/emojis/1387149871987036260.png',
-  subscriber: 'https://cdn.discordapp.com/emojis/1396632869673107556.png', // subscriber pawn
+  subscriber: 'https://cdn.discordapp.com/emojis/1396682174408822885.png',
   pawns: {
     'Red Pawn': 'https://cdn.discordapp.com/emojis/1432123673812144208.png',
     'Brown Pawn': 'https://cdn.discordapp.com/emojis/1402336202345943183.png',
@@ -60,22 +60,23 @@ export default {
     const balance = getUserBalance(userId);
     const profile = getUserProfile(userId) || { status: 'Use .x setstatus <text>', banner: 'default' };
 
-    // 🔥 NEW: Check if booster/subscriber
+    // VIP Check
     const member = await message.guild.members.fetch(userId);
     const isBooster = member.premiumSince !== null;
-    const isSubscriber = member.roles.cache.has('1396682174408822885'); // subscriber role ID from gradients.json
+    const isSubscriber = member.roles.cache.has('1396682174408822885');
     const isVIP = isBooster || isSubscriber;
 
-    // Find rarest pawn (SKIP if VIP)
+    // Find rarest pawn
     const owned = db.prepare('SELECT itemName FROM user_items WHERE userId = ?').all(userId);
     const bestPawn = PAWN_ORDER.find(pawn => owned.some(i => i.itemName === pawn));
 
-    const canvas = createCanvas(900, 300);
+    // ──────────────────────────────────────────────────────────────
+    // CANVAS: 920×320 (900×300 card + 10px padding)
+    // ──────────────────────────────────────────────────────────────
+    const canvas = createCanvas(920, 320);
     const ctx = canvas.getContext('2d');
 
-    // ──────────────────────────────────────────────────────────────
-    // LOCAL BACKGROUND (unchanged)
-    // ──────────────────────────────────────────────────────────────
+    // ── LOCAL BACKGROUND (900×300, centered at 10,10) ──
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     const bgPath = path.join(__dirname, '..', 'assets', 'profile_bg.png');
@@ -88,30 +89,21 @@ export default {
         create: { width: 900, height: 300, channels: 4, background: '#2f3136' }
       }).png().toBuffer());
     }
-    ctx.drawImage(banner, 0, 0, 900, 300);
+    ctx.drawImage(banner, 10, 10, 900, 300); // ← centered with 10px margin
 
-    // Overlays
+    // Overlays (on inner card)
     ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.fillRect(0, 0, 900, 300);
+    ctx.fillRect(10, 10, 900, 300);
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.fillRect(0, 270, 900, 30);
-
-    // 🔥 NEW: PINK BORDER FOR BOOSTERS/SUBSCRIBERS
-    if (isVIP) {
-      ctx.strokeStyle = '#ff69b4'; // Hot pink
-      ctx.lineWidth = 5;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.strokeRect(6, 6, 888, 288); // Border inside canvas edges
-    }
+    ctx.fillRect(10, 280, 900, 30);
 
     // Avatar
     const avatar = await loadImg(target.displayAvatarURL({ size: 256, format: 'png', dynamic: false }));
     ctx.save();
     ctx.beginPath();
-    ctx.arc(150, 115, 75, 0, Math.PI * 2);
+    ctx.arc(160, 125, 75, 0, Math.PI * 2); // +10
     ctx.clip();
-    ctx.drawImage(avatar, 75, 40, 150, 150);
+    ctx.drawImage(avatar, 85, 50, 150, 150); // +10
     ctx.restore();
     ctx.lineWidth = 6;
     ctx.strokeStyle = 'white';
@@ -120,48 +112,55 @@ export default {
     // Username
     ctx.fillStyle = 'white';
     ctx.font = 'bold 44px Arial';
-    ctx.fillText(target.username.slice(0, 20), 250, 125);
+    ctx.fillText(target.username.slice(0, 20), 260, 135); // +10
 
     // Status
     ctx.fillStyle = 'white';
     ctx.font = '18px Arial';
     const status = profile.status.length > 90 ? profile.status.slice(0, 87) + '...' : profile.status;
-    ctx.fillText(status, 20, 290);
+    ctx.fillText(status, 30, 300); // +10
 
-    // Relationship Status (Single)
+    // Relationship
     const heart = await loadImg(EMOJI.heart);
-    ctx.drawImage(heart, 250, 130, 35, 35);
+    ctx.drawImage(heart, 260, 140, 35, 35); // +10
     ctx.fillStyle = 'white';
     ctx.font = 'bold 32px Arial';
     const spouseId = getSpouse(target.id);
     if (spouseId) {
-        const spouse = await message.client.users.fetch(spouseId);
-        ctx.fillText(`${spouse.username}`, 292, 158);
+      const spouse = await message.client.users.fetch(spouseId);
+      ctx.fillText(`${spouse.username}`, 302, 168); // +10
     } else {
-        ctx.fillText('Single', 292, 158);
+      ctx.fillText('Single', 302, 168);
     }
 
     // Balance
     const coins = await loadImg(EMOJI.coins);
-    ctx.drawImage(coins, 30, 210, 50, 50);
+    ctx.drawImage(coins, 40, 220, 50, 50); // +10
     ctx.fillStyle = '#f1c40f';
     ctx.font = 'bold 36px Arial';
-    ctx.fillText(balance.toLocaleString(), 85, 245);
+    ctx.fillText(balance.toLocaleString(), 95, 255); // +10
 
-    // 🔥 UPDATED: Rarest Pawn OR Subscriber Pawn
+    // Pawn
     if (isVIP) {
-      // VIP gets exclusive subscriber pawn
       const subscriberPawn = await loadImg(EMOJI.subscriber);
-      ctx.drawImage(subscriberPawn, 800, 40, 90, 90);
+      ctx.drawImage(subscriberPawn, 810, 50, 90, 90); // +10
     } else if (bestPawn && EMOJI.pawns[bestPawn]) {
-      // Regular users get their best pawn
       const pawn = await loadImg(EMOJI.pawns[bestPawn]);
-      ctx.drawImage(pawn, 800, 40, 90, 90);
+      ctx.drawImage(pawn, 810, 50, 90, 90);
+    }
+
+    // ── PINK OUTER BORDER (drawn last) ──
+    if (isVIP) {
+      ctx.strokeStyle = '#ff69b4';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeRect(5, 5, 910, 310); // full canvas - 5px inset
     }
 
     // Send
     await message.reply({
-      content: `**${target.username}'s server card**${isVIP ? ' ✨ **VIP**' : ''}`,
+      content: `**${target.username}'s server card**${isVIP ? ' VIP' : ''}`,
       files: [new AttachmentBuilder(canvas.toBuffer(), { name: 'profile.png' })],
       allowedMentions: { repliedUser: false }
     });
