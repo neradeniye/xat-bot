@@ -9,7 +9,7 @@ import path from 'path';
 const EMOJI = {
   heart: 'https://cdn.discordapp.com/emojis/1386783891150602411.png',
   coins: 'https://cdn.discordapp.com/emojis/1387149871987036260.png',
-  subscriber: 'https://cdn.discordapp.com/emojis/1396682174408822885.png',
+  subscriber: 'https://cdn.discordapp.com/emojis/1396632869673107556.png',
   pawns: {
     'Red Pawn': 'https://cdn.discordapp.com/emojis/1432123673812144208.png',
     'Brown Pawn': 'https://cdn.discordapp.com/emojis/1402336202345943183.png',
