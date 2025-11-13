@@ -151,8 +151,8 @@ export default {
 
     // ── PINK OUTER BORDER (drawn last) ──
     if (isVIP) {
-      ctx.strokeStyle = '#ff69b4';
-      ctx.lineWidth = 10;
+      ctx.strokeStyle = '#c184e3';
+      ctx.lineWidth = 6;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.strokeRect(5, 5, 910, 310); // full canvas - 5px inset
