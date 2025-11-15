@@ -41,7 +41,7 @@ export default {
       content: `
 **WEDDING BELLS!**
 **${message.author.username}** just married **${spouse.username}** for **1,000 xats**!
-Now update your status: \`.x setstatus Married to @${spouse.username}\`
+Now update your status: \`.x status Married to @${spouse.username}\`
       `.trim()
     });
   }
