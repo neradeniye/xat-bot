@@ -58,7 +58,7 @@ export default {
 
     const userId = target.id;
     const balance = getUserBalance(userId);
-    const profile = getUserProfile(userId) || { status: 'Use .x setstatus <text>', banner: 'default' };
+    const profile = getUserProfile(userId) || { status: 'Use .x status <text>', banner: 'default' };
 
     // VIP Check
     const member = await message.guild.members.fetch(userId);
