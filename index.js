@@ -7,13 +7,7 @@ import {
   getTopMessageUser,
   resetMessageCounts,
   addUserXats,
-  incrementMessageCount,
-  recordLeave,
-  getLeaveRecord,
-  removeLeaveRecord,
-  setCommandBan,
-  getCommandBan,
-  removeCommandBan
+  incrementMessageCount
 } from './db.js';
 
 global.lootboxActive = false;
@@ -119,30 +113,6 @@ client.on('messageCreate', async message => {
 
   if (!message.content.startsWith(prefix)) return;
 
-  // CHECK COMMAND BAN
-  const ban = getCommandBan(message.author.id);
-  if (ban) {
-    const remainingHours = Math.max(0, Math.ceil((ban.ban_end - now) / (1000 * 60 * 60)));
-    if (now < ban.ban_end) {
-      const mockMessages = [
-        `Oh look, the *server hopper* is back. No commands for **${remainingHours} hours**. Should’ve stayed loyal.`,
-        `You left. We noticed. Now wait **${remainingHours} hours** like the traitor you are.`,
-        `Welcome back, deserter! Commands locked for **${remainingHours} hours**. Enjoy the silence.`,
-        `You ghosted the server? Now the bot ghosts you for **${remainingHours} hours**.`,
-        `Haha, you thought you could just waltz back in? **${remainingHours}-hour timeout**, quitter.`,
-        `Leaving is a choice. So is this: **${remainingHours} hours** of no bot access. Cry about it.`,
-        `Back already? Too bad. **${remainingHours} hours** until you’re worthy again.`,
-        `You ditched us. Now sit in the corner for **${remainingHours} hours**. No commands.`,
-        `Pro tip: Don’t leave. Second tip: Wait **${remainingHours} hours** before trying again.`,
-        `The prodigal user returns... but the bot says: **${remainingHours} hours** of shame.`
-      ];
-      const mock = mockMessages[Math.floor(Math.random() * mockMessages.length)];
-      return message.reply(mock);
-    } else {
-      removeCommandBan(message.author.id); // Expired
-    }
-  }
-
   const args = message.content.slice(prefix.length).trim().split(/\s+/);
   const commandName = args.shift()?.toLowerCase();
   const command = commands.get(commandName);
@@ -173,27 +143,6 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
     } catch (err) {
       console.error('[BOOSTER CLEANUP ERROR]', err);
     }
-  }
-});
-
-// RECORD LEAVE
-client.on('guildMemberRemove', member => {
-  recordLeave(member.id);
-  console.log(`[LEAVE] Recorded: ${member.user.tag}`);
-});
-
-// APPLY 48-HOUR BAN ON REJOIN
-client.on('guildMemberAdd', member => {
-  const leaveRecord = getLeaveRecord(member.id);
-  if (leaveRecord) {
-    const banEnd = Date.now() + 48 * 60 * 60 * 1000; // 48 hours
-    setCommandBan(member.id, banEnd);
-    removeLeaveRecord(member.id);
-    console.log(`[REJOIN] 48-hour command ban applied to ${member.user.tag}`);
-
-    // Optional: DM or announce
-    member.send(`You left the server. As punishment, you cannot use bot commands for **48 hours**.\n\n*Don't leave again.*`)
-      .catch(() => console.log(`[DM] Could not DM ${member.user.tag}`));
   }
 });
 

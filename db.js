@@ -103,20 +103,6 @@ db.prepare(`
   )
 `).run();
 
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS leavers (
-    user_id TEXT PRIMARY KEY,
-    leave_time INTEGER
-  );
-`).run();
-
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS command_bans (
-    user_id TEXT PRIMARY KEY,
-    ban_end INTEGER
-  );
-`).run();
-
 // Get spouse
 export function getSpouse(userId) {
   const row = db.prepare(`
@@ -314,37 +300,6 @@ export function getLastGamble(userId) {
 
 export function setLastGamble(userId, timestamp) {
   db.prepare('INSERT OR REPLACE INTO gamble_cooldowns (user_id, last_gamble) VALUES (?, ?)').run(userId, timestamp);
-}
-
-export function recordLeave(userId) {
-  const timestamp = Date.now();
-  db.prepare(`
-    INSERT OR REPLACE INTO leavers (user_id, leave_time)
-    VALUES (?, ?)
-  `).run(userId, timestamp);
-}
-
-export function getLeaveRecord(userId) {
-  return db.prepare('SELECT * FROM leavers WHERE user_id = ?').get(userId);
-}
-
-export function removeLeaveRecord(userId) {
-  db.prepare('DELETE FROM leavers WHERE user_id = ?').run(userId);
-}
-
-export function setCommandBan(userId, banEndTimestamp) {
-  db.prepare(`
-    INSERT OR REPLACE INTO command_bans (user_id, ban_end)
-    VALUES (?, ?)
-  `).run(userId, banEndTimestamp);
-}
-
-export function getCommandBan(userId) {
-  return db.prepare('SELECT * FROM command_bans WHERE user_id = ?').get(userId);
-}
-
-export function removeCommandBan(userId) {
-  db.prepare('DELETE FROM command_bans WHERE user_id = ?').run(userId);
 }
 
 export { db };
