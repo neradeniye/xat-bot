@@ -103,6 +103,13 @@ db.prepare(`
   )
 `).run();
 
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS steal_cooldowns (
+    user_id TEXT PRIMARY KEY,
+    last_steal INTEGER
+  );
+`).run();
+
 // Get spouse
 export function getSpouse(userId) {
   const row = db.prepare(`
@@ -300,6 +307,15 @@ export function getLastGamble(userId) {
 
 export function setLastGamble(userId, timestamp) {
   db.prepare('INSERT OR REPLACE INTO gamble_cooldowns (user_id, last_gamble) VALUES (?, ?)').run(userId, timestamp);
+}
+
+export function getLastSteal(userId) {
+  const row = db.prepare('SELECT last_steal FROM steal_cooldowns WHERE user_id = ?').get(userId);
+  return row?.last_steal ?? 0;
+}
+
+export function setLastSteal(userId, timestamp) {
+  db.prepare('INSERT OR REPLACE INTO steal_cooldowns (user_id, last_steal) VALUES (?, ?)').run(userId, timestamp);
 }
 
 export { db };
