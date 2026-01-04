@@ -19,7 +19,8 @@ export default {
             '`x gamble` — Try your luck to earn or lose big every 6 hours',
             '`x transfer` — Transfer xats to another user',
             '`x claim` — Claim lootbox. (30 seconds or less.)',
-            '`x leaderboard` - Show the top 10 richest users'
+            '`x leaderboard` - Show the top 10 richest users',
+            '`x steal` - Steal from a user every 12 hours',
           ].join('\n'),
           inline: false
         },
