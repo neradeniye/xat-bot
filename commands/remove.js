@@ -41,9 +41,18 @@ export default {
     const target = message.mentions.users.first();
     if (!target) return message.reply('❌ Mention a valid user.');
 
+    // Find and remove the mention string from args to make parsing order-independent
+    const mentionStr = args.find(arg => arg.startsWith('<@') && arg.endsWith('>'));
+    if (mentionStr) {
+      const index = args.indexOf(mentionStr);
+      if (index > -1) args.splice(index, 1);
+    }
+
     switch (type) {
       case 'xats': {
-        const amount = parseInt(args[2], 10);
+        const amountStr = args[1];
+        if (!amountStr) return message.reply('❌ Provide a valid number of xats.');
+        const amount = parseInt(amountStr, 10);
         if (isNaN(amount)) return message.reply('❌ Provide a valid number of xats.');
         addUserXats(target.id, -amount);
         return message.reply(`✅ Removed ${amount} xats from ${target.username}.`);
@@ -51,7 +60,8 @@ export default {
 
       case 'item':
       case 'color': {
-        const name = args.slice(2).join(' ').toLowerCase();
+        const name = args.slice(1).join(' ').toLowerCase();
+        if (!name) return message.reply('❌ Provide the name of the item or color.');
         const item = shopItems.find(i => i.name.toLowerCase() === name && i.type === type);
         if (!item) return message.reply('❌ That item/color was not found in the shop.');
         if (!userOwnsItem(target.id, item.name)) return message.reply(`❌ ${target.username} does not own ${item.name}.`);
@@ -68,7 +78,7 @@ export default {
       }
 
       default:
-        return message.reply('❌ Usage:\n• `.x remove xats|item|color @user <amount or name>`\n• `.x remove custom` to delete your own custom color');
+        return message.reply('❌ Usage:\n• `.x remove xats|item|color @user <amount or name>`\n• `.x remove namecolor` to delete your own custom color');
     }
   }
 };
