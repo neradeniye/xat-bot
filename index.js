@@ -13,8 +13,8 @@ import {
 global.lootboxActive = false;
 global.lootboxClaimed = false;
 
-const REWARD_CHANNEL_ID = '1391230063600730272';
-const LOOTBOX_CHANNEL_ID = '1391230063600730272';
+const REWARD_CHANNEL_ID = '1484552931775742115';
+const LOOTBOX_CHANNEL_ID = '1484552931775742115';
 const cooldowns = new Map();
 const EXCLUDED_ROLE_ID = '1385722392764092558';
 
