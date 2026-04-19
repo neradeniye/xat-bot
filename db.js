@@ -110,6 +110,31 @@ db.prepare(`
   );
 `).run();
 
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS bot_config (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
+`).run();
+
+export function getConfig(key) {
+  const row = db.prepare('SELECT value FROM bot_config WHERE key = ?').get(key);
+  return row ? row.value : null;
+}
+
+export function setConfig(key, value) {
+  db.prepare('INSERT OR REPLACE INTO bot_config (key, value) VALUES (?, ?)').run(key, value);
+}
+
+// Get current rotator channel ID
+export function getRotatorChannelId() {
+  return getConfig('rotator_current_channel');
+}
+
+export function setRotatorChannelId(channelId) {
+  setConfig('rotator_current_channel', channelId);
+}
+
 // Get spouse
 export function getSpouse(userId) {
   const row = db.prepare(`
