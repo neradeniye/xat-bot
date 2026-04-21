@@ -97,7 +97,7 @@ client.once('ready', () => {
         type: 0,
         permissionOverwrites: sourceChannel.permissionOverwrites.cache,
         parent: sourceChannel.parentId,
-        topic: sourceChannel.topic || `Main channel • Last cleared: <t:${Math.floor(Date.now()/1000)}:R>`,
+        topic: sourceChannel.topic || `Main chatting channel (Refreshes every 12 hours.)`,
         nsfw: sourceChannel.nsfw,
         rateLimitPerUser: sourceChannel.rateLimitPerUser,
         reason: 'Channel rotator - creating fresh clone'
