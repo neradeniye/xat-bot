@@ -8,9 +8,6 @@ import {
   resetMessageCounts,
   addUserXats,
   incrementMessageCount,
-  getRotatorChannelId,
-  setRotatorChannelId,
-  // Add these if you use them in guildMemberUpdate:
   getUserColorRole,
   removeUserColorRole,
   getUserGradient,
@@ -50,91 +47,16 @@ client.once('ready', () => {
   console.log(`🟢 Logged in as ${client.user.tag}`);
   client.user.setActivity('for .x help', { type: 3 });
 
-  // ====================== CHANNEL ROTATOR ======================
-  const ROTATOR_INTERVAL_MS = 12 * 60 * 60 * 1000; // 12 hours
+  // ====================== STATIC MAIN CHANNEL ======================
+  const MAIN_CHANNEL_ID = '1501991896052924596';   // ← Change this to your main chat channel ID
 
-  const TARGET_CHANNEL_NAME = "・flirt";           
-  const TEMPLATE_CHANNEL_ID = "1495207571873726584";
-
-  async function rotateChannel() {
-    const guild = client.guilds.cache.first();
-    if (!guild) return console.error('[Rotator] Guild not found');
-
-    const currentChannelId = getRotatorChannelId();
-    let currentChannel = currentChannelId ? guild.channels.cache.get(currentChannelId) : null;
-
-    let sourceChannel = currentChannel;
-
-    if (!sourceChannel && TEMPLATE_CHANNEL_ID) {
-      sourceChannel = guild.channels.cache.get(TEMPLATE_CHANNEL_ID);
-      if (!sourceChannel) {
-        console.error(`[Rotator] Template channel ${TEMPLATE_CHANNEL_ID} not found!`);
-        return;
-      }
-      console.log(`[Rotator] First run — cloning from template: ${sourceChannel.name}`);
-    }
-
-    if (!sourceChannel) {
-      console.error('[Rotator] No source channel available.');
-      return;
-    }
-
-    // Delete old channel
-    if (currentChannel) {
-      try {
-        await currentChannel.delete('Channel rotator - replacing with fresh clone');
-        console.log(`[Rotator] Deleted old channel: ${currentChannel.name}`);
-      } catch (err) {
-        console.error('[Rotator] Failed to delete old channel:', err.message);
-      }
-    }
-
-    if (currentChannel) await new Promise(r => setTimeout(r, 1500));
-
-    try {
-      const newChannel = await guild.channels.create({
-        name: TARGET_CHANNEL_NAME,
-        type: 0,
-        permissionOverwrites: sourceChannel.permissionOverwrites.cache,
-        parent: sourceChannel.parentId,
-        topic: sourceChannel.topic || `Main chatting channel (Refreshes every 12 hours.)`,
-        nsfw: sourceChannel.nsfw,
-        rateLimitPerUser: sourceChannel.rateLimitPerUser,
-        reason: 'Channel rotator - creating fresh clone'
-      });
-
-      // Move to top
-      const channelsInSameParent = guild.channels.cache
-        .filter(ch => ch.type === 0 && ch.parentId === newChannel.parentId)
-        .sort((a, b) => a.position - b.position);
-
-      const topPosition = channelsInSameParent.size > 0 ? channelsInSameParent.first().position : 0;
-      await newChannel.setPosition(topPosition, { reason: 'Channel rotator - moving to top' });
-
-      setRotatorChannelId(newChannel.id);
-      console.log(`[Rotator] ✅ Created & moved new channel to TOP: ${newChannel.name} (${newChannel.id})`);
-
-      await newChannel.send({
-        content: `**Main chat channel has been refreshed!**\nAll old messages have been purged.\nThis channel will automatically clear every 12 hours.`
-      });
-
-    } catch (err) {
-      console.error('[Rotator] Failed to create/move new channel:', err);
-    }
-  }
-
-  console.log(`[Rotator] Starting automatic channel rotation every 12 hours...`);
-  rotateChannel();
-  setInterval(rotateChannel, ROTATOR_INTERVAL_MS);
-
-  // ====================== HELPER ======================
   async function getMainChannel(guild) {
-    const storedId = getRotatorChannelId();
-    if (storedId) {
-      const ch = guild.channels.cache.get(storedId);
-      if (ch) return ch;
+    const channel = guild.channels.cache.get(MAIN_CHANNEL_ID);
+    if (!channel) {
+      console.error(`[Main Channel] Channel with ID ${MAIN_CHANNEL_ID} not found!`);
+      return null;
     }
-    return guild.channels.cache.find(ch => ch.type === 0 && ch.name === TARGET_CHANNEL_NAME);
+    return channel;
   }
 
   // ====================== REWARD SYSTEM (every 12 hours) ======================
@@ -146,9 +68,7 @@ client.once('ready', () => {
     if (!guild) return;
 
     const channel = await getMainChannel(guild);
-    if (!channel) {
-      return console.error('[Reward] Could not find main channel.');
-    }
+    if (!channel) return;
 
     const member = await guild.members.fetch(topUser.user_id).catch(() => null);
     if (!member || member.roles.cache.has(EXCLUDED_ROLE_ID)) {
@@ -165,7 +85,7 @@ client.once('ready', () => {
 
   // ====================== LOOTBOX SYSTEM ======================
   function scheduleLootbox() {
-    const delay = Math.floor(Math.random() * (4 - 2 + 1) + 2) * 60 * 60 * 1000;
+    const delay = Math.floor(Math.random() * (4 - 2 + 1) + 2) * 60 * 60 * 1000; // 2–6 hours
 
     setTimeout(async () => {
       const guild = client.guilds.cache.first();
@@ -173,7 +93,7 @@ client.once('ready', () => {
 
       const channel = await getMainChannel(guild);
       if (!channel) {
-        console.error('[Lootbox] Could not find main channel.');
+        console.error('[Lootbox] Main channel not found.');
         return scheduleLootbox();
       }
 
@@ -181,7 +101,7 @@ client.once('ready', () => {
       global.lootboxClaimed = false;
 
       await channel.send('🎁 A lootbox has appeared! Type `.x claim` to get the reward!');
-      console.log('[Lootbox] Spawned in main channel.');
+      console.log('[Lootbox] Spawned.');
 
       setTimeout(async () => {
         if (!global.lootboxClaimed) {
@@ -190,7 +110,7 @@ client.once('ready', () => {
         }
       }, 15_000);
 
-      scheduleLootbox();
+      scheduleLootbox(); // next one
     }, delay);
   }
 
