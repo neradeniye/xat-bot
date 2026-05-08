@@ -45,7 +45,7 @@ const client = new Client({
 
 client.once('ready', () => {
   console.log(`🟢 Logged in as ${client.user.tag}`);
-  client.user.setActivity('for .x helps', { type: 3 });
+  client.user.setActivity('for .x helps2', { type: 3 });
 
   // ====================== STATIC MAIN CHANNEL ======================
   const MAIN_CHANNEL_ID = '1501991896052924596';   // ← Change this to your main chat channel ID
