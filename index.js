@@ -48,7 +48,7 @@ client.once('ready', () => {
   client.user.setActivity('for .x help', { type: 3 });
 
   // ====================== STATIC MAIN CHANNEL ======================
-  const MAIN_CHANNEL_ID = '1501991896052924596';   // ← Change this to your main chat channel ID
+  const MAIN_CHANNEL_ID = '1502176270518325310';   // ← Change this to your main chat channel ID
 
   async function getMainChannel(guild) {
     const channel = guild.channels.cache.get(MAIN_CHANNEL_ID);
