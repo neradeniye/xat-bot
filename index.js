@@ -108,7 +108,7 @@ client.once('ready', () => {
           global.lootboxActive = false;
           await channel.send('💥 Sorry! Nobody claimed the lootbox. It has been destroyed!');
         }
-      }, 15_000);
+      }, 45_000);
 
       scheduleLootbox(); // next one
     }, delay);
