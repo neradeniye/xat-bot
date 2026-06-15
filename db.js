@@ -374,6 +374,16 @@ try {
   }
 }
 
+// IMPOSTER SYSTEM
+export function getRecentActiveUsers(limit = 20) {
+  return db.prepare(`
+    SELECT user_id 
+    FROM message_counts 
+    ORDER BY count DESC 
+    LIMIT ?
+  `).all(limit);
+}
+
 // ====================== SLOTS FUNCTIONS ======================
 export function getLastSlots(userId) {
   try {
@@ -396,5 +406,6 @@ export function setLastSlots(userId, timestamp) {
     console.error('Error setting last slots:', err.message);
   }
 }
+
 
 export { db };
