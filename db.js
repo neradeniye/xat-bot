@@ -359,18 +359,42 @@ export function removeUserBanner(userId) {
   db.prepare('DELETE FROM user_banners WHERE user_id = ?').run(userId);
 }
 
-// SLOTS COOLDOWN
+// ====================== SLOTS COOLDOWN MIGRATION (AUTO-FIX) ======================
+try {
+  // Try to see if the column exists
+  db.prepare('SELECT last_slots FROM daily_rewards LIMIT 1').get();
+  console.log('✅ last_slots column already exists');
+} catch (err) {
+  if (err.message.includes('no such column')) {
+    console.log('🔧 Adding missing last_slots column...');
+    db.prepare('ALTER TABLE daily_rewards ADD COLUMN last_slots INTEGER DEFAULT 0').run();
+    console.log('✅ last_slots column added successfully!');
+  } else {
+    console.error('Error checking slots column:', err.message);
+  }
+}
+
+// ====================== SLOTS FUNCTIONS ======================
 export function getLastSlots(userId) {
-  const row = db.prepare('SELECT last_slots FROM daily_rewards WHERE user_id = ?').get(userId);
-  return row?.last_slots ?? 0;
+  try {
+    const row = db.prepare('SELECT last_slots FROM daily_rewards WHERE user_id = ?').get(userId);
+    return row?.last_slots ?? 0;
+  } catch (err) {
+    console.error('Error getting last slots:', err.message);
+    return 0;
+  }
 }
 
 export function setLastSlots(userId, timestamp) {
-  db.prepare(`
-    INSERT INTO daily_rewards (user_id, last_slots)
-    VALUES (?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET last_slots = excluded.last_slots
-  `).run(userId, timestamp);
+  try {
+    db.prepare(`
+      INSERT INTO daily_rewards (user_id, last_slots)
+      VALUES (?, ?)
+      ON CONFLICT(user_id) DO UPDATE SET last_slots = excluded.last_slots
+    `).run(userId, timestamp);
+  } catch (err) {
+    console.error('Error setting last slots:', err.message);
+  }
 }
 
 export { db };
