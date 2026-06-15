@@ -325,14 +325,6 @@ export function setUserStatus(userId, status) {
   }
 }
 
-export function setUserBanner(userId, bannerName) {
-  db.prepare(`
-    INSERT INTO user_profiles (user_id, banner) 
-    VALUES (?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET banner = excluded.banner
-  `).run(userId, bannerName);
-}
-
 export function getLastGamble(userId) {
   const row = db.prepare('SELECT last_gamble FROM gamble_cooldowns WHERE user_id = ?').get(userId);
   return row?.last_gamble ?? 0;

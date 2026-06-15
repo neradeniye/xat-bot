@@ -1,4 +1,4 @@
-// commands/profile.js — CUSTOM BANNER + GRADIENT GLOW
+// commands/profile.js — CUSTOM BANNER + SMART COVER MODE + GRADIENT GLOW
 import { AttachmentBuilder } from 'discord.js';
 import { createCanvas, loadImage } from 'canvas';
 import sharp from 'sharp';
@@ -50,6 +50,26 @@ async function loadImg(url) {
   }
 }
 
+// SMART COVER MODE — No stretching, intelligent cropping
+function drawCoverImage(ctx, img, x, y, w, h) {
+  const imgRatio = img.width / img.height;
+  const targetRatio = w / h;
+
+  let sourceX = 0, sourceY = 0, sourceW = img.width, sourceH = img.height;
+
+  if (imgRatio > targetRatio) {
+    // Image is wider → crop left/right
+    sourceW = img.height * targetRatio;
+    sourceX = (img.width - sourceW) / 2;
+  } else {
+    // Image is taller → crop top/bottom
+    sourceH = img.width / targetRatio;
+    sourceY = (img.height - sourceH) / 2;
+  }
+
+  ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, x, y, w, h);
+}
+
 export default {
   name: 'profile',
   async execute(message, args) {
@@ -68,7 +88,6 @@ export default {
 
     // === CUSTOM BANNER SUPPORT ===
     const customBannerUrl = getUserBanner(userId);
-    let bannerUrl = customBannerUrl;
 
     // Find rarest pawn
     const owned = db.prepare('SELECT itemName FROM user_items WHERE userId = ?').all(userId);
@@ -77,23 +96,25 @@ export default {
     const canvas = createCanvas(920, 320);
     const ctx = canvas.getContext('2d');
 
-    // Load Background (Custom > Local > Fallback)
-    let banner;
-    if (bannerUrl) {
-      banner = await loadImg(bannerUrl);
+    // Load & Draw Banner with SMART COVER MODE
+    let bannerImg;
+    if (customBannerUrl) {
+      bannerImg = await loadImg(customBannerUrl);
     } else {
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
       const bgPath = path.join(__dirname, '..', 'assets', 'profile_bg.png');
       try {
-        banner = await loadImage(bgPath);
+        bannerImg = await loadImage(bgPath);
       } catch (err) {
-        banner = await loadImage(await sharp({
+        bannerImg = await loadImage(await sharp({
           create: { width: 900, height: 300, channels: 4, background: '#2f3136' }
         }).png().toBuffer());
       }
     }
-    ctx.drawImage(banner, 10, 10, 900, 300);
+
+    // Draw with smart cropping (this is the key part)
+    drawCoverImage(ctx, bannerImg, 10, 10, 900, 300);
 
     // Overlays
     ctx.fillStyle = 'rgba(0,0,0,0.65)';
@@ -169,7 +190,6 @@ export default {
       ctx.shadowBlur = 20;
 
       ctx.strokeRect(6, 6, 908, 308);
-
       ctx.shadowBlur = 0;
     }
 
