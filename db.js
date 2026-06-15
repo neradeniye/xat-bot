@@ -359,4 +359,18 @@ export function removeUserBanner(userId) {
   db.prepare('DELETE FROM user_banners WHERE user_id = ?').run(userId);
 }
 
+// SLOTS COOLDOWN
+export function getLastSlots(userId) {
+  const row = db.prepare('SELECT last_slots FROM daily_rewards WHERE user_id = ?').get(userId);
+  return row?.last_slots ?? 0;
+}
+
+export function setLastSlots(userId, timestamp) {
+  db.prepare(`
+    INSERT INTO daily_rewards (user_id, last_slots)
+    VALUES (?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET last_slots = excluded.last_slots
+  `).run(userId, timestamp);
+}
+
 export { db };
