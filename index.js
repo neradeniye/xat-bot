@@ -11,7 +11,9 @@ import {
   getUserColorRole,
   removeUserColorRole,
   getUserGradient,
-  removeUserGradient
+  removeUserGradient,
+  getUserBanner,      // ← Added
+  removeUserBanner    // ← Added
 } from './db.js';
 
 global.lootboxActive = false;
@@ -47,8 +49,7 @@ client.once('ready', () => {
   console.log(`🟢 Logged in as ${client.user.tag}`);
   client.user.setActivity('for .x help', { type: 3 });
 
-  // ====================== STATIC MAIN CHANNEL ======================
-  const MAIN_CHANNEL_ID = '1502176270518325310';   // ← Change this to your main chat channel ID
+  const MAIN_CHANNEL_ID = '1502176270518325310';
 
   async function getMainChannel(guild) {
     const channel = guild.channels.cache.get(MAIN_CHANNEL_ID);
@@ -59,7 +60,7 @@ client.once('ready', () => {
     return channel;
   }
 
-  // ====================== REWARD SYSTEM (every 12 hours) ======================
+  // Reward System
   setInterval(async () => {
     const topUser = getTopMessageUser();
     if (!topUser) return console.log('[Reward] No top user found.');
@@ -83,19 +84,16 @@ client.once('ready', () => {
     resetMessageCounts();
   }, 43_200_000);
 
-  // ====================== LOOTBOX SYSTEM ======================
+  // Lootbox System
   function scheduleLootbox() {
-    const delay = Math.floor(Math.random() * (4 - 2 + 1) + 2) * 60 * 60 * 1000; // 2–6 hours
+    const delay = Math.floor(Math.random() * (4 - 2 + 1) + 2) * 60 * 60 * 1000;
 
     setTimeout(async () => {
       const guild = client.guilds.cache.first();
       if (!guild) return scheduleLootbox();
 
       const channel = await getMainChannel(guild);
-      if (!channel) {
-        console.error('[Lootbox] Main channel not found.');
-        return scheduleLootbox();
-      }
+      if (!channel) return scheduleLootbox();
 
       global.lootboxActive = true;
       global.lootboxClaimed = false;
@@ -110,14 +108,14 @@ client.once('ready', () => {
         }
       }, 45_000);
 
-      scheduleLootbox(); // next one
+      scheduleLootbox();
     }, delay);
   }
 
-  scheduleLootbox(); // Start lootbox scheduler
+  scheduleLootbox();
 });
 
-// ====================== MESSAGE HANDLER ======================
+// Message Handler
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
 
@@ -138,7 +136,7 @@ client.on('messageCreate', async message => {
   if (command) command.execute(message, args, client);
 });
 
-// ====================== BOOSTER CLEANUP ======================
+// BOOSTER CLEANUP (Colors + Gradient + CUSTOM BANNER)
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   const userId = newMember.id;
   const wasBoosting = oldMember.premiumSince;
@@ -146,19 +144,29 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
 
   if (wasBoosting && !isBoosting) {
     try {
+      // Remove custom color role
       const colorRecord = getUserColorRole(userId);
       if (colorRecord?.role_id) {
         const role = newMember.guild.roles.cache.get(colorRecord.role_id);
-        if (role) await role.delete('User stopped boosting');
+        if (role) await role.delete('User stopped boosting - removing custom color');
         removeUserColorRole(userId);
       }
 
+      // Remove gradient role
       const gradRecord = getUserGradient(userId);
       if (gradRecord?.role_id) {
         const role = newMember.guild.roles.cache.get(gradRecord.role_id);
         if (role) await newMember.roles.remove(role);
         removeUserGradient(userId);
       }
+
+      // NEW: Remove custom banner
+      const bannerRecord = getUserBanner(userId);
+      if (bannerRecord) {
+        removeUserBanner(userId);
+        console.log(`[BOOSTER CLEANUP] Removed custom banner from ${newMember.user.tag}`);
+      }
+
     } catch (err) {
       console.error('[BOOSTER CLEANUP ERROR]', err);
     }

@@ -117,6 +117,14 @@ db.prepare(`
   );
 `).run();
 
+// CUSTOM BANNER SYSTEM (BOOSTERS ONLY)
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS user_banners (
+    user_id TEXT PRIMARY KEY,
+    banner_url TEXT NOT NULL
+  )
+`).run();
+
 export function getConfig(key) {
   const row = db.prepare('SELECT value FROM bot_config WHERE key = ?').get(key);
   return row ? row.value : null;
@@ -341,6 +349,22 @@ export function getLastSteal(userId) {
 
 export function setLastSteal(userId, timestamp) {
   db.prepare('INSERT OR REPLACE INTO steal_cooldowns (user_id, last_steal) VALUES (?, ?)').run(userId, timestamp);
+}
+
+export function getUserBanner(userId) {
+  return db.prepare('SELECT banner_url FROM user_banners WHERE user_id = ?').get(userId)?.banner_url || null;
+}
+
+export function setUserBanner(userId, bannerUrl) {
+  db.prepare(`
+    INSERT INTO user_banners (user_id, banner_url)
+    VALUES (?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET banner_url = excluded.banner_url
+  `).run(userId, bannerUrl);
+}
+
+export function removeUserBanner(userId) {
+  db.prepare('DELETE FROM user_banners WHERE user_id = ?').run(userId);
 }
 
 export { db };

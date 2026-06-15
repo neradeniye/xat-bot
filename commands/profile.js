@@ -1,8 +1,8 @@
-// commands/profile.js — GRADIENT GLOW BORDER FOR VIPs
+// commands/profile.js — CUSTOM BANNER + GRADIENT GLOW
 import { AttachmentBuilder } from 'discord.js';
 import { createCanvas, loadImage } from 'canvas';
 import sharp from 'sharp';
-import { getUserBalance, getUserProfile, db, getSpouse } from '../db.js';
+import { getUserBalance, getUserProfile, db, getSpouse, getUserBanner } from '../db.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -58,34 +58,40 @@ export default {
 
     const userId = target.id;
     const balance = getUserBalance(userId);
-    const profile = getUserProfile(userId) || { status: 'Use .x status <text>', banner: 'default' };
+    const profile = getUserProfile(userId) || { status: 'Use .x setstatus <text>', banner: 'default' };
 
-    // VIP Check
+    // VIP / Booster Check
     const member = await message.guild.members.fetch(userId);
     const isBooster = member.premiumSince !== null;
     const isSubscriber = member.roles.cache.has('1396682174408822885');
     const isVIP = isBooster || isSubscriber;
 
+    // === CUSTOM BANNER SUPPORT ===
+    const customBannerUrl = getUserBanner(userId);
+    let bannerUrl = customBannerUrl;
+
     // Find rarest pawn
     const owned = db.prepare('SELECT itemName FROM user_items WHERE userId = ?').all(userId);
     const bestPawn = PAWN_ORDER.find(pawn => owned.some(i => i.itemName === pawn));
 
-    // Canvas: 920×320 (900×300 + 10px padding)
     const canvas = createCanvas(920, 320);
     const ctx = canvas.getContext('2d');
 
-    // LOCAL BACKGROUND
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-    const bgPath = path.join(__dirname, '..', 'assets', 'profile_bg.png');
+    // Load Background (Custom > Local > Fallback)
     let banner;
-    try {
-      banner = await loadImage(bgPath);
-    } catch (err) {
-      console.warn('[Profile] Local background not found:', bgPath);
-      banner = await loadImage(await sharp({
-        create: { width: 900, height: 300, channels: 4, background: '#2f3136' }
-      }).png().toBuffer());
+    if (bannerUrl) {
+      banner = await loadImg(bannerUrl);
+    } else {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const bgPath = path.join(__dirname, '..', 'assets', 'profile_bg.png');
+      try {
+        banner = await loadImage(bgPath);
+      } catch (err) {
+        banner = await loadImage(await sharp({
+          create: { width: 900, height: 300, channels: 4, background: '#2f3136' }
+        }).png().toBuffer());
+      }
     }
     ctx.drawImage(banner, 10, 10, 900, 300);
 
@@ -138,7 +144,7 @@ export default {
     ctx.font = 'bold 36px Arial';
     ctx.fillText(balance.toLocaleString(), 95, 255);
 
-    // Pawn
+    // Pawn / Subscriber Icon
     if (isVIP) {
       const subscriberPawn = await loadImg(EMOJI.subscriber);
       ctx.drawImage(subscriberPawn, 810, 50, 90, 90);
@@ -150,30 +156,26 @@ export default {
     // GRADIENT GLOW BORDER (VIP ONLY)
     if (isVIP) {
       const gradient = ctx.createLinearGradient(0, 0, 920, 320);
-      gradient.addColorStop(0, '#ff69b4');    // Hot Pink
-      gradient.addColorStop(0.3, '#d946ef');  // Purple
-      gradient.addColorStop(0.7, '#8b5cf6');  // Violet
-      gradient.addColorStop(1, '#3b82f6');    // Blue
+      gradient.addColorStop(0, '#ff69b4');
+      gradient.addColorStop(0.3, '#d946ef');
+      gradient.addColorStop(0.7, '#8b5cf6');
+      gradient.addColorStop(1, '#3b82f6');
 
       ctx.strokeStyle = gradient;
       ctx.lineWidth = 5;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-
-      // Glow
       ctx.shadowColor = '#ff69b4';
       ctx.shadowBlur = 20;
 
-      // Draw outer stroke
-      ctx.strokeRect(6, 6, 908, 308); // 920-12, 320-12
+      ctx.strokeRect(6, 6, 908, 308);
 
-      // Reset shadow
       ctx.shadowBlur = 0;
     }
 
     // Send
     await message.reply({
-      content: `**${target.username}'s server card**${isVIP ? ' VIP' : ''}`,
+      content: `**${target.username}'s server card**${isVIP ? ' ✨ VIP' : ''}`,
       files: [new AttachmentBuilder(canvas.toBuffer(), { name: 'profile.png' })],
       allowedMentions: { repliedUser: false }
     });
