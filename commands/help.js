@@ -17,6 +17,7 @@ export default {
             '`x inventory` — View your owned colors and items',
             '`x daily` — Earn 100 xats every 12 hours',
             '`x gamble` — Try your luck to earn or lose big every 6 hours',
+            '`x slots` — Try your luck to earn or lose 50 xats every 6 hours',
             '`x transfer` — Transfer xats to another user',
             '`x claim` — Claim lootbox. (30 seconds or less.)',
             '`x leaderboard` - Show the top 10 richest users',
