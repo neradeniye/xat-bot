@@ -2,9 +2,6 @@
 import { db } from '../db.js';
 import { Buffer } from 'buffer';
 
-// (Optional one-time migration)
-// db.prepare(`ALTER TABLE user_custom_roles ADD COLUMN role_emoji TEXT;`).run();
-
 export default {
   name: 'custom',
   async execute(message, args, client) {
@@ -12,19 +9,20 @@ export default {
     const userId = message.author.id;
     const member = await guild.members.fetch(userId);
 
-    // ✅ Correct check for "Custom" item ownership using your actual table and columns
+    // ✅ New: Boosters get free access to custom roles while boosting
+    const isBooster = !!member.premiumSince;
     const ownsCustomItem = db
       .prepare('SELECT 1 FROM user_items WHERE userId = ? AND itemName = ?')
       .get(userId, 'Custom');
 
-    if (!ownsCustomItem) {
-      return message.reply('🚫 You must own the **Custom** item to use this command.');
+    if (!ownsCustomItem && !isBooster) {
+      return message.reply('🚫 You must own the **Custom** item **or** be a server booster to use this command.');
     }
 
     // Check for existing record
     const existing = db.prepare('SELECT role_id, role_emoji FROM user_custom_roles WHERE user_id = ?').get(userId);
 
-    // If user typed "disable"
+    // If user typed "disable" / "remove"
     if (args[0]?.toLowerCase() === 'remove') {
       if (!existing) return message.reply('⚠️ You don’t currently have a custom role to remove.');
 
@@ -46,7 +44,7 @@ return message.reply('❌ Please provide a name for your custom role.\nExample: 
     let roleNameParts = [...args];
 
     const isUrl = /^(https?:\/\/)/i.test(lastArg);
-    const isUnicodeEmoji = /[^\u0000-\u007F]/.test(lastArg);
+    const isUnicodeEmoji = /[^\u0000-\u007F]/.test(lastArg); // better unicode check
     const customEmojiMatch = lastArg.match(/^<a?:\w+:(\d+)>$/);
 
     if (isUrl || isUnicodeEmoji || customEmojiMatch) {
@@ -66,7 +64,7 @@ return message.reply('❌ Please provide a name for your custom role.\nExample: 
       role = guild.roles.cache.get(existing.role_id) || await guild.roles.fetch(existing.role_id).catch(() => null);
     }
 
-    // If the role exists, update its name and emoji/icon
+    // Update existing role
     if (role) {
       const updateData = { name: roleName };
       let newEmoji = emojiArg || existing.role_emoji;
@@ -80,7 +78,7 @@ return message.reply('❌ Please provide a name for your custom role.\nExample: 
           const buffer = Buffer.from(await res.arrayBuffer());
 
           if (buffer.length > 256 * 1024) {
-            return message.reply('⚠️ Image too large (max 256KB). Use a smaller image.');
+            return message.reply('⚠️ Image too large (max 256KB).');
           }
 
           updateData.icon = buffer;
@@ -97,7 +95,7 @@ return message.reply('❌ Please provide a name for your custom role.\nExample: 
       return message.reply(`✏️ Your custom role has been updated to **${roleName}**${emojiArg ? ' with new emoji/icon.' : '.'}`);
     }
 
-    // Otherwise, create a new role
+    // Create new role
     const botMember = await guild.members.fetch(client.user.id);
     const botRole = botMember.roles.highest;
 
@@ -120,13 +118,13 @@ return message.reply('❌ Please provide a name for your custom role.\nExample: 
         const buffer = Buffer.from(await res.arrayBuffer());
 
         if (buffer.length > 256 * 1024) {
-          return message.reply('⚠️ Image too large (max 256KB). Use a smaller image.');
+          return message.reply('⚠️ Image too large (max 256KB).');
         }
 
         roleData.icon = buffer;
       } catch (err) {
         console.error('Failed to fetch image:', err);
-        return message.reply('❌ Could not download image. Make sure it’s a direct link (PNG/JPG/WebP).');
+        return message.reply('❌ Could not download image. Make sure it’s a direct link.');
       }
     }
 
