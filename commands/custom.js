@@ -2,9 +2,6 @@
 import { db } from '../db.js';
 import { Buffer } from 'buffer';
 
-// (Optional one-time migration)
-// db.prepare(`ALTER TABLE user_custom_roles ADD COLUMN role_emoji TEXT;`).run();
-
 export default {
   name: 'custom',
   async execute(message, args, client) {
@@ -12,19 +9,20 @@ export default {
     const userId = message.author.id;
     const member = await guild.members.fetch(userId);
 
-    // ✅ Correct check for "Custom" item ownership using your actual table and columns
+    // ✅ New: Boosters get free access to custom roles while boosting
+    const isBooster = !!member.premiumSince;
     const ownsCustomItem = db
       .prepare('SELECT 1 FROM user_items WHERE userId = ? AND itemName = ?')
       .get(userId, 'Custom');
 
-    if (!ownsCustomItem) {
-      return message.reply('🚫 You must own the **Custom** item to use this command.');
+    if (!ownsCustomItem && !isBooster) {
+      return message.reply('🚫 You must own the **Custom** item **or** be a server booster to use this command.');
     }
 
     // Check for existing record
     const existing = db.prepare('SELECT role_id, role_emoji FROM user_custom_roles WHERE user_id = ?').get(userId);
 
-    // If user typed "disable"
+    // If user typed "disable" / "remove"
     if (args[0]?.toLowerCase() === 'remove') {
       if (!existing) return message.reply('⚠️ You don’t currently have a custom role to remove.');
 
@@ -37,7 +35,9 @@ export default {
 
     // Must include at least a name
     if (args.length < 1) {
-      return message.reply('❌ Please provide a name for your custom role.\nExample: `.x custom Pink Pawn 💖` or to add a custom icon `.x custom NameHere https://cdn.discordapp.com/emojis/XXXXXXXXXXXX.webp?size=160` (but rename the .webp to png) and to remove: `.x custom remove` to remove the role.');
+      return message.reply('❌ Please provide a name for your custom role.\n' +
+        'Example: `.x custom Pink Pawn 💖` or `.x custom NameHere https://cdn...` (PNG/JPG/WebP)\n' +
+        'To remove: `.x custom remove`');
     }
 
     // Parse role name and optional emoji/url
@@ -46,7 +46,7 @@ export default {
     let roleNameParts = [...args];
 
     const isUrl = /^(https?:\/\/)/i.test(lastArg);
-    const isUnicodeEmoji = /[^\u0000-\u007F]/.test(lastArg);
+    const isUnicodeEmoji = /[^\u0000-\u007F]/.test(lastArg); // better unicode check
     const customEmojiMatch = lastArg.match(/^<a?:\w+:(\d+)>$/);
 
     if (isUrl || isUnicodeEmoji || customEmojiMatch) {
@@ -66,7 +66,7 @@ export default {
       role = guild.roles.cache.get(existing.role_id) || await guild.roles.fetch(existing.role_id).catch(() => null);
     }
 
-    // If the role exists, update its name and emoji/icon
+    // Update existing role
     if (role) {
       const updateData = { name: roleName };
       let newEmoji = emojiArg || existing.role_emoji;
@@ -80,7 +80,7 @@ export default {
           const buffer = Buffer.from(await res.arrayBuffer());
 
           if (buffer.length > 256 * 1024) {
-            return message.reply('⚠️ Image too large (max 256KB). Use a smaller image.');
+            return message.reply('⚠️ Image too large (max 256KB).');
           }
 
           updateData.icon = buffer;
@@ -97,7 +97,7 @@ export default {
       return message.reply(`✏️ Your custom role has been updated to **${roleName}**${emojiArg ? ' with new emoji/icon.' : '.'}`);
     }
 
-    // Otherwise, create a new role
+    // Create new role
     const botMember = await guild.members.fetch(client.user.id);
     const botRole = botMember.roles.highest;
 
@@ -120,13 +120,13 @@ export default {
         const buffer = Buffer.from(await res.arrayBuffer());
 
         if (buffer.length > 256 * 1024) {
-          return message.reply('⚠️ Image too large (max 256KB). Use a smaller image.');
+          return message.reply('⚠️ Image too large (max 256KB).');
         }
 
         roleData.icon = buffer;
       } catch (err) {
         console.error('Failed to fetch image:', err);
-        return message.reply('❌ Could not download image. Make sure it’s a direct link (PNG/JPG/WebP).');
+        return message.reply('❌ Could not download image. Make sure it’s a direct link.');
       }
     }
 

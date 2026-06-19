@@ -407,5 +407,13 @@ export function setLastSlots(userId, timestamp) {
   }
 }
 
+export function getUserCustomRole(userId) {
+  return db.prepare('SELECT role_id FROM user_custom_roles WHERE user_id = ?').get(userId);
+}
+
+export function removeUserCustomRole(userId) {
+  db.prepare('DELETE FROM user_custom_roles WHERE user_id = ?').run(userId);
+}
+
 
 export { db };

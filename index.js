@@ -14,10 +14,13 @@ import {
   removeUserGradient,
   getUserBanner,
   removeUserBanner,
-  getRecentActiveUsers   // ← Added for Imposter
+  getRecentActiveUsers,
+  // Add these two new imports:
+  getUserCustomRole,
+  removeUserCustomRole
 } from './db.js';
 
-import { setCurrentImposter } from './commands/choose.js'; // ← Added for Imposter
+import { setCurrentImposter } from './commands/choose.js';
 
 global.lootboxActive = false;
 global.lootboxClaimed = false;
@@ -117,7 +120,7 @@ client.once('ready', () => {
 
   // ====================== THE IMPOSTER SYSTEM ======================
   function scheduleImposter() {
-    const delay = Math.floor(Math.random() * (5 - 3 + 1) + 3) * 60 * 60 * 1000; // 3–5 hours
+    const delay = Math.floor(Math.random() * (5 - 3 + 1) + 3) * 60 * 60 * 1000;
 
     setTimeout(async () => {
       const guild = client.guilds.cache.first();
@@ -152,7 +155,6 @@ client.once('ready', () => {
 
       console.log(`[Imposter] Spawned — Answer: ${answer}`);
 
-      // Auto end after 2 minutes
       setTimeout(() => {
         if (getCurrentImposter() && !getCurrentImposter().rewardGiven) {
           channel.send('⏰ The Imposter got away... Better luck next time!');
@@ -160,12 +162,12 @@ client.once('ready', () => {
         }
       }, 120_000);
 
-      scheduleImposter(); // Schedule next
+      scheduleImposter();
     }, delay);
   }
 
   scheduleLootbox();
-  scheduleImposter(); // ← Start Imposter system
+  scheduleImposter();
 });
 
 // Message Handler
@@ -197,6 +199,7 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
 
   if (wasBoosting && !isBoosting) {
     try {
+      // Custom Color
       const colorRecord = getUserColorRole(userId);
       if (colorRecord?.role_id) {
         const role = newMember.guild.roles.cache.get(colorRecord.role_id);
@@ -204,6 +207,7 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
         removeUserColorRole(userId);
       }
 
+      // Gradient
       const gradRecord = getUserGradient(userId);
       if (gradRecord?.role_id) {
         const role = newMember.guild.roles.cache.get(gradRecord.role_id);
@@ -211,11 +215,22 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
         removeUserGradient(userId);
       }
 
+      // Banner
       const bannerRecord = getUserBanner(userId);
       if (bannerRecord) {
         removeUserBanner(userId);
         console.log(`[BOOSTER CLEANUP] Removed custom banner from ${newMember.user.tag}`);
       }
+
+      // === NEW: Custom Role ===
+      const customRecord = getUserCustomRole(userId);
+      if (customRecord?.role_id) {
+        const role = newMember.guild.roles.cache.get(customRecord.role_id);
+        if (role) await role.delete('User stopped boosting - removing custom role').catch(() => {});
+        removeUserCustomRole(userId);
+        console.log(`[BOOSTER CLEANUP] Removed custom role from ${newMember.user.tag}`);
+      }
+
     } catch (err) {
       console.error('[BOOSTER CLEANUP ERROR]', err);
     }
