@@ -1,11 +1,9 @@
 // commands/setbanner.js
-import { getUserBanner, setUserBanner } from '../db.js';
-import { AttachmentBuilder } from 'discord.js';
+import { setUserBanner } from '../db.js';
 
 export default {
   name: 'setbanner',
   async execute(message) {
-    // Check if user is boosting
     if (!message.member.premiumSince) {
       return message.reply('❌ Only **server boosters** can set a custom profile banner!');
     }
@@ -24,25 +22,30 @@ export default {
     }
 
     try {
-      // Download the image and store as base64
+      console.log(`[SetBanner] Attempting to save banner for ${message.author.tag}`);
+
       const response = await fetch(attachment.url);
-      if (!response.ok) throw new Error('Failed to download');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
       const buffer = Buffer.from(await response.arrayBuffer());
       const base64 = buffer.toString('base64');
 
-      setUserBanner(message.author.id, base64, attachment.contentType);
+      console.log(`[SetBanner] Image downloaded (${buffer.length} bytes)`);
+
+      setUserBanner(message.author.id, base64, attachment.contentType || 'image/png');
+
+      console.log(`[SetBanner] Successfully saved for ${message.author.tag}`);
 
       await message.reply({
-        content: `✅ **Custom banner saved permanently!**\n\n` +
-                 `It will now appear on your \`.x profile\`.\n` +
-                 `**Recommended:** \`900x300\` for best results.`,
+        content: `✅ **Custom banner saved permanently!**\n\nIt will now appear on your \`.x profile\`.`,
         allowedMentions: { repliedUser: false }
       });
 
     } catch (err) {
-      console.error('[SetBanner Error]', err);
-      return message.reply('❌ Failed to save banner. Please try again.');
+      console.error('[SetBanner ERROR]', err);
+      await message.reply(`❌ Failed to save banner: ${err.message || 'Unknown error'}. Please try again.`);
     }
   }
 };

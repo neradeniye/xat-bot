@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 
-//const db = new Database('economy.db');
-const db = new Database('/var/xat-bot-data/economy.db');
+const db = new Database('economy.db');
+//const db = new Database('/var/xat-bot-data/economy.db');
 
 // ✅ Create users table
 db.prepare(`
@@ -117,7 +117,7 @@ db.prepare(`
   );
 `).run();
 
-// Add this table creation (if not already present)
+// ✅ Clean user_banners table
 db.prepare(`
   CREATE TABLE IF NOT EXISTS user_banners (
     user_id TEXT PRIMARY KEY,
@@ -345,7 +345,7 @@ export function setLastSteal(userId, timestamp) {
 }
 
 export function getUserBanner(userId) {
-  return db.prepare('SELECT banner_data, content_type FROM user_banners WHERE user_id = ?').get(userId);
+  return db.prepare('SELECT banner_url FROM user_banners WHERE user_id = ?').get(userId)?.banner_url || null;
 }
 
 export function setUserBanner(userId, bannerData, contentType) {
