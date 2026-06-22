@@ -121,7 +121,7 @@ db.prepare(`
 db.prepare(`
   CREATE TABLE IF NOT EXISTS user_banners (
     user_id TEXT PRIMARY KEY,
-    banner_data TEXT,      -- base64 encoded image
+    banner_data TEXT,
     content_type TEXT
   );
 `).run();
