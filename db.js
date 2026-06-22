@@ -117,14 +117,26 @@ db.prepare(`
   );
 `).run();
 
-// ✅ Clean user_banners table
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS user_banners (
-    user_id TEXT PRIMARY KEY,
-    banner_data TEXT,
-    content_type TEXT
-  );
-`).run();
+// === FORCE CLEAN & RECREATE user_banners TABLE ===
+try {
+  console.log('[DB] Cleaning old banner table...');
+  
+  // Drop the old broken table if it exists
+  db.prepare('DROP TABLE IF EXISTS user_banners').run();
+  
+  // Create fresh clean table
+  db.prepare(`
+    CREATE TABLE user_banners (
+      user_id TEXT PRIMARY KEY,
+      banner_data TEXT,
+      content_type TEXT
+    );
+  `).run();
+  
+  console.log('[DB] ✅ user_banners table recreated successfully');
+} catch (err) {
+  console.error('[DB Banner Cleanup ERROR]', err);
+}
 
 export function getConfig(key) {
   const row = db.prepare('SELECT value FROM bot_config WHERE key = ?').get(key);
@@ -348,14 +360,12 @@ export function getUserBanner(userId) {
   return db.prepare('SELECT banner_url FROM user_banners WHERE user_id = ?').get(userId)?.banner_url || null;
 }
 
-export function setUserBanner(userId, bannerData, contentType) {
+export function setUserBanner(userId, bannerUrl) {
   db.prepare(`
-    INSERT INTO user_banners (user_id, banner_data, content_type)
-    VALUES (?, ?, ?)
-    ON CONFLICT(user_id) DO UPDATE 
-    SET banner_data = excluded.banner_data, 
-        content_type = excluded.content_type
-  `).run(userId, bannerData, contentType);
+    INSERT INTO user_banners (user_id, banner_url)
+    VALUES (?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET banner_url = excluded.banner_url
+  `).run(userId, bannerUrl);
 }
 
 export function removeUserBanner(userId) {
