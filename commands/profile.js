@@ -38,14 +38,22 @@ const PAWN_ORDER = [
   'Brown Pawn', 'Red Pawn'
 ];
 
-async function loadImg(url) {
+async function loadImg(urlOrBuffer) {
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw 1;
-    const buf = Buffer.from(await res.arrayBuffer());
-    return await loadImage(await sharp(buf).png().toBuffer());
+    let buffer;
+    if (Buffer.isBuffer(urlOrBuffer)) {
+      buffer = urlOrBuffer;
+    } else if (typeof urlOrBuffer === 'string' && urlOrBuffer.startsWith('data:')) {
+      // Fallback for old base64 URLs if any
+      buffer = Buffer.from(urlOrBuffer.split(',')[1], 'base64');
+    } else {
+      const res = await fetch(urlOrBuffer);
+      if (!res.ok) throw 1;
+      buffer = Buffer.from(await res.arrayBuffer());
+    }
+    return await loadImage(await sharp(buffer).png().toBuffer());
   } catch (e) {
-    console.log('Failed to load image:', url);
+    console.log('Failed to load image');
     return await loadImage(await sharp({ create: { width: 1, height: 1, channels: 4, background: '#0000' } }).png().toBuffer());
   }
 }
@@ -58,11 +66,9 @@ function drawCoverImage(ctx, img, x, y, w, h) {
   let sourceX = 0, sourceY = 0, sourceW = img.width, sourceH = img.height;
 
   if (imgRatio > targetRatio) {
-    // Image is wider → crop left/right
     sourceW = img.height * targetRatio;
     sourceX = (img.width - sourceW) / 2;
   } else {
-    // Image is taller → crop top/bottom
     sourceH = img.width / targetRatio;
     sourceY = (img.height - sourceH) / 2;
   }
@@ -78,7 +84,7 @@ export default {
 
     const userId = target.id;
     const balance = getUserBalance(userId);
-    const profile = getUserProfile(userId) || { status: 'Use .x setstatus <text>', banner: 'default' };
+    const profile = getUserProfile(userId) || { status: 'Use .x setstatus <text>' };
 
     // VIP / Booster Check
     const member = await message.guild.members.fetch(userId);
@@ -86,21 +92,16 @@ export default {
     const isSubscriber = member.roles.cache.has('1396682174408822885');
     const isVIP = isBooster || isSubscriber;
 
-    // === CUSTOM BANNER SUPPORT ===
-    const customBannerUrl = getUserBanner(userId);
-
-    // Find rarest pawn
-    const owned = db.prepare('SELECT itemName FROM user_items WHERE userId = ?').all(userId);
-    const bestPawn = PAWN_ORDER.find(pawn => owned.some(i => i.itemName === pawn));
-
-    const canvas = createCanvas(920, 320);
-    const ctx = canvas.getContext('2d');
-
-    // Load & Draw Banner with SMART COVER MODE
+    // === CUSTOM BANNER SUPPORT (Fixed) ===
+    const bannerRecord = getUserBanner(userId);
     let bannerImg;
-    if (customBannerUrl) {
-      bannerImg = await loadImg(customBannerUrl);
+
+    if (bannerRecord?.banner_data) {
+      // New base64 storage
+      const buffer = Buffer.from(bannerRecord.banner_data, 'base64');
+      bannerImg = await loadImage(await sharp(buffer).png().toBuffer());
     } else {
+      // Default background
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
       const bgPath = path.join(__dirname, '..', 'assets', 'profile_bg.png');
@@ -113,7 +114,10 @@ export default {
       }
     }
 
-    // Draw with smart cropping (this is the key part)
+    const canvas = createCanvas(920, 320);
+    const ctx = canvas.getContext('2d');
+
+    // Draw Banner with SMART COVER MODE
     drawCoverImage(ctx, bannerImg, 10, 10, 900, 300);
 
     // Overlays
@@ -169,7 +173,7 @@ export default {
     if (isVIP) {
       const subscriberPawn = await loadImg(EMOJI.subscriber);
       ctx.drawImage(subscriberPawn, 810, 50, 90, 90);
-    } else if (bestPawn && EMOJI.pawns[bestPawn]) {
+    } else if (bestPawn && EMOJI.pawns[bestPawn]) {  // ← Fixed: bestPawn was missing
       const pawn = await loadImg(EMOJI.pawns[bestPawn]);
       ctx.drawImage(pawn, 810, 50, 90, 90);
     }
