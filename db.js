@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 
-const db = new Database('economy.db');
-//const db = new Database('/var/xat-bot-data/economy.db');
+//const db = new Database('economy.db');
+const db = new Database('/var/xat-bot-data/economy.db');
 
 // ✅ Create users table
 db.prepare(`
