@@ -138,6 +138,12 @@ try {
   console.error('[DB Banner Cleanup ERROR]', err);
 }
 
+// Safety migration in case anything is left over
+try {
+  const cols = db.prepare("PRAGMA table_info('user_banners')").all();
+  console.log('[DB] Current banner columns:', cols.map(c => c.name));
+} catch (e) {}
+
 export function getConfig(key) {
   const row = db.prepare('SELECT value FROM bot_config WHERE key = ?').get(key);
   return row ? row.value : null;
@@ -357,15 +363,17 @@ export function setLastSteal(userId, timestamp) {
 }
 
 export function getUserBanner(userId) {
-  return db.prepare('SELECT banner_url FROM user_banners WHERE user_id = ?').get(userId)?.banner_url || null;
+  return db.prepare('SELECT banner_data, content_type FROM user_banners WHERE user_id = ?').get(userId);
 }
 
-export function setUserBanner(userId, bannerUrl) {
+export function setUserBanner(userId, bannerData, contentType) {
   db.prepare(`
-    INSERT INTO user_banners (user_id, banner_url)
-    VALUES (?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET banner_url = excluded.banner_url
-  `).run(userId, bannerUrl);
+    INSERT INTO user_banners (user_id, banner_data, content_type)
+    VALUES (?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE 
+    SET banner_data = excluded.banner_data, 
+        content_type = excluded.content_type
+  `).run(userId, bannerData, contentType);
 }
 
 export function removeUserBanner(userId) {
