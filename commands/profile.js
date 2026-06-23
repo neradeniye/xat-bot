@@ -44,7 +44,6 @@ async function loadImg(urlOrBuffer) {
     if (Buffer.isBuffer(urlOrBuffer)) {
       buffer = urlOrBuffer;
     } else if (typeof urlOrBuffer === 'string' && urlOrBuffer.startsWith('data:')) {
-      // Fallback for old base64 URLs if any
       buffer = Buffer.from(urlOrBuffer.split(',')[1], 'base64');
     } else {
       const res = await fetch(urlOrBuffer);
@@ -58,7 +57,7 @@ async function loadImg(urlOrBuffer) {
   }
 }
 
-// SMART COVER MODE — No stretching, intelligent cropping
+// SMART COVER MODE
 function drawCoverImage(ctx, img, x, y, w, h) {
   const imgRatio = img.width / img.height;
   const targetRatio = w / h;
@@ -92,16 +91,18 @@ export default {
     const isSubscriber = member.roles.cache.has('1396682174408822885');
     const isVIP = isBooster || isSubscriber;
 
-    // === CUSTOM BANNER SUPPORT (Fixed) ===
+    // Find rarest pawn (this was missing)
+    const owned = db.prepare('SELECT itemName FROM user_items WHERE userId = ?').all(userId);
+    const bestPawn = PAWN_ORDER.find(pawn => owned.some(i => i.itemName === pawn));
+
+    // === CUSTOM BANNER SUPPORT ===
     const bannerRecord = getUserBanner(userId);
     let bannerImg;
 
     if (bannerRecord?.banner_data) {
-      // New base64 storage
       const buffer = Buffer.from(bannerRecord.banner_data, 'base64');
       bannerImg = await loadImage(await sharp(buffer).png().toBuffer());
     } else {
-      // Default background
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
       const bgPath = path.join(__dirname, '..', 'assets', 'profile_bg.png');
@@ -117,7 +118,7 @@ export default {
     const canvas = createCanvas(920, 320);
     const ctx = canvas.getContext('2d');
 
-    // Draw Banner with SMART COVER MODE
+    // Draw Banner
     drawCoverImage(ctx, bannerImg, 10, 10, 900, 300);
 
     // Overlays
@@ -138,12 +139,11 @@ export default {
     ctx.strokeStyle = 'white';
     ctx.stroke();
 
-    // Username
+    // Username + Status + etc.
     ctx.fillStyle = 'white';
     ctx.font = 'bold 44px Arial';
     ctx.fillText(target.username.slice(0, 20), 260, 135);
 
-    // Status
     ctx.fillStyle = 'white';
     ctx.font = '18px Arial';
     const status = profile.status.length > 90 ? profile.status.slice(0, 87) + '...' : profile.status;
@@ -169,16 +169,16 @@ export default {
     ctx.font = 'bold 36px Arial';
     ctx.fillText(balance.toLocaleString(), 95, 255);
 
-    // Pawn / Subscriber Icon
+    // Pawn Icon
     if (isVIP) {
       const subscriberPawn = await loadImg(EMOJI.subscriber);
       ctx.drawImage(subscriberPawn, 810, 50, 90, 90);
-    } else if (bestPawn && EMOJI.pawns[bestPawn]) {  // ← Fixed: bestPawn was missing
+    } else if (bestPawn && EMOJI.pawns[bestPawn]) {
       const pawn = await loadImg(EMOJI.pawns[bestPawn]);
       ctx.drawImage(pawn, 810, 50, 90, 90);
     }
 
-    // GRADIENT GLOW BORDER (VIP ONLY)
+    // VIP Glow
     if (isVIP) {
       const gradient = ctx.createLinearGradient(0, 0, 920, 320);
       gradient.addColorStop(0, '#ff69b4');
@@ -188,11 +188,8 @@ export default {
 
       ctx.strokeStyle = gradient;
       ctx.lineWidth = 5;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
       ctx.shadowColor = '#ff69b4';
       ctx.shadowBlur = 20;
-
       ctx.strokeRect(6, 6, 908, 308);
       ctx.shadowBlur = 0;
     }
