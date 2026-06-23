@@ -1,20 +1,19 @@
 // commands/removebanner.js
-import { removeUserBanner, getUserBanner } from '../db.js';
+import { removeUserBanner } from '../db.js';
 
 export default {
   name: 'removebanner',
   async execute(message) {
-    const currentBanner = getUserBanner(message.author.id);
-
-    if (!currentBanner) {
-      return message.reply('You don’t have a custom banner set.');
+    if (!message.member.premiumSince) {
+      return message.reply('❌ Only server boosters can manage banners!');
     }
 
-    removeUserBanner(message.author.id);
-
-    await message.reply({
-      content: '✅ **Custom banner removed.** Your profile will now use the default background.',
-      allowedMentions: { repliedUser: false }
-    });
+    try {
+      const record = removeUserBanner(message.author.id); // or check first
+      await message.reply('✅ Your custom banner has been removed.');
+    } catch (err) {
+      console.error(err);
+      await message.reply('❌ Failed to remove banner.');
+    }
   }
 };
