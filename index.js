@@ -119,55 +119,120 @@ client.once('ready', () => {
   }
 
   // ====================== THE IMPOSTER SYSTEM ======================
-function scheduleImposter() {
-  const delay = Math.floor(Math.random() * (5 - 3 + 1) + 3) * 60 * 60 * 1000; // 3–5 hours
+  function scheduleImposter() {
+    const delay = Math.floor(Math.random() * (5 - 3 + 1) + 3) * 60 * 60 * 1000;
 
-  setTimeout(async () => {
-    const guild = client.guilds.cache.first();
-    if (!guild) return scheduleImposter();
+    setTimeout(async () => {
+      const guild = client.guilds.cache.first();
+      if (!guild) return scheduleImposter();
 
-    const channel = await getMainChannel(guild);
-    if (!channel) return scheduleImposter();
+      const channel = await getMainChannel(guild);
+      if (!channel) return scheduleImposter();
 
-    const activeUsers = getRecentActiveUsers(30);
-    if (activeUsers.length < 5) {
-      console.log('[Imposter] Not enough active users');
-      return scheduleImposter();
-    }
-
-    const shuffled = activeUsers.sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, 5);
-
-    const imposterIndex = Math.floor(Math.random() * 5);
-    const letters = ['A', 'B', 'C', 'D', 'E'];
-    const answer = letters[imposterIndex];
-
-    setCurrentImposter({ answer, rewardGiven: false });
-
-    // Build message WITHOUT pinging
-    let description = '**🕵️ ONE OF THESE USERS IS THE IMPOSTER! 🕵️**\n\n';
-    selected.forEach((user, i) => {
-      description += `${letters[i]} — **${user.username || 'Unknown'}**\n`;
-    });
-
-    await channel.send({
-      content: description + '\nFirst to guess correctly with `.x choose A/B/C/D/E` wins **100 xats**!\nWrong guess = **-200 xats**'
-    });
-
-    console.log(`[Imposter] Spawned — Answer: ${answer}`);
-
-    // Auto end after 2 minutes
-    setTimeout(() => {
-      const current = getCurrentImposter?.(); // safe check
-      if (current && !current.rewardGiven) {
-        channel.send('⏰ The Imposter got away... Better luck next time!');
-        setCurrentImposter(null);
+      const activeUsers = getRecentActiveUsers(30);
+      if (activeUsers.length < 5) {
+        console.log('[Imposter] Not enough active users');
+        return scheduleImposter();
       }
-    }, 120_000);
 
-    scheduleImposter(); // Schedule next round
-  }, delay);
-}
+      const shuffled = activeUsers.sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, 5);
+
+      const imposterIndex = Math.floor(Math.random() * 5);
+      const letters = ['A', 'B', 'C', 'D', 'E'];
+      const answer = letters[imposterIndex];
+
+      setCurrentImposter({ answer, rewardGiven: false });
+
+      let description = '**🕵️ ONE OF THESE USERS IS THE IMPOSTER! 🕵️**\n\n';
+      selected.forEach((user, i) => {
+        description += `${letters[i]} — **${user.username || 'Unknown'}**\n`;
+      });
+
+      await channel.send({
+        content: description + '\nFirst to guess correctly with `.x choose A/B/C/D/E` wins **100 xats**!\nWrong guess = **-200 xats**'
+      });
+
+      console.log(`[Imposter] Spawned — Answer: ${answer}`);
+
+      setTimeout(() => {
+        const current = getCurrentImposter?.();
+        if (current && !current.rewardGiven) {
+          channel.send('⏰ The Imposter got away... Better luck next time!');
+          setCurrentImposter(null);
+        }
+      }, 120_000);
+
+      scheduleImposter();
+    }, delay);
+  }
+
+  scheduleLootbox();
+  scheduleImposter();   // ← Make sure this line is here
+});
+
+// Message Handler
+client.on('messageCreate', async message => {
+  if (message.author.bot) return;
+
+  incrementMessageCount(message.author.id);
+
+  const now = Date.now();
+  const lastUsed = cooldowns.get(message.author.id) || 0;
+  if (now - lastUsed >= 10_000) {
+    addUserXats(message.author.id, 1);
+    cooldowns.set(message.author.id, now);
+  }
+
+  if (!message.content.startsWith(prefix)) return;
+
+  const args = message.content.slice(prefix.length).trim().split(/\s+/);
+  const commandName = args.shift()?.toLowerCase();
+  const command = commands.get(commandName);
+  if (command) command.execute(message, args, client);
+});
+
+// BOOSTER CLEANUP
+client.on('guildMemberUpdate', async (oldMember, newMember) => {
+  const userId = newMember.id;
+  const wasBoosting = oldMember.premiumSince;
+  const isBoosting = newMember.premiumSince;
+
+  if (wasBoosting && !isBoosting) {
+    try {
+      const colorRecord = getUserColorRole(userId);
+      if (colorRecord?.role_id) {
+        const role = newMember.guild.roles.cache.get(colorRecord.role_id);
+        if (role) await role.delete('User stopped boosting - removing custom color');
+        removeUserColorRole(userId);
+      }
+
+      const gradRecord = getUserGradient(userId);
+      if (gradRecord?.role_id) {
+        const role = newMember.guild.roles.cache.get(gradRecord.role_id);
+        if (role) await newMember.roles.remove(role);
+        removeUserGradient(userId);
+      }
+
+      const bannerRecord = getUserBanner(userId);
+      if (bannerRecord) {
+        removeUserBanner(userId);
+        console.log(`[BOOSTER CLEANUP] Removed custom banner from ${newMember.user.tag}`);
+      }
+
+      const customRecord = getUserCustomRole(userId);
+      if (customRecord?.role_id) {
+        const role = newMember.guild.roles.cache.get(customRecord.role_id);
+        if (role) await role.delete('User stopped boosting - removing custom role').catch(() => {});
+        removeUserCustomRole(userId);
+        console.log(`[BOOSTER CLEANUP] Removed custom role from ${newMember.user.tag}`);
+      }
+
+    } catch (err) {
+      console.error('[BOOSTER CLEANUP ERROR]', err);
+    }
+  }
+});
 
 // Message Handler
 client.on('messageCreate', async message => {
