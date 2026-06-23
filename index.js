@@ -15,12 +15,18 @@ import {
   getUserBanner,
   removeUserBanner,
   getRecentActiveUsers,
-  // Add these two new imports:
   getUserCustomRole,
   removeUserCustomRole
 } from './db.js';
 
 import { setCurrentImposter } from './commands/choose.js';
+
+// Prevent duplicate starts
+if (global.xatBotStarted) {
+  console.log('[WARN] Duplicate bot start detected - exiting');
+  process.exit(0);
+}
+global.xatBotStarted = true;
 
 global.lootboxActive = false;
 global.lootboxClaimed = false;
@@ -168,10 +174,10 @@ client.once('ready', () => {
   }
 
   scheduleLootbox();
-  scheduleImposter();   // ← Make sure this line is here
+  scheduleImposter();
 });
 
-// Message Handler
+// ==================== MESSAGE HANDLER ====================
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
 
@@ -192,7 +198,7 @@ client.on('messageCreate', async message => {
   if (command) command.execute(message, args, client);
 });
 
-// BOOSTER CLEANUP
+// ==================== BOOSTER CLEANUP ====================
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   const userId = newMember.id;
   const wasBoosting = oldMember.premiumSince;
@@ -220,73 +226,6 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
         console.log(`[BOOSTER CLEANUP] Removed custom banner from ${newMember.user.tag}`);
       }
 
-      const customRecord = getUserCustomRole(userId);
-      if (customRecord?.role_id) {
-        const role = newMember.guild.roles.cache.get(customRecord.role_id);
-        if (role) await role.delete('User stopped boosting - removing custom role').catch(() => {});
-        removeUserCustomRole(userId);
-        console.log(`[BOOSTER CLEANUP] Removed custom role from ${newMember.user.tag}`);
-      }
-
-    } catch (err) {
-      console.error('[BOOSTER CLEANUP ERROR]', err);
-    }
-  }
-});
-
-// Message Handler
-client.on('messageCreate', async message => {
-  if (message.author.bot) return;
-
-  incrementMessageCount(message.author.id);
-
-  const now = Date.now();
-  const lastUsed = cooldowns.get(message.author.id) || 0;
-  if (now - lastUsed >= 10_000) {
-    addUserXats(message.author.id, 1);
-    cooldowns.set(message.author.id, now);
-  }
-
-  if (!message.content.startsWith(prefix)) return;
-
-  const args = message.content.slice(prefix.length).trim().split(/\s+/);
-  const commandName = args.shift()?.toLowerCase();
-  const command = commands.get(commandName);
-  if (command) command.execute(message, args, client);
-});
-
-// BOOSTER CLEANUP
-client.on('guildMemberUpdate', async (oldMember, newMember) => {
-  const userId = newMember.id;
-  const wasBoosting = oldMember.premiumSince;
-  const isBoosting = newMember.premiumSince;
-
-  if (wasBoosting && !isBoosting) {
-    try {
-      // Custom Color
-      const colorRecord = getUserColorRole(userId);
-      if (colorRecord?.role_id) {
-        const role = newMember.guild.roles.cache.get(colorRecord.role_id);
-        if (role) await role.delete('User stopped boosting - removing custom color');
-        removeUserColorRole(userId);
-      }
-
-      // Gradient
-      const gradRecord = getUserGradient(userId);
-      if (gradRecord?.role_id) {
-        const role = newMember.guild.roles.cache.get(gradRecord.role_id);
-        if (role) await newMember.roles.remove(role);
-        removeUserGradient(userId);
-      }
-
-      // Banner
-      const bannerRecord = getUserBanner(userId);
-      if (bannerRecord) {
-        removeUserBanner(userId);
-        console.log(`[BOOSTER CLEANUP] Removed custom banner from ${newMember.user.tag}`);
-      }
-
-      // === NEW: Custom Role ===
       const customRecord = getUserCustomRole(userId);
       if (customRecord?.role_id) {
         const role = newMember.guild.roles.cache.get(customRecord.role_id);
