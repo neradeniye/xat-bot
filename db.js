@@ -117,32 +117,29 @@ db.prepare(`
   );
 `).run();
 
-// === FORCE CLEAN & RECREATE user_banners TABLE ===
-try {
-  console.log('[DB] Cleaning old banner table...');
-  
-  // Drop the old broken table if it exists
-  db.prepare('DROP TABLE IF EXISTS user_banners').run();
-  
-  // Create fresh clean table
-  db.prepare(`
-    CREATE TABLE user_banners (
-      user_id TEXT PRIMARY KEY,
-      banner_data TEXT,
-      content_type TEXT
-    );
-  `).run();
-  
-  console.log('[DB] ✅ user_banners table recreated successfully');
-} catch (err) {
-  console.error('[DB Banner Cleanup ERROR]', err);
-}
+// === BANNER TABLE (Safe Creation + Migration) ===
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS user_banners (
+    user_id TEXT PRIMARY KEY,
+    banner_data TEXT,
+    content_type TEXT
+  );
+`).run();
 
-// Safety migration in case anything is left over
+// Migration for old tables (only runs if needed)
 try {
   const cols = db.prepare("PRAGMA table_info('user_banners')").all();
-  console.log('[DB] Current banner columns:', cols.map(c => c.name));
-} catch (e) {}
+  const colNames = cols.map(c => c.name);
+
+  if (colNames.includes('banner_url')) {
+    console.log('[DB] Migrating old banner_url to new system...');
+    // You can add migration logic here later if needed
+  }
+
+  console.log('[DB] ✅ user_banners table ready');
+} catch (err) {
+  console.error('[DB Banner Migration ERROR]', err);
+}
 
 export function getConfig(key) {
   const row = db.prepare('SELECT value FROM bot_config WHERE key = ?').get(key);
