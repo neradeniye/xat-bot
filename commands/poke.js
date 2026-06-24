@@ -1,5 +1,5 @@
 const pokeBalls = new Map(); // userId -> { basic: count, great: count } (debug)
-const userPokedex = new Map(); // userId -> Set of pokemon names (debug)
+const userPokedex = new Map(); // userId -> Map<pokemonName, count> (debug)
 
 const activePokemon = new Map(); // For global active wild pokemon
 
@@ -15,7 +15,7 @@ const pokeShopItems = [
   {
     name: 'basic',
     display: 'Poké Ball',
-    price: 0, // debug price
+    price: 0,
     sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png',
     catchRate: 40
   },
@@ -33,16 +33,12 @@ function getSpriteUrl(pokemonId) {
 }
 
 function getUserBalls(userId) {
-  if (!pokeBalls.has(userId)) {
-    pokeBalls.set(userId, { basic: 0, great: 0 });
-  }
+  if (!pokeBalls.has(userId)) pokeBalls.set(userId, { basic: 0, great: 0 });
   return pokeBalls.get(userId);
 }
 
 function getUserDex(userId) {
-  if (!userPokedex.has(userId)) {
-    userPokedex.set(userId, new Set());
-  }
+  if (!userPokedex.has(userId)) userPokedex.set(userId, new Map());
   return userPokedex.get(userId);
 }
 
@@ -52,8 +48,8 @@ export default {
   execute: async (message, args, client) => {
     const subCommand = args[0]?.toLowerCase();
     const userId = message.author.id;
+    const page = parseInt(args[1]) || 1;
 
-    // === SPAWN ===
     if (subCommand === 'spawn') {
       if (activePokemon.has('current')) activePokemon.delete('current');
 
@@ -66,9 +62,9 @@ export default {
       const embed = {
         color: 0xFFAA00,
         title: '🐾 A wild Pokémon appeared!',
-        description: `${pokemon.emoji} **Wild ${pokemon.name}** appeared!\n\nCatch chance with basic Poké Ball: **${catchChance}%**`,
+        description: `${pokemon.emoji} **Wild ${pokemon.name}** appeared!\n\nCatch chance: **${catchChance}%**`,
         thumbnail: { url: getSpriteUrl(pokemon.id) },
-        footer: { text: 'Use .x poke catch | Expires soon!' }
+        footer: { text: 'Use .x poke catch' }
       };
       
       const spawnMsg = await message.channel.send({ embeds: [embed] });
@@ -79,20 +75,17 @@ export default {
           spawnMsg.reply('💨 The wild Pokémon ran away!');
         }
       }, 30000);
-      
-      console.log(`[POKE DEBUG] Spawned ${pokemon.name}`);
       return;
     }
 
-    // === CATCH ===
     if (subCommand === 'catch') {
       const active = activePokemon.get('current');
-      if (!active) return message.reply('No wild Pokémon right now!');
+      if (!active) return message.reply('No wild Pokémon!');
 
       const balls = getUserBalls(userId);
-      let ballType = args[1] ? args[1].toLowerCase() : 'basic';
+      let ballType = (args[1] || 'basic').toLowerCase();
       if (!balls[ballType] || balls[ballType] <= 0) {
-        return message.reply(`No **${ballType}** balls! Buy with \`.x poke shop\``);
+        return message.reply(`No **${ballType}** balls!`);
       }
 
       balls[ballType]--;
@@ -105,32 +98,27 @@ export default {
 
       if (success) {
         const dex = getUserDex(userId);
-        dex.add(active.name);
+        const count = (dex.get(active.name) || 0) + 1;
+        dex.set(active.name, count);
 
         await message.channel.send({
-          content: `🎉 **Gotcha!** You caught the **${active.name}** with a ${ballInfo.display}!`,
-          embeds: [{
-            color: 0x00ff00,
-            description: `(${Math.floor(roll)}/${Math.floor(adjustedChance)})`,
-            thumbnail: { url: getSpriteUrl(active.id) }
-          }]
+          content: `🎉 Caught **${active.name}** (x${count})!`,
+          embeds: [{ color: 0x00ff00, thumbnail: { url: getSpriteUrl(active.id) } }]
         });
         activePokemon.delete('current');
       } else {
-        await message.channel.send(`💥 The **${active.name}** broke free!`);
+        await message.channel.send(`💥 Broke free!`);
       }
       return;
     }
 
-    // === SHOP ===
     if (subCommand === 'shop') {
       const embed = {
         color: 0xAA00FF,
         title: '🛒 Poké Shop',
-        description: 'Buy balls (debug prices = 0 xats)',
         fields: pokeShopItems.map(item => ({
           name: item.display,
-          value: `**${item.price}** xats\nCatch bonus: +${item.catchRate-40}%\n\` .x poke buy ${item.name} \``,
+          value: `**${item.price}** xats\n+.x poke buy ${item.name}`,
           inline: true
         }))
       };
@@ -138,44 +126,49 @@ export default {
       return;
     }
 
-    // === BUY ===
     if (subCommand === 'buy') {
       const itemName = args[1]?.toLowerCase();
       const item = pokeShopItems.find(i => i.name === itemName);
-      if (!item) return message.reply('Use `basic` or `great`');
+      if (!item) return message.reply('basic or great');
 
       const balls = getUserBalls(userId);
       balls[item.name] = (balls[item.name] || 0) + 1;
-
-      await message.channel.send({
-        content: `✅ Bought 1 **${item.display}**!`,
-        embeds: [{ thumbnail: { url: item.sprite }, description: `You now have **${balls[item.name]}**.` }]
-      });
+      await message.channel.send(`✅ Bought **${item.display}**!`);
       return;
     }
 
-    // === DEX ===
     if (subCommand === 'dex' || subCommand === 'pokedex') {
-      const dex = getUserDex(userId);
-      if (dex.size === 0) return message.reply('🦒 **Pokédex**: Empty!');
+      const dexMap = getUserDex(userId);
+      if (dexMap.size === 0) return message.reply('🦒 Pokédex empty!');
 
-      const list = Array.from(dex).join('\n• ');
+      const entries = Array.from(dexMap.entries());
+      const itemsPerPage = 50;
+      const totalPages = Math.ceil(entries.length / itemsPerPage);
+      const currentPage = Math.max(1, Math.min(page, totalPages));
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const pageEntries = entries.slice(start, start + itemsPerPage);
+
+      const description = pageEntries.map(([name, count]) => 
+        `• ${name} ${count > 1 ? `**x${count}**` : ''}`
+      ).join('\n');
+
       await message.channel.send({
         embeds: [{
           color: 0x00AAFF,
-          title: `🦒 Pokédex (${dex.size}/${pokemonList.length})`,
-          description: `• ${list}`
+          title: `🦒 Pokédex (${dexMap.size} caught)`,
+          description,
+          footer: { text: `Page ${currentPage}/${totalPages} • Use .x poke dex <page>` }
         }]
       });
       return;
     }
 
-    // Help
-    message.reply(`**Pokémon Commands:**\n` +
-      `• \`.x poke spawn\`\n` +
-      `• \`.x poke catch [basic/great]\`\n` +
-      `• \`.x poke shop\`\n` +
-      `• \`.x poke buy <basic/great>\`\n` +
-      `• \`.x poke dex\``);
+    message.reply(`**Commands:**\n` +
+      `• .x poke spawn\n` +
+      `• .x poke catch [basic/great]\n` +
+      `• .x poke shop\n` +
+      `• .x poke buy <type>\n` +
+      `• .x poke dex [page]`);
   }
 };
