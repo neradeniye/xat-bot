@@ -14,13 +14,10 @@ async function getPokemonData(id) {
   try {
     const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
     const data = await res.json();
-    const pokemon = {
-      name: data.name.charAt(0).toUpperCase() + data.name.slice(1),
-      id: id
-    };
+    const pokemon = { name: data.name.charAt(0).toUpperCase() + data.name.slice(1), id };
     pokemonNameCache.set(id, pokemon);
     return pokemon;
-  } catch (e) {
+  } catch {
     return { name: `Unknown #${id}`, id };
   }
 }
@@ -46,12 +43,17 @@ export default {
     const subCommand = args[0]?.toLowerCase();
     const userId = message.author.id;
 
+    // SPAWN - Admin only
     if (subCommand === 'spawn') {
+      if (!message.member.permissions.has('Administrator')) {
+        return message.reply('❌ Only server admins can spawn Pokémon for debugging!');
+      }
+
       if (activePokemon.has('current')) activePokemon.delete('current');
 
       const id = Math.floor(Math.random() * 151) + 1;
       const pokemon = await getPokemonData(id);
-      const isShiny = Math.random() < 0.02; // 2% shiny chance
+      const isShiny = Math.random() < 0.02;
       const difficulty = 25 + Math.floor(Math.random() * 60);
 
       const pokemonData = { ...pokemon, difficulty, isShiny, spawnTime: Date.now() };
@@ -61,11 +63,18 @@ export default {
         color: isShiny ? 0xFFD700 : 0xFFAA00,
         title: isShiny ? '✨ A shiny Pokémon appeared!' : '🐾 A wild Pokémon appeared!',
         description: `**Wild ${pokemon.name}** appeared!${isShiny ? ' ✨' : ''}\nCatch chance ≈ **${difficulty}%**`,
-        thumbnail: { url: getSpriteUrl(pokemon.id, isShiny) },
-        footer: { text: 'Use .x poke catch' }
+        thumbnail: { url: getSpriteUrl(pokemon.id, isShiny) }
       };
 
       const spawnMsg = await message.channel.send({ embeds: [embed] });
+
+      // Rare rebel attack
+      if (Math.random() < 0.08) {
+        setTimeout(() => {
+          const stolen = 10 + Math.floor(Math.random() * 91);
+          spawnMsg.reply(`😠 **${pokemon.name} rebelled!** It attacked and stole **${stolen} xats**! (debug mode)`);
+        }, 8000);
+      }
 
       setTimeout(() => {
         if (activePokemon.get('current')?.spawnTime === pokemonData.spawnTime) {
@@ -94,12 +103,12 @@ export default {
 
       if (success) {
         const dex = getUserDex(userId);
-        const currentCount = (dex.get(active.name)?.count || 0) + 1;
-        dex.set(active.name, { id: active.id, count: currentCount, shiny: active.isShiny });
+        const count = (dex.get(active.name)?.count || 0) + 1;
+        dex.set(active.name, { id: active.id, count, shiny: active.isShiny });
 
         const shinyText = active.isShiny ? ' ✨ **SHINY!**' : '';
         await message.channel.send({
-          content: `🎉 **Gotcha!** Caught **${active.name}**${shinyText} (x${currentCount})!`,
+          content: `🎉 Caught **${active.name}**${shinyText} (x${count})!`,
           embeds: [{ color: active.isShiny ? 0xFFD700 : 0x00ff00, thumbnail: { url: getSpriteUrl(active.id, active.isShiny) } }]
         });
         activePokemon.delete('current');
@@ -164,8 +173,8 @@ export default {
       return;
     }
 
-    message.reply(`**Commands:**\n` +
-      `• .x poke spawn\n` +
+    message.reply(`**Pokémon Commands:**\n` +
+      `• .x poke spawn (admin only)\n` +
       `• .x poke catch [basic/great]\n` +
       `• .x poke shop\n` +
       `• .x poke buy <type>\n` +
