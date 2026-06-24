@@ -160,7 +160,7 @@ export default {
         color: 0xFF0000,
         title: `⚔️ Battle vs ${trainer}!`,
         description: `You sent out **${pokemonName}**!\nOpponent sent out **${enemy.name}**!`,
-        thumbnail: { url: getSpriteUrl(owned.id) },
+        thumbnail: { url: getTrainerSprite(trainer) },
         image: { url: getTrainerSprite(trainer) }
       };
       await message.channel.send({ embeds: [embed] });
