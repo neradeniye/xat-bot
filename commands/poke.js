@@ -142,7 +142,7 @@ export default {
       return;
     }
 
-    // BATTLE with penalties on loss
+    // BATTLE with possible Team Rocket steal
     if (subCommand === 'battle') {
       const pokemonName = args[1] ? args[1].charAt(0).toUpperCase() + args[1].slice(1).toLowerCase() : null;
       if (!pokemonName) return message.reply('Usage: `.x poke battle <pokemonname>`');
@@ -151,6 +151,21 @@ export default {
       const owned = dex.get(pokemonName);
       if (!owned) return message.reply(`You don't own **${pokemonName}**!`);
 
+      // Team Rocket steal chance BEFORE battle
+      if (Math.random() < 0.25) { // 25% chance
+        dex.delete(pokemonName);
+        await message.channel.send({
+          content: `🚀 **Uh oh! Team Rocket stole ${pokemonName}!**`,
+          embeds: [{ 
+            color: 0x000000,
+            description: "Looks like Team Rocket is up to no good again...",
+            image: { url: "https://play.pokemonshowdown.com/sprites/trainers/team-rocket.png" }
+          }]
+        });
+        return;
+      }
+
+      // Normal battle if no steal
       const trainers = ['Red', 'Blue', 'Giovanni', 'Misty', 'Brock', 'Lt. Surge', 'Erika', 'Koga', 'Sabrina', 'Blaine'];
       const trainer = trainers[Math.floor(Math.random() * trainers.length)];
       const enemyId = Math.floor(Math.random() * 151) + 1;
@@ -175,15 +190,7 @@ export default {
           });
         } else {
           const lostXats = 15 + Math.floor(Math.random() * 60);
-          let penaltyMsg = `💥 Defeat... You lost **${lostXats} xats**! (debug)`;
-
-          // Rare pokemon theft on loss
-          if (Math.random() < 0.15) {
-            dex.delete(pokemonName);
-            penaltyMsg += `\n😱 **${pokemonName} was stolen by the trainer!**`;
-          }
-
-          await message.channel.send(penaltyMsg);
+          await message.channel.send(`💥 Defeat... You lost **${lostXats} xats**! (debug)`);
         }
       }, 2200);
       return;
