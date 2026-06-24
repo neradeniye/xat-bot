@@ -42,20 +42,36 @@ export default {
     const userId = message.author.id;
 
     if (subCommand === 'spawn') {
+      // Clear any existing active pokemon
+      if (activePokemon.has('current')) {
+        activePokemon.delete('current');
+      }
+
       const pokemon = pokemonList[Math.floor(Math.random() * pokemonList.length)];
       const catchChance = pokemon.difficulty;
       
-      activePokemon.set('current', { ...pokemon, catchChance });
+      const pokemonData = { ...pokemon, catchChance, spawnTime: Date.now() };
+      activePokemon.set('current', pokemonData);
       
       const embed = {
         color: 0xFFAA00,
         title: '🐾 A wild Pokémon appeared!',
         description: `${pokemon.emoji} **Wild ${pokemon.name}** appeared!\n\nCatch chance with basic Poké Ball: **${catchChance}%**`,
         thumbnail: { url: getSpriteUrl(pokemon.id) },
-        footer: { text: 'Use .x poke catch to try!' }
+        footer: { text: 'Use .x poke catch | Expires soon!' }
       };
       
-      await message.channel.send({ embeds: [embed] });
+      const spawnMsg = await message.channel.send({ embeds: [embed] });
+      
+      // Auto-despawn after 30 seconds
+      setTimeout(() => {
+        if (activePokemon.has('current') && activePokemon.get('current').spawnTime === pokemonData.spawnTime) {
+          activePokemon.delete('current');
+          spawnMsg.reply('💨 The wild Pokémon ran away!');
+          console.log(`[POKE DEBUG] ${pokemon.name} despawned`);
+        }
+      }, 30000);
+      
       console.log(`[POKE DEBUG] Spawned ${pokemon.name}`);
       return;
     }
@@ -109,7 +125,7 @@ export default {
 
     // Help
     message.reply(`**Pokémon Debug Commands:**\n` +
-      `• \`.x poke spawn\` — Spawn a wild Pokémon\n` +
+      `• \`.x poke spawn\` — Spawn a wild Pokémon (30s timer)\n` +
       `• \`.x poke catch\` — Try to catch the current one\n` +
       `• \`.x poke add basic <num>\` — Give yourself balls\n` +
       `• \`.x poke dex\` — View pokedex (placeholder)`);
