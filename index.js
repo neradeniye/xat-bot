@@ -124,54 +124,63 @@ client.once('ready', () => {
     }, delay);
   }
 
-  // ====================== THE IMPOSTER SYSTEM ======================
-  function scheduleImposter() {
-    const delay = Math.floor(Math.random() * (5 - 3 + 1) + 3) * 60 * 60 * 1000;
+// ====================== THE IMPOSTER SYSTEM ======================
+function scheduleImposter() {
+  const delay = Math.floor(Math.random() * (5 - 3 + 1) + 3) * 60 * 60 * 1000; // 3–5 hours
 
-    setTimeout(async () => {
-      const guild = client.guilds.cache.first();
-      if (!guild) return scheduleImposter();
+  setTimeout(async () => {
+    const guild = client.guilds.cache.first();
+    if (!guild) return scheduleImposter();
 
-      const channel = await getMainChannel(guild);
-      if (!channel) return scheduleImposter();
+    const channel = await getMainChannel(guild);
+    if (!channel) return scheduleImposter();
 
-      const activeUsers = getRecentActiveUsers(30);
-      if (activeUsers.length < 5) {
-        console.log('[Imposter] Not enough active users');
-        return scheduleImposter();
+    const activeRows = getRecentActiveUsers(30);
+    if (activeRows.length < 5) {
+      console.log('[Imposter] Not enough active users');
+      return scheduleImposter();
+    }
+
+    // Fetch full user objects to get usernames
+    const selected = [];
+    for (const row of activeRows.slice(0, 5)) {
+      try {
+        const user = await client.users.fetch(row.user_id);
+        selected.push(user);
+      } catch (err) {
+        // Fallback if user can't be fetched
+        selected.push({ username: `User${row.user_id.slice(-4)}`, id: row.user_id });
       }
+    }
 
-      const shuffled = activeUsers.sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, 5);
+    const imposterIndex = Math.floor(Math.random() * 5);
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    const answer = letters[imposterIndex];
 
-      const imposterIndex = Math.floor(Math.random() * 5);
-      const letters = ['A', 'B', 'C', 'D', 'E'];
-      const answer = letters[imposterIndex];
+    setCurrentImposter({ answer, rewardGiven: false });
 
-      setCurrentImposter({ answer, rewardGiven: false });
+    let description = '**🕵️ ONE OF THESE USERS IS THE IMPOSTER! 🕵️**\n\n';
+    selected.forEach((user, i) => {
+      description += `${letters[i]} — **${user.username}**\n`;
+    });
 
-      let description = '**🕵️ ONE OF THESE USERS IS THE IMPOSTER! 🕵️**\n\n';
-      selected.forEach((user, i) => {
-        description += `${letters[i]} — **${user.username || 'Unknown'}**\n`;
-      });
+    await channel.send({
+      content: description + '\nFirst to guess correctly with `.x choose A/B/C/D/E` wins **100 xats**!\nWrong guess = **-200 xats**'
+    });
 
-      await channel.send({
-        content: description + '\nFirst to guess correctly with `.x choose A/B/C/D/E` wins **100 xats**!\nWrong guess = **-200 xats**'
-      });
+    console.log(`[Imposter] Spawned — Answer: ${answer}`);
 
-      console.log(`[Imposter] Spawned — Answer: ${answer}`);
+    setTimeout(() => {
+      const current = getCurrentImposter?.();
+      if (current && !current.rewardGiven) {
+        channel.send('⏰ The Imposter got away... Better luck next time!');
+        setCurrentImposter(null);
+      }
+    }, 120_000);
 
-      setTimeout(() => {
-        const current = getCurrentImposter?.();
-        if (current && !current.rewardGiven) {
-          channel.send('⏰ The Imposter got away... Better luck next time!');
-          setCurrentImposter(null);
-        }
-      }, 120_000);
-
-      scheduleImposter();
-    }, delay);
-  }
+    scheduleImposter(); // Schedule next
+  }, delay);
+}
 
   scheduleLootbox();
   scheduleImposter();
