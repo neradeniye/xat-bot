@@ -68,7 +68,6 @@ export default {
     const subCommand = args[0]?.toLowerCase();
     const userId = message.author.id;
 
-    // SPAWN (admin only)
     if (subCommand === 'spawn') {
       if (!message.member.permissions.has('Administrator')) {
         return message.reply('❌ Admin only for spawn!');
@@ -108,7 +107,6 @@ export default {
       return;
     }
 
-    // CATCH
     if (subCommand === 'catch') {
       const active = activePokemon.get('current');
       if (!active) return message.reply('No wild Pokémon!');
@@ -144,7 +142,7 @@ export default {
       return;
     }
 
-    // BATTLE with Trainer Sprite
+    // BATTLE with penalties on loss
     if (subCommand === 'battle') {
       const pokemonName = args[1] ? args[1].charAt(0).toUpperCase() + args[1].slice(1).toLowerCase() : null;
       if (!pokemonName) return message.reply('Usage: `.x poke battle <pokemonname>`');
@@ -176,13 +174,21 @@ export default {
             embeds: [{ color: 0x00ff00, description: `You earned **${rewardXats} xats**! (debug)` }]
           });
         } else {
-          await message.channel.send(`💥 Defeat... ${enemy.name} was too strong!`);
+          const lostXats = 15 + Math.floor(Math.random() * 60);
+          let penaltyMsg = `💥 Defeat... You lost **${lostXats} xats**! (debug)`;
+
+          // Rare pokemon theft on loss
+          if (Math.random() < 0.15) {
+            dex.delete(pokemonName);
+            penaltyMsg += `\n😱 **${pokemonName} was stolen by the trainer!**`;
+          }
+
+          await message.channel.send(penaltyMsg);
         }
       }, 2200);
       return;
     }
 
-    // SHOP
     if (subCommand === 'shop') {
       const embeds = pokeShopItems.map(item => ({
         color: 0xAA00FF,
