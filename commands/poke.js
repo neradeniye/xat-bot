@@ -46,8 +46,8 @@ function getTrainerSprite(trainer) {
     'Sabrina': 'sabrina',
     'Blaine': 'blaine'
   };
-  const key = trainerMap[trainer] || trainer.toLowerCase().replace(/ /g, '-');
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/${key}.png`;
+  let key = trainerMap[trainer] || trainer.toLowerCase().replace(/ /g, '-');
+  return `https://play.pokemonshowdown.com/sprites/trainers/${key}.png`;
 }
 
 function getUserBalls(userId) {
@@ -68,6 +68,7 @@ export default {
     const subCommand = args[0]?.toLowerCase();
     const userId = message.author.id;
 
+    // SPAWN (admin only)
     if (subCommand === 'spawn') {
       if (!message.member.permissions.has('Administrator')) {
         return message.reply('❌ Admin only for spawn!');
@@ -107,6 +108,7 @@ export default {
       return;
     }
 
+    // CATCH
     if (subCommand === 'catch') {
       const active = activePokemon.get('current');
       if (!active) return message.reply('No wild Pokémon!');
@@ -160,7 +162,7 @@ export default {
         color: 0xFF0000,
         title: `⚔️ Battle vs ${trainer}!`,
         description: `You sent out **${pokemonName}**!\nOpponent sent out **${enemy.name}**!`,
-        thumbnail: { url: getTrainerSprite(trainer) },
+        thumbnail: { url: getSpriteUrl(owned.id) },
         image: { url: getTrainerSprite(trainer) }
       };
       await message.channel.send({ embeds: [embed] });
@@ -180,6 +182,7 @@ export default {
       return;
     }
 
+    // SHOP
     if (subCommand === 'shop') {
       const embeds = pokeShopItems.map(item => ({
         color: 0xAA00FF,
