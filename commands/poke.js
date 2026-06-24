@@ -51,11 +51,11 @@ export default {
     const subCommand = args[0]?.toLowerCase();
     const userId = message.author.id;
 
+    // SPAWN (admin only)
     if (subCommand === 'spawn') {
       if (!message.member.permissions.has('Administrator')) {
         return message.reply('❌ Admin only for spawn!');
       }
-      // ... (spawn code same as before)
       if (activePokemon.has('current')) activePokemon.delete('current');
 
       const id = Math.floor(Math.random() * 151) + 1;
@@ -91,6 +91,7 @@ export default {
       return;
     }
 
+    // CATCH
     if (subCommand === 'catch') {
       const active = activePokemon.get('current');
       if (!active) return message.reply('No wild Pokémon!');
@@ -126,6 +127,44 @@ export default {
       return;
     }
 
+    // BATTLE
+    if (subCommand === 'battle') {
+      const pokemonName = args[1] ? args[1].charAt(0).toUpperCase() + args[1].slice(1).toLowerCase() : null;
+      if (!pokemonName) return message.reply('Usage: `.x poke battle <pokemonname>`');
+
+      const dex = getUserDex(userId);
+      const owned = dex.get(pokemonName);
+      if (!owned) return message.reply(`You don't own **${pokemonName}**!`);
+
+      const trainers = ['Red', 'Blue', 'Giovanni', 'Misty', 'Brock', 'Lt. Surge'];
+      const trainer = trainers[Math.floor(Math.random() * trainers.length)];
+      const enemyId = Math.floor(Math.random() * 151) + 1;
+      const enemy = await getPokemonData(enemyId);
+
+      const embed = {
+        color: 0xFF0000,
+        title: `⚔️ Battle vs ${trainer}!`,
+        description: `You sent out **${pokemonName}**!\nOpponent sent out **${enemy.name}**!`,
+        thumbnail: { url: getSpriteUrl(owned.id) }
+      };
+      await message.channel.send({ embeds: [embed] });
+
+      setTimeout(async () => {
+        const win = Math.random() < 0.55; // 55% win chance
+        if (win) {
+          const rewardXats = 30 + Math.floor(Math.random() * 70);
+          await message.channel.send({
+            content: `🎉 **Victory!** ${pokemonName} defeated ${enemy.name}!`,
+            embeds: [{ color: 0x00ff00, description: `You earned **${rewardXats} xats**! (debug)` }]
+          });
+        } else {
+          await message.channel.send(`💥 Defeat... ${enemy.name} was too strong!`);
+        }
+      }, 2200);
+      return;
+    }
+
+    // SHOP
     if (subCommand === 'shop') {
       const embeds = pokeShopItems.map(item => ({
         color: 0xAA00FF,
@@ -184,6 +223,7 @@ export default {
     message.reply(`**Pokémon Commands:**\n` +
       `• .x poke spawn (admin)\n` +
       `• .x poke catch [balltype]\n` +
+      `• .x poke battle <pokemon>\n` +
       `• .x poke shop\n` +
       `• .x poke buy <type>\n` +
       `• .x poke dex [page]`);
