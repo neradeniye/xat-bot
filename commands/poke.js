@@ -33,6 +33,19 @@ function getSpriteUrl(id, isShiny = false) {
   return isShiny ? `${base}shiny/${id}.png` : `${base}${id}.png`;
 }
 
+function getTrainerSprite(trainer) {
+  const trainerMap = {
+    'Red': 'red',
+    'Blue': 'blue',
+    'Giovanni': 'giovanni',
+    'Misty': 'misty',
+    'Brock': 'brock',
+    'Lt. Surge': 'lt-surge'
+  };
+  const key = trainerMap[trainer] || trainer.toLowerCase().replace(' ', '-');
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/${key}.png`;
+}
+
 function getUserBalls(userId) {
   if (!pokeBalls.has(userId)) {
     pokeBalls.set(userId, { basic: 0, great: 0, ultra: 0, premier: 0, heal: 0, quick: 0, dusk: 0, timer: 0 });
@@ -51,7 +64,6 @@ export default {
     const subCommand = args[0]?.toLowerCase();
     const userId = message.author.id;
 
-    // SPAWN (admin only)
     if (subCommand === 'spawn') {
       if (!message.member.permissions.has('Administrator')) {
         return message.reply('❌ Admin only for spawn!');
@@ -91,7 +103,6 @@ export default {
       return;
     }
 
-    // CATCH
     if (subCommand === 'catch') {
       const active = activePokemon.get('current');
       if (!active) return message.reply('No wild Pokémon!');
@@ -127,7 +138,7 @@ export default {
       return;
     }
 
-    // BATTLE
+    // BATTLE with Trainer Sprite
     if (subCommand === 'battle') {
       const pokemonName = args[1] ? args[1].charAt(0).toUpperCase() + args[1].slice(1).toLowerCase() : null;
       if (!pokemonName) return message.reply('Usage: `.x poke battle <pokemonname>`');
@@ -145,12 +156,13 @@ export default {
         color: 0xFF0000,
         title: `⚔️ Battle vs ${trainer}!`,
         description: `You sent out **${pokemonName}**!\nOpponent sent out **${enemy.name}**!`,
-        thumbnail: { url: getSpriteUrl(owned.id) }
+        thumbnail: { url: getSpriteUrl(owned.id) },
+        image: { url: getTrainerSprite(trainer) }  // Trainer sprite at bottom
       };
       await message.channel.send({ embeds: [embed] });
 
       setTimeout(async () => {
-        const win = Math.random() < 0.55; // 55% win chance
+        const win = Math.random() < 0.55;
         if (win) {
           const rewardXats = 30 + Math.floor(Math.random() * 70);
           await message.channel.send({
@@ -164,7 +176,6 @@ export default {
       return;
     }
 
-    // SHOP
     if (subCommand === 'shop') {
       const embeds = pokeShopItems.map(item => ({
         color: 0xAA00FF,
@@ -229,3 +240,16 @@ export default {
       `• .x poke dex [page]`);
   }
 };
+
+function getTrainerSprite(trainer) {
+  const trainerMap = {
+    'Red': 'red',
+    'Blue': 'blue',
+    'Giovanni': 'giovanni',
+    'Misty': 'misty',
+    'Brock': 'brock',
+    'Lt. Surge': 'lt-surge'
+  };
+  const key = trainerMap[trainer] || trainer.toLowerCase().replace(' ', '-');
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/${key}.png`;
+}
