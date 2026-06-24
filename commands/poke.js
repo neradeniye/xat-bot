@@ -6,7 +6,13 @@ const pokemonNameCache = new Map();
 
 const pokeShopItems = [
   { name: 'basic', display: 'Poké Ball', price: 0, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png', catchRate: 40 },
-  { name: 'great', display: 'Great Ball', price: 0, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png', catchRate: 60 }
+  { name: 'great', display: 'Great Ball', price: 0, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png', catchRate: 60 },
+  { name: 'ultra', display: 'Ultra Ball', price: 0, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png', catchRate: 80 },
+  { name: 'premier', display: 'Premier Ball', price: 0, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/premier-ball.png', catchRate: 50 },
+  { name: 'heal', display: 'Heal Ball', price: 0, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/heal-ball.png', catchRate: 45 },
+  { name: 'quick', display: 'Quick Ball', price: 0, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/quick-ball.png', catchRate: 70 },
+  { name: 'dusk', display: 'Dusk Ball', price: 0, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/dusk-ball.png', catchRate: 65 },
+  { name: 'timer', display: 'Timer Ball', price: 0, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/timer-ball.png', catchRate: 55 }
 ];
 
 async function getPokemonData(id) {
@@ -28,7 +34,9 @@ function getSpriteUrl(id, isShiny = false) {
 }
 
 function getUserBalls(userId) {
-  if (!pokeBalls.has(userId)) pokeBalls.set(userId, { basic: 0, great: 0 });
+  if (!pokeBalls.has(userId)) {
+    pokeBalls.set(userId, { basic: 0, great: 0, ultra: 0, premier: 0, heal: 0, quick: 0, dusk: 0, timer: 0 });
+  }
   return pokeBalls.get(userId);
 }
 
@@ -43,12 +51,11 @@ export default {
     const subCommand = args[0]?.toLowerCase();
     const userId = message.author.id;
 
-    // SPAWN - Admin only
     if (subCommand === 'spawn') {
       if (!message.member.permissions.has('Administrator')) {
-        return message.reply('❌ Only server admins can spawn Pokémon for debugging!');
+        return message.reply('❌ Admin only for spawn!');
       }
-
+      // ... (spawn code same as before)
       if (activePokemon.has('current')) activePokemon.delete('current');
 
       const id = Math.floor(Math.random() * 151) + 1;
@@ -68,18 +75,17 @@ export default {
 
       const spawnMsg = await message.channel.send({ embeds: [embed] });
 
-      // Rare rebel attack
       if (Math.random() < 0.08) {
         setTimeout(() => {
           const stolen = 10 + Math.floor(Math.random() * 91);
-          spawnMsg.reply(`😠 **${pokemon.name} rebelled!** It attacked and stole **${stolen} xats**! (debug mode)`);
+          spawnMsg.reply(`😠 **${pokemon.name} rebelled!** Stole **${stolen} xats**! (debug)`);
         }, 8000);
       }
 
       setTimeout(() => {
         if (activePokemon.get('current')?.spawnTime === pokemonData.spawnTime) {
           activePokemon.delete('current');
-          spawnMsg.reply('💨 The wild Pokémon ran away!');
+          spawnMsg.reply('💨 Ran away!');
         }
       }, 30000);
       return;
@@ -87,11 +93,13 @@ export default {
 
     if (subCommand === 'catch') {
       const active = activePokemon.get('current');
-      if (!active) return message.reply('No wild Pokémon right now!');
+      if (!active) return message.reply('No wild Pokémon!');
 
       const balls = getUserBalls(userId);
       let ballType = (args[1] || 'basic').toLowerCase();
-      if (!balls[ballType] || balls[ballType] <= 0) return message.reply(`No ${ballType} balls!`);
+      if (!balls[ballType] || balls[ballType] <= 0) {
+        return message.reply(`No ${ballType} balls!`);
+      }
 
       balls[ballType]--;
 
@@ -108,7 +116,7 @@ export default {
 
         const shinyText = active.isShiny ? ' ✨ **SHINY!**' : '';
         await message.channel.send({
-          content: `🎉 Caught **${active.name}**${shinyText} (x${count})!`,
+          content: `🎉 Caught **${active.name}**${shinyText} (x${count}) with ${ballInfo.display}!`,
           embeds: [{ color: active.isShiny ? 0xFFD700 : 0x00ff00, thumbnail: { url: getSpriteUrl(active.id, active.isShiny) } }]
         });
         activePokemon.delete('current');
@@ -133,7 +141,7 @@ export default {
     if (subCommand === 'buy') {
       const itemName = args[1]?.toLowerCase();
       const item = pokeShopItems.find(i => i.name === itemName);
-      if (!item) return message.reply('basic or great');
+      if (!item) return message.reply('Use a valid ball type (see .x poke shop)');
 
       const balls = getUserBalls(userId);
       balls[item.name] = (balls[item.name] || 0) + 1;
@@ -174,8 +182,8 @@ export default {
     }
 
     message.reply(`**Pokémon Commands:**\n` +
-      `• .x poke spawn (admin only)\n` +
-      `• .x poke catch [basic/great]\n` +
+      `• .x poke spawn (admin)\n` +
+      `• .x poke catch [balltype]\n` +
       `• .x poke shop\n` +
       `• .x poke buy <type>\n` +
       `• .x poke dex [page]`);
