@@ -40,9 +40,13 @@ function getTrainerSprite(trainer) {
     'Giovanni': 'giovanni',
     'Misty': 'misty',
     'Brock': 'brock',
-    'Lt. Surge': 'lt-surge'
+    'Lt. Surge': 'lt-surge',
+    'Erika': 'erika',
+    'Koga': 'koga',
+    'Sabrina': 'sabrina',
+    'Blaine': 'blaine'
   };
-  const key = trainerMap[trainer] || trainer.toLowerCase().replace(' ', '-');
+  const key = trainerMap[trainer] || trainer.toLowerCase().replace(/ /g, '-');
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/${key}.png`;
 }
 
@@ -147,7 +151,7 @@ export default {
       const owned = dex.get(pokemonName);
       if (!owned) return message.reply(`You don't own **${pokemonName}**!`);
 
-      const trainers = ['Red', 'Blue', 'Giovanni', 'Misty', 'Brock', 'Lt. Surge'];
+      const trainers = ['Red', 'Blue', 'Giovanni', 'Misty', 'Brock', 'Lt. Surge', 'Erika', 'Koga', 'Sabrina', 'Blaine'];
       const trainer = trainers[Math.floor(Math.random() * trainers.length)];
       const enemyId = Math.floor(Math.random() * 151) + 1;
       const enemy = await getPokemonData(enemyId);
@@ -157,7 +161,7 @@ export default {
         title: `⚔️ Battle vs ${trainer}!`,
         description: `You sent out **${pokemonName}**!\nOpponent sent out **${enemy.name}**!`,
         thumbnail: { url: getSpriteUrl(owned.id) },
-        image: { url: getTrainerSprite(trainer) }  // Trainer sprite at bottom
+        image: { url: getTrainerSprite(trainer) }
       };
       await message.channel.send({ embeds: [embed] });
 
@@ -240,16 +244,3 @@ export default {
       `• .x poke dex [page]`);
   }
 };
-
-function getTrainerSprite(trainer) {
-  const trainerMap = {
-    'Red': 'red',
-    'Blue': 'blue',
-    'Giovanni': 'giovanni',
-    'Misty': 'misty',
-    'Brock': 'brock',
-    'Lt. Surge': 'lt-surge'
-  };
-  const key = trainerMap[trainer] || trainer.toLowerCase().replace(' ', '-');
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/trainers/${key}.png`;
-}
