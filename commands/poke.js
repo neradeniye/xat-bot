@@ -1,4 +1,5 @@
 const pokeBalls = new Map(); // userId -> count (debug in-memory)
+const userPokedex = new Map(); // userId -> Set of pokemon names (debug)
 
 const activePokemon = new Map(); // For global active wild pokemon
 
@@ -27,11 +28,24 @@ const pokemonList = [
     difficulty: 35, 
     emoji: '💧' 
   },
+  { 
+    name: 'Eevee', 
+    id: 133, 
+    difficulty: 45, 
+    emoji: '🌟' 
+  },
   // Add more later
 ];
 
 function getSpriteUrl(pokemonId) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`;
+}
+
+function getUserDex(userId) {
+  if (!userPokedex.has(userId)) {
+    userPokedex.set(userId, new Set());
+  }
+  return userPokedex.get(userId);
 }
 
 export default {
@@ -93,11 +107,14 @@ export default {
       const success = roll < active.catchChance;
 
       if (success) {
+        const dex = getUserDex(userId);
+        dex.add(active.name);
+
         await message.channel.send({
           content: `🎉 **Gotcha!** You caught the **${active.name}**!`,
           embeds: [{
             color: 0x00ff00,
-            description: `(${Math.floor(roll)}/${active.catchChance})`,
+            description: `(${Math.floor(roll)}/${active.catchChance})\nAdded to your Pokédex!`,
             thumbnail: { url: getSpriteUrl(active.id) }
           }]
         });
@@ -120,7 +137,20 @@ export default {
     }
 
     if (subCommand === 'dex' || subCommand === 'pokedex') {
-      return message.reply('🦒 **Pokédex** (debug mode): No Pokémon caught yet.\nCatch some with `.x poke catch`!');
+      const dex = getUserDex(userId);
+      if (dex.size === 0) {
+        return message.reply('🦒 **Your Pokédex** (debug): Empty! Go catch some Pokémon!');
+      }
+
+      let list = Array.from(dex).join('\n• ');
+      return message.channel.send({
+        embeds: [{
+          color: 0x00AAFF,
+          title: `🦒 Your Pokédex (${dex.size}/5)`,
+          description: `• ${list}`,
+          footer: { text: 'Debug mode - catches are temporary' }
+        }]
+      });
     }
 
     // Help
@@ -128,6 +158,6 @@ export default {
       `• \`.x poke spawn\` — Spawn a wild Pokémon (30s timer)\n` +
       `• \`.x poke catch\` — Try to catch the current one\n` +
       `• \`.x poke add basic <num>\` — Give yourself balls\n` +
-      `• \`.x poke dex\` — View pokedex (placeholder)`);
+      `• \`.x poke dex\` — View your pokedex`);
   }
 };
