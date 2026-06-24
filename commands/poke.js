@@ -1,15 +1,38 @@
-const pokeBalls = new Map();
-const userPokedex = new Map(); // name -> {id, count}
+const pokeBalls = new Map(); // userId -> { basic: count, great: count }
+const userPokedex = new Map(); // userId -> Map<name, {id, count}>
 
 const activePokemon = new Map();
+const pokemonNameCache = new Map();
 
-const pokeShopItems = [ /* same as before */ ];
+const pokeShopItems = [
+  { name: 'basic', display: 'Poké Ball', price: 0, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png', catchRate: 40 },
+  { name: 'great', display: 'Great Ball', price: 0, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png', catchRate: 60 }
+];
+
+async function getPokemonData(id) {
+  if (pokemonNameCache.has(id)) return pokemonNameCache.get(id);
+  try {
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+    const data = await res.json();
+    const pokemon = {
+      name: data.name.charAt(0).toUpperCase() + data.name.slice(1),
+      id: id
+    };
+    pokemonNameCache.set(id, pokemon);
+    return pokemon;
+  } catch (e) {
+    return { name: `Unknown #${id}`, id };
+  }
+}
 
 function getSpriteUrl(id) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
 }
 
-function getUserBalls(userId) { /* same */ }
+function getUserBalls(userId) {
+  if (!pokeBalls.has(userId)) pokeBalls.set(userId, { basic: 0, great: 0 });
+  return pokeBalls.get(userId);
+}
 
 function getUserDex(userId) {
   if (!userPokedex.has(userId)) userPokedex.set(userId, new Map());
@@ -18,23 +41,27 @@ function getUserDex(userId) {
 
 export default {
   name: 'poke',
-  execute: async (message, args) => {
+  execute: async (message, args, client) => {
     const subCommand = args[0]?.toLowerCase();
     const userId = message.author.id;
 
+    // SPAWN - Dynamic Pokémon
     if (subCommand === 'spawn') {
-      const id = Math.floor(Math.random() * 151) + 1; // 1-151 classic
-      const name = await getPokemonName(id); // simple fetch
+      if (activePokemon.has('current')) activePokemon.delete('current');
 
-      const difficulty = 30 + Math.floor(Math.random() * 50);
-      const pokemonData = { name, id, difficulty, spawnTime: Date.now() };
+      const id = Math.floor(Math.random() * 151) + 1;
+      const pokemon = await getPokemonData(id);
+      const difficulty = 25 + Math.floor(Math.random() * 60);
+
+      const pokemonData = { ...pokemon, difficulty, spawnTime: Date.now() };
       activePokemon.set('current', pokemonData);
 
       const embed = {
         color: 0xFFAA00,
         title: '🐾 A wild Pokémon appeared!',
-        description: `**Wild ${name}** appeared!\nCatch chance: **${difficulty}%**`,
-        thumbnail: { url: getSpriteUrl(id) }
+        description: `**Wild ${pokemon.name}** appeared!\nCatch chance ≈ **${difficulty}%**`,
+        thumbnail: { url: getSpriteUrl(pokemon.id) },
+        footer: { text: 'Use .x poke catch' }
       };
 
       const spawnMsg = await message.channel.send({ embeds: [embed] });
@@ -42,33 +69,114 @@ export default {
       setTimeout(() => {
         if (activePokemon.get('current')?.spawnTime === pokemonData.spawnTime) {
           activePokemon.delete('current');
-          spawnMsg.reply('💨 Ran away!');
+          spawnMsg.reply('💨 The wild Pokémon ran away!');
         }
       }, 30000);
       return;
     }
 
-    // ... (catch, shop, buy, dex remain similar - catch now saves dynamic name/id)
+    // CATCH
+    if (subCommand === 'catch') {
+      const active = activePokemon.get('current');
+      if (!active) return message.reply('No wild Pokémon right now!');
 
-    if (subCommand === 'dex' || subCommand === 'pokedex') {
-      // pagination code as before, using saved names
+      const balls = getUserBalls(userId);
+      let ballType = (args[1] || 'basic').toLowerCase();
+      if (!balls[ballType] || balls[ballType] <= 0) {
+        return message.reply(`No ${ballType} balls!`);
+      }
+
+      balls[ballType]--;
+
+      const ballInfo = pokeShopItems.find(b => b.name === ballType) || pokeShopItems[0];
+      const adjusted = Math.min(95, active.difficulty + (ballInfo.catchRate - 40));
+
+      const roll = Math.random() * 100;
+      const success = roll < adjusted;
+
+      if (success) {
+        const dex = getUserDex(userId);
+        const currentCount = (dex.get(active.name)?.count || 0) + 1;
+        dex.set(active.name, { id: active.id, count: currentCount });
+
+        await message.channel.send({
+          content: `🎉 **Gotcha!** Caught **${active.name}** (x${currentCount})!`,
+          embeds: [{ color: 0x00ff00, thumbnail: { url: getSpriteUrl(active.id) } }]
+        });
+        activePokemon.delete('current');
+      } else {
+        await message.channel.send(`💥 The Pokémon broke free!`);
+      }
+      return;
     }
 
-    // Help...
+    // SHOP
+    if (subCommand === 'shop') {
+      const embed = {
+        color: 0xAA00FF,
+        title: '🛒 Poké Shop (Debug Prices)',
+        description: 'Buy with .x poke buy <type>',
+        fields: pokeShopItems.map(item => ({
+          name: item.display,
+          value: `**${item.price}** xats\nCatch bonus: +${item.catchRate-40}%\nType: ${item.name}`,
+          inline: true
+        }))
+      };
+      await message.channel.send({ embeds: [embed] });
+      return;
+    }
+
+    // BUY
+    if (subCommand === 'buy') {
+      const itemName = args[1]?.toLowerCase();
+      const item = pokeShopItems.find(i => i.name === itemName);
+      if (!item) return message.reply('Available: basic or great');
+
+      const balls = getUserBalls(userId);
+      balls[item.name] = (balls[item.name] || 0) + 1;
+
+      await message.channel.send({
+        content: `✅ Bought 1 **${item.display}**!`,
+        embeds: [{ thumbnail: { url: item.sprite }, description: `You now have ${balls[item.name]}.` }]
+      });
+      return;
+    }
+
+    // DEX with pagination
+    if (subCommand === 'dex' || subCommand === 'pokedex') {
+      const dexMap = getUserDex(userId);
+      if (dexMap.size === 0) return message.reply('🦒 Your Pokédex is empty!');
+
+      const entries = Array.from(dexMap.entries());
+      const itemsPerPage = 50;
+      const page = parseInt(args[1]) || 1;
+      const totalPages = Math.ceil(entries.length / itemsPerPage);
+      const currentPage = Math.max(1, Math.min(page, totalPages));
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const pageEntries = entries.slice(start, start + itemsPerPage);
+
+      const description = pageEntries.map(([name, data]) => 
+        `• ${name} ${data.count > 1 ? `**x${data.count}**` : ''}`
+      ).join('\n');
+
+      await message.channel.send({
+        embeds: [{
+          color: 0x00AAFF,
+          title: `🦒 Pokédex (${dexMap.size} species)`,
+          description: description,
+          footer: { text: `Page ${currentPage} / ${totalPages} • .x poke dex <page>` }
+        }]
+      });
+      return;
+    }
+
+    // Help
+    message.reply(`**Pokémon Commands:**\n` +
+      `• .x poke spawn\n` +
+      `• .x poke catch [basic/great]\n` +
+      `• .x poke shop\n` +
+      `• .x poke buy <basic/great>\n` +
+      `• .x poke dex [page]`);
   }
 };
-
-// Helper to get name (cached if possible)
-const pokemonNameCache = new Map();
-async function getPokemonName(id) {
-  if (pokemonNameCache.has(id)) return pokemonNameCache.get(id);
-  try {
-    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-    const data = await res.json();
-    const name = data.name.charAt(0).toUpperCase() + data.name.slice(1);
-    pokemonNameCache.set(id, name);
-    return name;
-  } catch {
-    return `Pokémon #${id}`;
-  }
-}
