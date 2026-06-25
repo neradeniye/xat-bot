@@ -142,7 +142,7 @@ export default {
       return;
     }
 
-    // BATTLE with possible Team Rocket steal
+    // BATTLE with Team Rocket steal chance
     if (subCommand === 'battle') {
       const pokemonName = args[1] ? args[1].charAt(0).toUpperCase() + args[1].slice(1).toLowerCase() : null;
       if (!pokemonName) return message.reply('Usage: `.x poke battle <pokemonname>`');
@@ -151,8 +151,8 @@ export default {
       const owned = dex.get(pokemonName);
       if (!owned) return message.reply(`You don't own **${pokemonName}**!`);
 
-      // Team Rocket steal chance BEFORE battle
-      if (Math.random() < 0.25) { // 25% chance
+      // Team Rocket steal chance
+      if (Math.random() < 0.10) { // 10% chance
         dex.delete(pokemonName);
         await message.channel.send({
           content: `🚀 **Uh oh! Team Rocket stole ${pokemonName}!**`,
@@ -165,7 +165,7 @@ export default {
         return;
       }
 
-      // Normal battle if no steal
+      // Normal battle
       const trainers = ['Red', 'Blue', 'Giovanni', 'Misty', 'Brock', 'Lt. Surge', 'Erika', 'Koga', 'Sabrina', 'Blaine'];
       const trainer = trainers[Math.floor(Math.random() * trainers.length)];
       const enemyId = Math.floor(Math.random() * 151) + 1;
