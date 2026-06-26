@@ -56,19 +56,37 @@ export default {
 
     // ====================== SHOW LIST ======================
     if (!args[0]) {
+      const gradientList = Object.entries(gradients)
+        .map(([name, roleId]) => {
+          const role = message.guild.roles.cache.get(roleId);
+          if (role) {
+            // Shows role color + name without pinging
+            return `• **${name}** — ${role.toString()}`;
+          }
+          return `• **${name}**`;
+        })
+        .join('\n');
+
       const embed = new EmbedBuilder()
         .setTitle('🌈 Name Color & Gradient Options')
         .setColor(0xff66cc)
         .setDescription(
           '**Custom Color:**\n' +
           '`#hex1` or `#hex1 #hex2`\n\n' +
-          '**Gradients:**\n' +
-          Object.keys(gradients).map(name => `• **${name}**`).join('\n') +
-          '\n\nUse `.x namecolor remove` to clear.'
+          '**Available Gradients:**\n' +
+          gradientList +
+          '\n\n**Usage Examples:**\n' +
+          '• `.x namecolor #ff66cc`\n' +
+          '• `.x namecolor #ff66cc #00ffff`\n' +
+          '• `.x namecolor red`\n' +
+          '• `.x namecolor remove`'
         )
-        .setFooter({ text: 'Boosters only • .x namecolor <option>' });
+        .setFooter({ text: 'Boosters only • One active color or gradient at a time' });
 
-      return message.reply({ embeds: [embed] });
+      return message.reply({ 
+        embeds: [embed], 
+        allowedMentions: { parse: [] }   // ← This prevents any pings
+      });
     }
 
     // ====================== GRADIENT MODE ======================
