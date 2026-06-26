@@ -191,6 +191,11 @@ export function setupPokemonReactions(client) {
     const active = activePokemon.get('current');
     if (!active || active.messageId !== reaction.message.id) return;
 
+    // Prevent multiple attempts from same user at once
+    if (active.lastReactor === user.id) return;
+
+    active.lastReactor = user.id;
+
     const dex = getUserDex(user.id);
     const roll = Math.random() * 100;
     const success = roll < active.catchDifficulty;
