@@ -86,6 +86,11 @@ client.once('ready', () => {
     return channel;
   }
 
+  // ====================== POKÉMON REACTION HANDLER ======================
+  setupPokemonReactions(client);
+  console.log('✅ Pokémon reaction handler registered');
+});
+
   // ====================== REWARD SYSTEM ======================
   setInterval(async () => {
     const topUser = getTopMessageUser();
@@ -266,5 +271,4 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
   }
 });
 
-setupPokemonReactions(client);
 client.login(token);
