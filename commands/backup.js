@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BACKUP_DIR = path.join(__dirname, '../backups');
 
- // Create backups folder if it doesn't exist
+// Create backups folder if it doesn't exist
 if (!fs.existsSync(BACKUP_DIR)) {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
@@ -28,12 +28,12 @@ export default {
         '• `.x backup list`');
     }
 
-    // Only allow admins / owners for safety
+    // Only allow admins
     if (!message.member.permissions.has('Administrator')) {
       return message.reply('❌ Only administrators can use backup commands.');
     }
 
-    const dbPath = '/var/xat-bot-data/economy.db'; // ← Make sure this matches your db.js
+    const dbPath = '/var/xat-bot-data/economy.db'; // Make sure this matches your db.js path
 
     // ====================== LIST ======================
     if (sub === 'list') {
@@ -72,12 +72,8 @@ export default {
       }
 
       try {
-        // Optional: Create a quick backup of current state before overwriting
-        const safetyBackup = getBackupPath(`pre-load-${Date.now()}`);
-        fs.copyFileSync(dbPath, safetyBackup);
-
         fs.copyFileSync(backupPath, dbPath);
-        return message.reply(`✅ Database restored from backup **${backupName}**.\nA safety backup was created just in case.`);
+        return message.reply(`✅ Database successfully restored from backup **${backupName}**.`);
       } catch (err) {
         console.error(err);
         return message.reply('❌ Failed to restore backup.');
@@ -92,7 +88,7 @@ export default {
 
       try {
         fs.unlinkSync(backupPath);
-        return message.reply(`🗑️ Backup **${backupName}** deleted.`);
+        return message.reply(`🗑️ Backup **${backupName}** has been deleted.`);
       } catch (err) {
         console.error(err);
         return message.reply('❌ Failed to delete backup.');
