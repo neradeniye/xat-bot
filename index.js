@@ -32,6 +32,9 @@ global.xatBotStarted = true;
 global.lootboxActive = false;
 global.lootboxClaimed = false;
 
+let lastPokemonSpawnMessages = 0;
+let pokemonSpawnMessageThreshold = 50;
+
 const cooldowns = new Map();
 const EXCLUDED_ROLE_ID = '1385722392764092558';
 
@@ -49,12 +52,10 @@ const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('
 for (const file of commandFiles) {
   const command = (await import(`./commands/${file}`)).default;
 
-  // Register primary name
   if (command.name) {
     commands.set(command.name.toLowerCase(), command);
   }
 
-  // Register aliases
   if (command.aliases && Array.isArray(command.aliases)) {
     for (const alias of command.aliases) {
       aliases.set(alias.toLowerCase(), command);
@@ -87,7 +88,6 @@ client.once('ready', () => {
       return null;
     }
     return channel;
-
   }
 
   // ====================== REWARD SYSTEM ======================
@@ -139,6 +139,38 @@ client.once('ready', () => {
       }, 45_000);
 
       scheduleLootbox();
+    }, delay);
+  }
+
+  // ====================== AUTO POKÉMON SPAWN ======================
+  function schedulePokemonSpawn() {
+    const delay = (1 + Math.random() * 2) * 60 * 60 * 1000; // 1 to 3 hours
+
+    setTimeout(async () => {
+      const guild = client.guilds.cache.first();
+      if (!guild) return schedulePokemonSpawn();
+
+      const currentMessageCount = global.totalMessages || 0;
+
+      if (currentMessageCount - lastPokemonSpawnMessages >= pokemonSpawnMessageThreshold) {
+        const channel = await getMainChannel(guild);
+        if (channel) {
+          try {
+            const pokeModule = await import('./commands/poke.js');
+            if (pokeModule.spawnPokemon) {
+              await pokeModule.spawnPokemon(channel);
+              console.log(`[Auto Pokémon] Spawned due to activity (${currentMessageCount - lastPokemonSpawnMessages} messages)`);
+              lastPokemonSpawnMessages = currentMessageCount;
+            }
+          } catch (err) {
+            console.error('[Auto Pokémon Spawn Error]', err);
+          }
+        }
+      } else {
+        console.log(`[Auto Pokémon] Not enough activity yet (${currentMessageCount - lastPokemonSpawnMessages}/${pokemonSpawnMessageThreshold})`);
+      }
+
+      schedulePokemonSpawn(); // chain next attempt
     }, delay);
   }
 
@@ -200,6 +232,7 @@ client.once('ready', () => {
 
   scheduleLootbox();
   scheduleImposter();
+  schedulePokemonSpawn();
 });
 
 // ==================== MESSAGE HANDLER ====================
@@ -207,6 +240,9 @@ client.on('messageCreate', async message => {
   if (message.author.bot) return;
 
   incrementMessageCount(message.author.id);
+
+  // Track total messages for Pokémon spawn
+  global.totalMessages = (global.totalMessages || 0) + 1;
 
   const now = Date.now();
   const lastUsed = cooldowns.get(message.author.id) || 0;
@@ -220,7 +256,6 @@ client.on('messageCreate', async message => {
   const args = message.content.slice(prefix.length).trim().split(/\s+/);
   const commandName = args.shift()?.toLowerCase();
 
-  // Support both primary name and aliases
   const command = commands.get(commandName) || aliases.get(commandName);
 
   if (command) {

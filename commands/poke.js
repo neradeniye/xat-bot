@@ -46,7 +46,7 @@ export default {
     const subCommand = args[0]?.toLowerCase();
     const userId = message.author.id;
 
-    // ====================== SPAWN ======================
+    // ====================== SPAWN (Admin manual spawn) ======================
     if (subCommand === 'spawn') {
       if (!message.member.permissions.has('Administrator')) {
         return message.reply('❌ Admin only for spawn!');
@@ -111,7 +111,6 @@ export default {
 
       // Team Rocket steal chance
       if (Math.random() < 0.10) {
-        // Remove from DB
         db.prepare('DELETE FROM user_pokedex WHERE user_id = ? AND pokemon_name = ?')
           .run(userId, pokemonName);
 
@@ -233,4 +232,44 @@ export function setupPokemonReactions(client) {
       reaction.users.remove(user.id).catch(() => {});
     }
   });
+}
+
+// ====================== EXPORT FOR AUTO-SPAWN ======================
+export async function spawnPokemon(channel) {
+  if (!channel) return;
+
+  const id = Math.floor(Math.random() * 151) + 1;
+  const pokemon = await getPokemonData(id);
+  const isShiny = Math.random() < 0.03;
+  const catchDifficulty = 35 + Math.floor(Math.random() * 50);
+
+  const pokemonData = { 
+    ...pokemon, 
+    isShiny, 
+    catchDifficulty, 
+    spawnTime: Date.now(),
+    messageId: null 
+  };
+
+  activePokemon.set('current', pokemonData);
+
+  const embed = {
+    color: isShiny ? 0xFFD700 : 0xFFAA00,
+    title: isShiny ? '✨ A shiny Pokémon appeared!' : '🐾 A wild Pokémon appeared!',
+    description: `**${pokemon.name}** has appeared!\n\nReact with ⚾ to try catching it!`,
+    thumbnail: { url: getSpriteUrl(pokemon.id, isShiny) },
+    footer: { text: `Catch chance ≈ ${catchDifficulty}% • 45 seconds` }
+  };
+
+  const spawnMsg = await channel.send({ embeds: [embed] });
+  pokemonData.messageId = spawnMsg.id;
+
+  await spawnMsg.react('⚾');
+
+  setTimeout(() => {
+    if (activePokemon.get('current')?.spawnTime === pokemonData.spawnTime) {
+      activePokemon.delete('current');
+      spawnMsg.reply('💨 The wild Pokémon ran away!');
+    }
+  }, 45000);
 }
