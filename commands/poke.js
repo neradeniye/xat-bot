@@ -91,13 +91,6 @@ export default {
 
       const spawnMsg = await message.channel.send({ embeds: [embed] });
 
-      if (Math.random() < 0.08) {
-        setTimeout(() => {
-          const stolen = 10 + Math.floor(Math.random() * 91);
-          spawnMsg.reply(`😠 **${pokemon.name} rebelled!** Stole **${stolen} xats**! (debug)`);
-        }, 8000);
-      }
-
       setTimeout(() => {
         if (activePokemon.get('current')?.spawnTime === pokemonData.spawnTime) {
           activePokemon.delete('current');
@@ -137,7 +130,13 @@ export default {
         });
         activePokemon.delete('current');
       } else {
-        await message.channel.send(`💥 Broke free!`);
+        await message.channel.send(`💥 ${active.name} Broke free!`);
+      }
+      if (Math.random() < 0.08) {
+        setTimeout(() => {
+          const stolen = 10 + Math.floor(Math.random() * 91);
+          spawnMsg.reply(`😠 **${pokemon.name} rebelled!** Stole **${stolen} xats**! (debug)`);
+        }, 8000);
       }
       return;
     }
@@ -154,12 +153,19 @@ export default {
       // Team Rocket steal chance
       if (Math.random() < 0.10) { // 10% chance
         dex.delete(pokemonName);
+        
+        // Random male or female grunt
+        const isFemale = Math.random() < 0.5;
+        const gruntSprite = isFemale 
+          ? "https://play.pokemonshowdown.com/sprites/trainers/rocketgruntf.png"
+          : "https://play.pokemonshowdown.com/sprites/trainers/rocketgrunt.png";
+
         await message.channel.send({
           content: `🚀 **Uh oh! Team Rocket stole ${pokemonName}!**`,
           embeds: [{ 
             color: 0x000000,
             description: "Looks like Team Rocket is up to no good again...",
-            image: { url: "https://play.pokemonshowdown.com/sprites/trainers/team-rocket.png" }
+            image: { url: gruntSprite }
           }]
         });
         return;
