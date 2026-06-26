@@ -38,14 +38,27 @@ const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 const { prefix } = config;
 const token = process.env.DISCORD_TOKEN;
 
-// Load commands
-const commands = new Map();
+// Load commands with alias support
+const commands = new Map();   // primary name → command
+const aliases = new Map();    // alias → command
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
   const command = (await import(`./commands/${file}`)).default;
-  commands.set(command.name, command);
+
+  // Register primary name
+  if (command.name) {
+    commands.set(command.name.toLowerCase(), command);
+  }
+
+  // Register aliases
+  if (command.aliases && Array.isArray(command.aliases)) {
+    for (const alias of command.aliases) {
+      aliases.set(alias.toLowerCase(), command);
+    }
+  }
 }
 
 const client = new Client({
@@ -124,63 +137,61 @@ client.once('ready', () => {
     }, delay);
   }
 
-// ====================== THE IMPOSTER SYSTEM ======================
-function scheduleImposter() {
-  const delay = Math.floor(Math.random() * (5 - 3 + 1) + 3) * 60 * 60 * 1000; // 3–5 hours
+  // ====================== THE IMPOSTER SYSTEM ======================
+  function scheduleImposter() {
+    const delay = Math.floor(Math.random() * (5 - 3 + 1) + 3) * 60 * 60 * 1000; // 3–5 hours
 
-  setTimeout(async () => {
-    const guild = client.guilds.cache.first();
-    if (!guild) return scheduleImposter();
+    setTimeout(async () => {
+      const guild = client.guilds.cache.first();
+      if (!guild) return scheduleImposter();
 
-    const channel = await getMainChannel(guild);
-    if (!channel) return scheduleImposter();
+      const channel = await getMainChannel(guild);
+      if (!channel) return scheduleImposter();
 
-    const activeRows = getRecentActiveUsers(30);
-    if (activeRows.length < 5) {
-      console.log('[Imposter] Not enough active users');
-      return scheduleImposter();
-    }
-
-    // Fetch full user objects to get usernames
-    const selected = [];
-    for (const row of activeRows.slice(0, 5)) {
-      try {
-        const user = await client.users.fetch(row.user_id);
-        selected.push(user);
-      } catch (err) {
-        // Fallback if user can't be fetched
-        selected.push({ username: `User${row.user_id.slice(-4)}`, id: row.user_id });
+      const activeRows = getRecentActiveUsers(30);
+      if (activeRows.length < 5) {
+        console.log('[Imposter] Not enough active users');
+        return scheduleImposter();
       }
-    }
 
-    const imposterIndex = Math.floor(Math.random() * 5);
-    const letters = ['A', 'B', 'C', 'D', 'E'];
-    const answer = letters[imposterIndex];
-
-    setCurrentImposter({ answer, rewardGiven: false });
-
-    let description = '**🕵️ ONE OF THESE USERS IS THE IMPOSTER! 🕵️**\n\n';
-    selected.forEach((user, i) => {
-      description += `${letters[i]} — **${user.username}**\n`;
-    });
-
-    await channel.send({
-      content: description + '\nFirst to guess correctly with `.x choose A/B/C/D/E` wins **100 xats**!\nWrong guess = **-200 xats**'
-    });
-
-    console.log(`[Imposter] Spawned — Answer: ${answer}`);
-
-    setTimeout(() => {
-      const current = getCurrentImposter?.();
-      if (current && !current.rewardGiven) {
-        channel.send('⏰ The Imposter got away... Better luck next time!');
-        setCurrentImposter(null);
+      const selected = [];
+      for (const row of activeRows.slice(0, 5)) {
+        try {
+          const user = await client.users.fetch(row.user_id);
+          selected.push(user);
+        } catch (err) {
+          selected.push({ username: `User${row.user_id.slice(-4)}`, id: row.user_id });
+        }
       }
-    }, 120_000);
 
-    scheduleImposter(); // Schedule next
-  }, delay);
-}
+      const imposterIndex = Math.floor(Math.random() * 5);
+      const letters = ['A', 'B', 'C', 'D', 'E'];
+      const answer = letters[imposterIndex];
+
+      setCurrentImposter({ answer, rewardGiven: false });
+
+      let description = '**🕵️ ONE OF THESE USERS IS THE IMPOSTER! 🕵️**\n\n';
+      selected.forEach((user, i) => {
+        description += `${letters[i]} — **${user.username}**\n`;
+      });
+
+      await channel.send({
+        content: description + '\nFirst to guess correctly with `.x choose A/B/C/D/E` wins **100 xats**!\nWrong guess = **-200 xats**'
+      });
+
+      console.log(`[Imposter] Spawned — Answer: ${answer}`);
+
+      setTimeout(() => {
+        const current = getCurrentImposter?.();
+        if (current && !current.rewardGiven) {
+          channel.send('⏰ The Imposter got away... Better luck next time!');
+          setCurrentImposter(null);
+        }
+      }, 120_000);
+
+      scheduleImposter();
+    }, delay);
+  }
 
   scheduleLootbox();
   scheduleImposter();
@@ -203,8 +214,13 @@ client.on('messageCreate', async message => {
 
   const args = message.content.slice(prefix.length).trim().split(/\s+/);
   const commandName = args.shift()?.toLowerCase();
-  const command = commands.get(commandName);
-  if (command) command.execute(message, args, client);
+
+  // Support both primary name and aliases
+  const command = commands.get(commandName) || aliases.get(commandName);
+
+  if (command) {
+    command.execute(message, args, client);
+  }
 });
 
 // ==================== BOOSTER CLEANUP ====================

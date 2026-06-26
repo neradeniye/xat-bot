@@ -5,12 +5,13 @@ const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 const { xatEmoji } = config;
 
 export default {
-  name: 'balance',
-  execute(message) {
+  name: 'balance',           // primary name
+  aliases: ['bal', 'b'],     // ← add any aliases you want here
+  execute(message, args) {
     const target = message.mentions.users.first() || message.author;
     const balance = getUserBalance(target.id);
 
     const descriptor = target.id === message.author.id ? 'You have' : 'They have';
-    message.reply(`${descriptor} ${balance} ${xatEmoji} xats.`);
+    message.reply(`${descriptor} **${balance}** ${xatEmoji} xats.`);
   }
 };
