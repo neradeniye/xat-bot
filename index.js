@@ -67,13 +67,16 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessageReactions
   ]
 });
 
 client.once('ready', () => {
   console.log(`🟢 Logged in as ${client.user.tag}`);
   client.user.setActivity('for .x help', { type: 3 });
+  setupPokemonReactions(client);
+  console.log('✅ Pokémon reaction handler registered');
 
   const MAIN_CHANNEL_ID = '1502176270518325310';
 
@@ -85,8 +88,6 @@ client.once('ready', () => {
     }
     return channel;
 
-    setupPokemonReactions(client);
-    console.log('✅ Pokémon reaction handler registered');
   }
 
   // ====================== REWARD SYSTEM ======================
