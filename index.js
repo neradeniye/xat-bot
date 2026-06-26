@@ -19,6 +19,7 @@ import {
   removeUserCustomRole
 } from './db.js';
 
+import { setupPokemonReactions } from './commands/poke.js';
 import { setCurrentImposter } from './commands/choose.js';
 
 // Prevent duplicate starts
@@ -265,4 +266,5 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
   }
 });
 
+setupPokemonReactions(client);
 client.login(token);
