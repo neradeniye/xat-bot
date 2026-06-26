@@ -84,12 +84,10 @@ client.once('ready', () => {
       return null;
     }
     return channel;
-  }
 
-  // ====================== POKÉMON REACTION HANDLER ======================
-  setupPokemonReactions(client);
-  console.log('✅ Pokémon reaction handler registered');
-});
+    setupPokemonReactions(client);
+    console.log('✅ Pokémon reaction handler registered');
+  }
 
   // ====================== REWARD SYSTEM ======================
   setInterval(async () => {
