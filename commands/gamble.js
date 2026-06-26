@@ -43,9 +43,9 @@ export default {
 
     let amount;
     if (win) {
-      amount = Math.floor(Math.random() * 101) + 50; // +50 to +150
+      amount = Math.floor(Math.random() * 101) + 100; // +50 to +150
     } else {
-      amount = -(Math.floor(Math.random() * 401) + 100); // -100 to -500
+      amount = -(Math.floor(Math.random() * 401) + 50); // -100 to -500
     }
 
     // === UPDATE BALANCE & COOLDOWN ===

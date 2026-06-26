@@ -37,9 +37,9 @@ export default {
         content: `🎉 **CORRECT!** ${message.author} caught the Imposter!\nYou won **100 xats**!`
       });
     } else {
-      addUserXats(message.author.id, -200);
+      addUserXats(message.author.id, -100);
       await message.reply({
-        content: `❌ Wrong choice... You lost **200 xats**.`
+        content: `❌ Wrong choice... You lost **100 xats**.`
       });
     }
   }

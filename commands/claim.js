@@ -6,6 +6,11 @@ const TROLL_MESSAGES = [
   "You opened the lootbox... it was empty. Tough luck.",
   "The lootbox laughed at you. **0 xats.**",
   "You reached in... and pulled out *nothing*. Classic.",
+  "Error 404 The reward could not be found.",
+  "The reward is in another castle!",
+  "You open the lootbox... You get absolutely nothing.",
+  "Futile attempt.",
+  "You aren't very good at collecting these are you?",
   "The bot ate the reward. You get **0 xats**."
 ];
 

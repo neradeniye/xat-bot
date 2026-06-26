@@ -33,6 +33,11 @@ export default {
         `You thought you’d get free stuff? *Wrong.* -100 xats.`,
         `The bot is not in a giving mood. **-100 xats.**`,
         `You pestered me. Now pay. **-100 xats.**`,
+        `You thought you would get free shit? **-100 xats.**`,
+        `I guess today is not your lucky day. **-100 xats.**`,
+        `Tough luck pal. No xats today!`,
+        `I was hungry so I ate your 100 xats.`,
+        `Git Gud. **-100 xats.**`,
         `I rolled a 1. You lose. **-100 xats.**`
       ][Math.floor(Math.random() * 5)];
     } else {
