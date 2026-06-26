@@ -141,6 +141,25 @@ try {
   console.error('[DB Banner Migration ERROR]', err);
 }
 
+// Create pokemon tables
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS user_pokedex (
+    user_id TEXT NOT NULL,
+    pokemon_name TEXT NOT NULL,
+    pokemon_id INTEGER NOT NULL,
+    count INTEGER DEFAULT 1,
+    shiny INTEGER DEFAULT 0,
+    PRIMARY KEY (user_id, pokemon_name)
+  );
+`).run();
+
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS pokemon_battle_cooldowns (
+    user_id TEXT PRIMARY KEY,
+    last_battle INTEGER
+  );
+`).run();
+
 export function getConfig(key) {
   const row = db.prepare('SELECT value FROM bot_config WHERE key = ?').get(key);
   return row ? row.value : null;
@@ -433,5 +452,45 @@ export function removeUserCustomRole(userId) {
   db.prepare('DELETE FROM user_custom_roles WHERE user_id = ?').run(userId);
 }
 
+export function getUserPokedex(userId) {
+  const rows = db.prepare(`
+    SELECT pokemon_name, pokemon_id, count, shiny 
+    FROM user_pokedex WHERE user_id = ?
+  `).all(userId);
+
+  const dex = new Map();
+  rows.forEach(row => {
+    dex.set(row.pokemon_name, {
+      id: row.pokemon_id,
+      count: row.count,
+      shiny: !!row.shiny
+    });
+  });
+  return dex;
+}
+
+export function addToPokedex(userId, pokemonName, pokemonId, isShiny) {
+  db.prepare(`
+    INSERT INTO user_pokedex (user_id, pokemon_name, pokemon_id, count, shiny)
+    VALUES (?, ?, ?, 1, ?)
+    ON CONFLICT(user_id, pokemon_name) 
+    DO UPDATE SET 
+      count = count + 1,
+      shiny = MAX(shiny, excluded.shiny)
+  `).run(userId, pokemonName, pokemonId, isShiny ? 1 : 0);
+}
+
+export function getBattleCooldown(userId) {
+  const row = db.prepare('SELECT last_battle FROM pokemon_battle_cooldowns WHERE user_id = ?').get(userId);
+  return row ? row.last_battle : 0;
+}
+
+export function setBattleCooldown(userId) {
+  db.prepare(`
+    INSERT INTO pokemon_battle_cooldowns (user_id, last_battle)
+    VALUES (?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET last_battle = excluded.last_battle
+  `).run(userId, Date.now());
+}
 
 export { db };

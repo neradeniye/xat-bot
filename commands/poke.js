@@ -1,5 +1,12 @@
+import { 
+  getUserPokedex, 
+  addToPokedex, 
+  getBattleCooldown, 
+  setBattleCooldown,
+  addUserXats
+} from '../db.js';
+
 const activePokemon = new Map();
-const userPokedex = new Map();
 const pokemonNameCache = new Map();
 
 async function getPokemonData(id) {
@@ -33,11 +40,6 @@ function getTrainerSprite(trainer) {
   return `https://play.pokemonshowdown.com/sprites/trainers/${key}.png`;
 }
 
-function getUserDex(userId) {
-  if (!userPokedex.has(userId)) userPokedex.set(userId, new Map());
-  return userPokedex.get(userId);
-}
-
 export default {
   name: 'poke',
   execute: async (message, args) => {
@@ -54,8 +56,8 @@ export default {
 
       const id = Math.floor(Math.random() * 151) + 1;
       const pokemon = await getPokemonData(id);
-      const isShiny = Math.random() < 0.03; // 3% shiny chance
-      const catchDifficulty = 35 + Math.floor(Math.random() * 50); // 35-85%
+      const isShiny = Math.random() < 0.03;
+      const catchDifficulty = 35 + Math.floor(Math.random() * 50);
 
       const pokemonData = { 
         ...pokemon, 
@@ -80,7 +82,6 @@ export default {
 
       await spawnMsg.react('⚾');
 
-      // Auto despawn
       setTimeout(() => {
         if (activePokemon.get('current')?.spawnTime === pokemonData.spawnTime) {
           activePokemon.delete('current');
@@ -91,19 +92,29 @@ export default {
       return;
     }
 
-    // ====================== BATTLE ======================
+    // ====================== BATTLE (with 1 hour cooldown) ======================
     if (subCommand === 'battle') {
       const pokemonName = args[1] ? args[1].charAt(0).toUpperCase() + args[1].slice(1).toLowerCase() : null;
       if (!pokemonName) return message.reply('Usage: `.x poke battle <pokemonname>`');
 
-      const dex = getUserDex(userId);
+      const dex = getUserPokedex(userId);
       const owned = dex.get(pokemonName);
       if (!owned) return message.reply(`You don't own **${pokemonName}**!`);
 
+      // Cooldown check (1 hour = 3600000 ms)
+      const lastBattle = getBattleCooldown(userId);
+      const cooldown = 3600000;
+      if (Date.now() - lastBattle < cooldown) {
+        const timeLeft = Math.ceil((cooldown - (Date.now() - lastBattle)) / 60000);
+        return message.reply(`⏳ You can battle again in **${timeLeft} minutes**.`);
+      }
+
       // Team Rocket steal chance
       if (Math.random() < 0.10) {
-        dex.delete(pokemonName);
-        
+        // Remove from DB
+        db.prepare('DELETE FROM user_pokedex WHERE user_id = ? AND pokemon_name = ?')
+          .run(userId, pokemonName);
+
         const isFemale = Math.random() < 0.5;
         const gruntSprite = isFemale 
           ? "https://play.pokemonshowdown.com/sprites/trainers/rocketgruntf.png"
@@ -137,20 +148,25 @@ export default {
 
       setTimeout(async () => {
         const win = Math.random() < 0.55;
+        const amount = 10 + Math.floor(Math.random() * 41); // 10-50 xats
+
         if (win) {
-          const rewardXats = 30 + Math.floor(Math.random() * 70);
-          await message.channel.send(`🎉 **Victory!** ${pokemonName} defeated ${enemy.name}! You earned **${rewardXats} xats**!`);
+          addUserXats(userId, amount);
+          await message.channel.send(`🎉 **Victory!** ${pokemonName} defeated ${enemy.name}! You earned **${amount} xats**!`);
         } else {
-          const lostXats = 15 + Math.floor(Math.random() * 60);
-          await message.channel.send(`💥 Defeat... You lost **${lostXats} xats**!`);
+          addUserXats(userId, -amount);
+          await message.channel.send(`💥 Defeat... You lost **${amount} xats**!`);
         }
+
+        setBattleCooldown(userId);
       }, 2200);
+
       return;
     }
 
     // ====================== DEX ======================
     if (subCommand === 'dex' || subCommand === 'pokedex') {
-      const dexMap = getUserDex(userId);
+      const dexMap = getUserPokedex(userId);
       if (dexMap.size === 0) return message.reply('🦒 Your Pokédex is empty!');
 
       const entries = Array.from(dexMap.entries());
@@ -191,23 +207,20 @@ export function setupPokemonReactions(client) {
     const active = activePokemon.get('current');
     if (!active || active.messageId !== reaction.message.id) return;
 
-    // Prevent multiple attempts from same user at once
     if (active.lastReactor === user.id) return;
-
     active.lastReactor = user.id;
 
-    const dex = getUserDex(user.id);
-    const roll = Math.random() * 100;
-    const success = roll < active.catchDifficulty;
+    const success = Math.random() * 100 < active.catchDifficulty;
 
     if (success) {
-      const count = (dex.get(active.name)?.count || 0) + 1;
-      dex.set(active.name, { id: active.id, count, shiny: active.isShiny });
+      addToPokedex(user.id, active.name, active.id, active.isShiny);
 
+      const dex = getUserPokedex(user.id); // refresh
+      const count = dex.get(active.name).count;
       const shinyText = active.isShiny ? ' ✨ **SHINY!**' : '';
 
       await reaction.message.channel.send({
-        content: `🎉 **${user.username}** caught **${active.name}**${shinyText}!`,
+        content: `🎉 **${user.username}** caught **${active.name}**${shinyText} (x${count})!`,
         embeds: [{
           color: active.isShiny ? 0xFFD700 : 0x00ff00,
           thumbnail: { url: getSpriteUrl(active.id, active.isShiny) }
