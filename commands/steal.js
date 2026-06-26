@@ -13,7 +13,7 @@ export default {
 
     const now = Date.now();
     const lastSteal = getLastSteal(message.author.id);
-    const cooldown = 12 * 60 * 60 * 1000; // 12 hours
+    const cooldown = 6 * 60 * 60 * 1000; // 6 hours
 
     if (now - lastSteal < cooldown) {
       const remaining = Math.ceil((cooldown - (now - lastSteal)) / (60 * 60 * 1000));

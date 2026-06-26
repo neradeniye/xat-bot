@@ -77,6 +77,7 @@ function drawCoverImage(ctx, img, x, y, w, h) {
 
 export default {
   name: 'profile',
+  aliases: ['prof'],     // ← add any aliases you want here
   async execute(message, args) {
     let target = message.author;
     if (message.mentions.users.size) target = message.mentions.users.first();

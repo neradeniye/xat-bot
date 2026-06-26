@@ -9,30 +9,6 @@ export default {
   async execute(message, args) {
     const type = args[0]?.toLowerCase();
 
-    // === USER SELF-REMOVE CUSTOM COLOR ===
-    if (type === 'namecolor' && args.length === 1) {
-      const userId = message.author.id;
-      const guild = message.guild;
-
-      const record = getUserColorRole(userId);
-      if (!record) {
-        return message.reply('ℹ️ You don’t have a custom color role to remove.');
-      }
-
-      const role = guild.roles.cache.get(record.role_id) || await guild.roles.fetch(record.role_id).catch(() => null);
-      if (role) {
-        try {
-          await role.delete('User requested custom color removal');
-        } catch (err) {
-          console.error('[remove custom] Failed to delete role:', err);
-          return message.reply('⚠️ I couldn’t delete the role. Make sure my role is high enough in the hierarchy.');
-        }
-      }
-
-      removeUserColorRole(userId);
-      return message.reply('✅ Your custom color has been removed.');
-    }
-
     // === ADMIN FUNCTIONALITY ===
     if (!message.member.permissions.has('Administrator')) {
       return message.reply('❌ You do not have permission to use this command.');

@@ -11,7 +11,7 @@ const require = createRequire(import.meta.url);
 const config = require('../config.json');
 
 const COOLDOWN_HOURS = 6;
-const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
+const COOLDOWN_MS = 3 * 60 * 60 * 1000; // 3 hours
 
 const SLOT_EMOJIS = ['🍒', '🍋', '🍉', '⭐', '💎', '🔔', '7️⃣'];
 
@@ -23,7 +23,7 @@ export default {
     const userId = message.author.id;
     const now = Date.now();
 
-    // === 6-HOUR COOLDOWN ===
+     // === 3-HOUR COOLDOWN ===
     const lastSlots = getLastSlots(userId);
     const timeLeft = COOLDOWN_MS - (now - lastSlots);
 

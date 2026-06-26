@@ -81,7 +81,7 @@ export default {
           '• `.x namecolor red`\n' +
           '• `.x namecolor remove`'
         )
-        .setFooter({ text: 'Boosters only • One active color or gradient at a time' });
+        .setFooter({ text: 'Boosters only! Boost the server if you want to use these.' });
 
       return message.reply({ 
         embeds: [embed], 
