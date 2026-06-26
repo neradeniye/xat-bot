@@ -72,7 +72,7 @@ export default {
       const embed = {
         color: isShiny ? 0xFFD700 : 0xFFAA00,
         title: isShiny ? '✨ A shiny Pokémon appeared!' : '🐾 A wild Pokémon appeared!',
-        description: `**${pokemon.name}** has appeared!\n\nReact with ⚾ to try catching it!`,
+        description: `**${pokemon.name}** has appeared!\n\nReact with <:pb:1520136245710164180> to try catching it!`,
         thumbnail: { url: getSpriteUrl(pokemon.id, isShiny) },
         footer: { text: `Catch chance ≈ ${catchDifficulty}% • 45 seconds` }
       };
@@ -80,7 +80,7 @@ export default {
       const spawnMsg = await message.channel.send({ embeds: [embed] });
       pokemonData.messageId = spawnMsg.id;
 
-      await spawnMsg.react('⚾');
+      await spawnMsg.react('1520136245710164180'); // your custom pb emoji
 
       setTimeout(() => {
         if (activePokemon.get('current')?.spawnTime === pokemonData.spawnTime) {
@@ -101,7 +101,6 @@ export default {
       const owned = dex.get(pokemonName);
       if (!owned) return message.reply(`You don't own **${pokemonName}**!`);
 
-      // Cooldown check (1 hour = 3600000 ms)
       const lastBattle = getBattleCooldown(userId);
       const cooldown = 3600000;
       if (Date.now() - lastBattle < cooldown) {
@@ -109,7 +108,6 @@ export default {
         return message.reply(`⏳ You can battle again in **${timeLeft} minutes**.`);
       }
 
-      // Team Rocket steal chance
       if (Math.random() < 0.10) {
         db.prepare('DELETE FROM user_pokedex WHERE user_id = ? AND pokemon_name = ?')
           .run(userId, pokemonName);
@@ -130,7 +128,6 @@ export default {
         return;
       }
 
-      // Normal battle
       const trainers = ['Red', 'Blue', 'Giovanni', 'Misty', 'Brock', 'Lt. Surge', 'Erika', 'Koga', 'Sabrina', 'Blaine'];
       const trainer = trainers[Math.floor(Math.random() * trainers.length)];
       const enemyId = Math.floor(Math.random() * 151) + 1;
@@ -147,7 +144,7 @@ export default {
 
       setTimeout(async () => {
         const win = Math.random() < 0.55;
-        const amount = 10 + Math.floor(Math.random() * 41); // 10-50 xats
+        const amount = 10 + Math.floor(Math.random() * 41);
 
         if (win) {
           addUserXats(userId, amount);
@@ -190,7 +187,6 @@ export default {
       return;
     }
 
-    // Default help
     message.reply(`**Pokémon Commands:**\n` +
       `• .x poke spawn (admin only)\n` +
       `• .x poke battle <pokemonname>\n` +
@@ -201,7 +197,10 @@ export default {
 // ====================== REACTION CATCHING ======================
 export function setupPokemonReactions(client) {
   client.on('messageReactionAdd', async (reaction, user) => {
-    if (user.bot || reaction.emoji.name !== '⚾') return;
+    if (user.bot) return;
+
+    // Check for your custom :pb: emoji
+    if (reaction.emoji.id !== '1520136245710164180') return;
 
     const active = activePokemon.get('current');
     if (!active || active.messageId !== reaction.message.id) return;
@@ -214,7 +213,7 @@ export function setupPokemonReactions(client) {
     if (success) {
       addToPokedex(user.id, active.name, active.id, active.isShiny);
 
-      const dex = getUserPokedex(user.id); // refresh
+      const dex = getUserPokedex(user.id);
       const count = dex.get(active.name).count;
       const shinyText = active.isShiny ? ' ✨ **SHINY!**' : '';
 
@@ -256,7 +255,7 @@ export async function spawnPokemon(channel) {
   const embed = {
     color: isShiny ? 0xFFD700 : 0xFFAA00,
     title: isShiny ? '✨ A shiny Pokémon appeared!' : '🐾 A wild Pokémon appeared!',
-    description: `**${pokemon.name}** has appeared!\n\nReact with ⚾ to try catching it!`,
+    description: `**${pokemon.name}** has appeared!\n\nReact with <:pb:1520136245710164180> to try catching it!`,
     thumbnail: { url: getSpriteUrl(pokemon.id, isShiny) },
     footer: { text: `Catch chance ≈ ${catchDifficulty}% • 45 seconds` }
   };
@@ -264,7 +263,7 @@ export async function spawnPokemon(channel) {
   const spawnMsg = await channel.send({ embeds: [embed] });
   pokemonData.messageId = spawnMsg.id;
 
-  await spawnMsg.react('⚾');
+  await spawnMsg.react('1520136245710164180'); // your custom pb emoji ID
 
   setTimeout(() => {
     if (activePokemon.get('current')?.spawnTime === pokemonData.spawnTime) {
