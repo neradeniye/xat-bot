@@ -14,13 +14,11 @@ import {
   removeUserGradient,
   getUserBanner,
   removeUserBanner,
-  getRecentActiveUsers,
   getUserCustomRole,
   removeUserCustomRole
 } from './db.js';
 
 import { setupPokemonReactions } from './commands/poke.js';
-import { setCurrentImposter } from './commands/choose.js';
 
 // Prevent duplicate starts
 if (global.xatBotStarted) {
