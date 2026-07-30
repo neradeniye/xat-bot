@@ -61,6 +61,14 @@ for (const file of commandFiles) {
   }
 }
 
+// Collect slash command data
+const slashCommands = [];
+for (const command of commands.values()) {
+  if (command.data) {
+    slashCommands.push(command.data.toJSON());
+  }
+}
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -71,11 +79,22 @@ const client = new Client({
   ]
 });
 
-client.once('ready', () => {
+client.once('ready', async () => {
   console.log(`🟢 Logged in as ${client.user.tag}`);
   client.user.setActivity('for .x help', { type: 3 });
   setupPokemonReactions(client);
   console.log('✅ Pokémon reaction handler registered');
+
+  // ====================== REGISTER SLASH COMMANDS ======================
+  try {
+    const guild = client.guilds.cache.first();
+    if (guild && slashCommands.length > 0) {
+      await guild.commands.set(slashCommands);
+      console.log(`✅ Registered ${slashCommands.length} slash command(s)`);
+    }
+  } catch (err) {
+    console.error('[Slash Command Registration Error]', err);
+  }
 
   const MAIN_CHANNEL_ID = '1530276633561268284';
 
@@ -204,6 +223,34 @@ client.on('messageCreate', async message => {
   }
 });
 
+// ==================== SLASH COMMAND HANDLER ====================
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const command =
+    commands.get(interaction.commandName) ||
+    aliases.get(interaction.commandName);
+
+  if (!command) return;
+
+  try {
+    await command.execute(interaction, [], client);
+  } catch (err) {
+    console.error(`[Slash ${interaction.commandName}]`, err);
+
+    const reply = {
+      content: '❌ There was an error while executing this command.',
+      ephemeral: true
+    };
+
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp(reply);
+    } else {
+      await interaction.reply(reply);
+    }
+  }
+});
+
 // ==================== BOOSTER CLEANUP ====================
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   const userId = newMember.id;
@@ -239,7 +286,6 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
         removeUserCustomRole(userId);
         console.log(`[BOOSTER CLEANUP] Removed custom role from ${newMember.user.tag}`);
       }
-
     } catch (err) {
       console.error('[BOOSTER CLEANUP ERROR]', err);
     }
