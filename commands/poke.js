@@ -32,20 +32,7 @@ function getSpriteUrl(id, isShiny = false) {
   return isShiny ? `${base}shiny/${id}.png` : `${base}${id}.png`;
 }
 
-function getTrainerSprite(trainer) {
-  const trainerMap = {
-    'Red': 'red',
-    'Blue': 'blue',
-    'Giovanni': 'giovanni',
-    'Misty': 'misty',
-    'Brock': 'brock',
-    'Lt. Surge': 'lt-surge',
-    'Erika': 'erika',
-    'Koga': 'koga',
-    'Sabrina': 'sabrina',
-    'Blaine': 'blaine'
-  };
-  let key = trainerMap[trainer] || trainer.toLowerCase().replace(/ /g, '-');
+function getTrainerSprite(key) {
   return `https://play.pokemonshowdown.com/sprites/trainers/${key}.png`;
 }
 
@@ -145,17 +132,170 @@ export default {
         return;
       }
 
-      const trainers = ['Red', 'Blue', 'Giovanni', 'Misty', 'Brock', 'Lt. Surge', 'Erika', 'Koga', 'Sabrina', 'Blaine'];
+      // Large curated trainer list
+      const trainers = [
+        // Gen 1
+        { key: 'red', name: 'Red' },
+        { key: 'blue', name: 'Blue' },
+        { key: 'brock', name: 'Brock' },
+        { key: 'misty', name: 'Misty' },
+        { key: 'lt-surge', name: 'Lt. Surge' },
+        { key: 'erika', name: 'Erika' },
+        { key: 'koga', name: 'Koga' },
+        { key: 'sabrina', name: 'Sabrina' },
+        { key: 'blaine', name: 'Blaine' },
+        { key: 'giovanni', name: 'Giovanni' },
+        { key: 'lorelei', name: 'Lorelei' },
+        { key: 'bruno', name: 'Bruno' },
+        { key: 'agatha', name: 'Agatha' },
+        { key: 'lance', name: 'Lance' },
+
+        // Gen 2
+        { key: 'silver', name: 'Silver' },
+        { key: 'will', name: 'Will' },
+        { key: 'karen', name: 'Karen' },
+        { key: 'clair', name: 'Clair' },
+        { key: 'chuck', name: 'Chuck' },
+        { key: 'jasmine', name: 'Jasmine' },
+        { key: 'pryce', name: 'Pryce' },
+        { key: 'morty', name: 'Morty' },
+        { key: 'falkner', name: 'Falkner' },
+        { key: 'bugsy', name: 'Bugsy' },
+        { key: 'whitney', name: 'Whitney' },
+
+        // Gen 3
+        { key: 'may', name: 'May' },
+        { key: 'brendan', name: 'Brendan' },
+        { key: 'roxanne', name: 'Roxanne' },
+        { key: 'brawly', name: 'Brawly' },
+        { key: 'wattson', name: 'Wattson' },
+        { key: 'flannery', name: 'Flannery' },
+        { key: 'norman', name: 'Norman' },
+        { key: 'winona', name: 'Winona' },
+        { key: 'tate', name: 'Tate' },
+        { key: 'liza', name: 'Liza' },
+        { key: 'wallace', name: 'Wallace' },
+        { key: 'steven', name: 'Steven' },
+        { key: 'archie', name: 'Archie' },
+        { key: 'maxie', name: 'Maxie' },
+        { key: 'sidney', name: 'Sidney' },
+        { key: 'phoebe', name: 'Phoebe' },
+        { key: 'glacia', name: 'Glacia' },
+        { key: 'drake', name: 'Drake' },
+
+        // Gen 4
+        { key: 'cynthia', name: 'Cynthia' },
+        { key: 'fantina', name: 'Fantina' },
+        { key: 'byron', name: 'Byron' },
+        { key: 'candice', name: 'Candice' },
+        { key: 'volkner', name: 'Volkner' },
+        { key: 'aaron', name: 'Aaron' },
+        { key: 'bertha', name: 'Bertha' },
+        { key: 'flint', name: 'Flint' },
+        { key: 'lucian', name: 'Lucian' },
+        { key: 'gardenia', name: 'Gardenia' },
+        { key: 'maylene', name: 'Maylene' },
+        { key: 'crasherwake', name: 'Crasher Wake' },
+        { key: 'roark', name: 'Roark' },
+
+        // Gen 5
+        { key: 'n', name: 'N' },
+        { key: 'ghetsis', name: 'Ghetsis' },
+        { key: 'alder', name: 'Alder' },
+        { key: 'iris', name: 'Iris' },
+        { key: 'lenora', name: 'Lenora' },
+        { key: 'burgh', name: 'Burgh' },
+        { key: 'elesa', name: 'Elesa' },
+        { key: 'clay', name: 'Clay' },
+        { key: 'skyla', name: 'Skyla' },
+        { key: 'drayden', name: 'Drayden' },
+        { key: 'marshal', name: 'Marshal' },
+        { key: 'grimsley', name: 'Grimsley' },
+        { key: 'caitlin', name: 'Caitlin' },
+        { key: 'shauntal', name: 'Shauntal' },
+        { key: 'chili', name: 'Chili' },
+        { key: 'cilan', name: 'Cilan' },
+        { key: 'cress', name: 'Cress' },
+
+        // Gen 6
+        { key: 'diantha', name: 'Diantha' },
+        { key: 'olympia', name: 'Olympia' },
+        { key: 'wikstrom', name: 'Wikstrom' },
+        { key: 'drasna', name: 'Drasna' },
+        { key: 'malva', name: 'Malva' },
+        { key: 'lysandre', name: 'Lysandre' },
+        { key: 'grant', name: 'Grant' },
+        { key: 'korrina', name: 'Korrina' },
+        { key: 'ramos', name: 'Ramos' },
+        { key: 'clemont', name: 'Clemont' },
+        { key: 'valerie', name: 'Valerie' },
+
+        // Gen 7
+        { key: 'kukui', name: 'Kukui' },
+        { key: 'nanu', name: 'Nanu' },
+        { key: 'hapu', name: 'Hapu' },
+        { key: 'olivia', name: 'Olivia' },
+        { key: 'kahili', name: 'Kahili' },
+        { key: 'molayne', name: 'Molayne' },
+        { key: 'acerola', name: 'Acerola' },
+        { key: 'guzma', name: 'Guzma' },
+        { key: 'lusamine', name: 'Lusamine' },
+        { key: 'gladion', name: 'Gladion' },
+        { key: 'lillie', name: 'Lillie' },
+        { key: 'hau', name: 'Hau' },
+
+        // Gen 8
+        { key: 'leon', name: 'Leon' },
+        { key: 'hop', name: 'Hop' },
+        { key: 'marnie', name: 'Marnie' },
+        { key: 'bede', name: 'Bede' },
+        { key: 'raihan', name: 'Raihan' },
+        { key: 'milo', name: 'Milo' },
+        { key: 'nessa', name: 'Nessa' },
+        { key: 'kabu', name: 'Kabu' },
+        { key: 'bea', name: 'Bea' },
+        { key: 'allister', name: 'Allister' },
+        { key: 'opal', name: 'Opal' },
+        { key: 'gordie', name: 'Gordie' },
+        { key: 'melony', name: 'Melony' },
+        { key: 'piers', name: 'Piers' },
+
+        // Gen 9
+        { key: 'nemona', name: 'Nemona' },
+        { key: 'penny', name: 'Penny' },
+        { key: 'arven', name: 'Arven' },
+        { key: 'geeta', name: 'Geeta' },
+        { key: 'larry', name: 'Larry' },
+        { key: 'ryme', name: 'Ryme' },
+        { key: 'tulip', name: 'Tulip' },
+        { key: 'grusha', name: 'Grusha' },
+        { key: 'iono', name: 'Iono' },
+        { key: 'katy', name: 'Katy' },
+        { key: 'brassius', name: 'Brassius' },
+        { key: 'kofu', name: 'Kofu' },
+        { key: 'poppy', name: 'Poppy' },
+        { key: 'rika', name: 'Rika' },
+        { key: 'hassel', name: 'Hassel' },
+
+        // Team Rocket / Villains
+        { key: 'rocketgrunt', name: 'Team Rocket Grunt' },
+        { key: 'rocketgruntf', name: 'Team Rocket Grunt' },
+        { key: 'proton', name: 'Proton' },
+        { key: 'petrel', name: 'Petrel' },
+        { key: 'ariana', name: 'Ariana' },
+        { key: 'archer', name: 'Archer' },
+      ];
+
       const trainer = trainers[Math.floor(Math.random() * trainers.length)];
       const enemyId = Math.floor(Math.random() * 151) + 1;
       const enemy = await getPokemonData(enemyId);
 
       const embed = {
         color: 0xFF0000,
-        title: `⚔️ Battle vs ${trainer}!`,
+        title: `⚔️ Battle vs ${trainer.name}!`,
         description: `You sent out **${pokemonName}**!\nOpponent sent out **${enemy.name}**!`,
         thumbnail: { url: getSpriteUrl(owned.id) },
-        image: { url: getTrainerSprite(trainer) }
+        image: { url: getTrainerSprite(trainer.key) }
       };
 
       await message.channel.send({ embeds: [embed] });
