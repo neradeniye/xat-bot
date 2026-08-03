@@ -2,7 +2,6 @@ import { SlashCommandBuilder } from 'discord.js';
 
 export default {
   name: 'say',
-  // Slash command definition
   data: new SlashCommandBuilder()
     .setName('say')
     .setDescription('Send a message as yourself in the main channel')
@@ -14,11 +13,9 @@ export default {
         .setMaxLength(2000)
     ),
 
-  // Optional aliases for the prefix version
   aliases: [],
 
   async execute(source, args, client) {
-    // Detect whether this is a slash command or a prefix command
     const isSlash = !!source.isChatInputCommand;
 
     let text;
@@ -44,7 +41,7 @@ export default {
 
     // Block muted users
     const isMuted = member.roles.cache.some(
-      role => role.name.toLowerCase() === 'Muted'
+      role => role.name.toLowerCase() === 'muted'
     );
 
     if (isMuted) {
@@ -54,7 +51,6 @@ export default {
         : source.reply(reply);
     }
 
-    // === Target channel (from your current index.js) ===
     const MAIN_CHANNEL_ID = '1530276633561268284';
     const targetChannel = guild.channels.cache.get(MAIN_CHANNEL_ID);
 
@@ -66,7 +62,6 @@ export default {
     }
 
     try {
-      // Find or create a webhook owned by the bot
       const webhooks = await targetChannel.fetchWebhooks();
       let webhook = webhooks.find(
         wh => wh.name === 'xat-say' && wh.owner?.id === client.user.id
@@ -79,15 +74,14 @@ export default {
         });
       }
 
-      // Send the message as the user (display name + avatar)
+      // Send as the user + small identification
       await webhook.send({
-        content: text,
+        content: `${text}\n\n- <@${member.id}>`,
         username: member.displayName,
         avatarURL: member.displayAvatarURL({ dynamic: true, size: 256 }),
-        allowedMentions: { parse: [] }, // blocks @everyone / @here / role pings
+        allowedMentions: { parse: [] }, // still blocks @everyone / @here, but the <@id> still shows as a clickable name
       });
 
-      // Confirmation
       if (isSlash) {
         await source.reply({ content: '✅ Message sent!', ephemeral: true });
       } else {
