@@ -75,12 +75,12 @@ export default {
       }
 
       // Send as the user + small identification
-      await webhook.send({
-        content: `${text} [Sent From: <@${member.id}>]`,
-        username: member.displayName,
-        avatarURL: member.displayAvatarURL({ dynamic: true, size: 256 }),
-        allowedMentions: { parse: [] }, // still blocks @everyone / @here, but the <@id> still shows as a clickable name
-      });
+    await webhook.send({
+      content: text,                                          // ← just the message, nothing extra
+      username: `${member.displayName} (${member.user.username})`,
+      avatarURL: member.displayAvatarURL({ dynamic: true, size: 256 }),
+      allowedMentions: { parse: [] },
+    });
 
       if (isSlash) {
         await source.reply({ content: '✅ Message sent!', ephemeral: true });
