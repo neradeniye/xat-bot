@@ -76,7 +76,7 @@ export default {
 
       // Send as the user + small identification
       await webhook.send({
-        content: `${text} <@${member.id}>`,
+        content: `${text} From: <@${member.id}>`,
         username: member.displayName,
         avatarURL: member.displayAvatarURL({ dynamic: true, size: 256 }),
         allowedMentions: { parse: [] }, // still blocks @everyone / @here, but the <@id> still shows as a clickable name
