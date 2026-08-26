@@ -15,7 +15,9 @@ import {
   getUserBanner,
   removeUserBanner,
   getUserCustomRole,
-  removeUserCustomRole
+  removeUserCustomRole,
+  getSecretMessage,
+  deleteSecretMessage
 } from './db.js';
 
 import { setupPokemonReactions } from './commands/poke.js';
@@ -223,8 +225,50 @@ client.on('messageCreate', async message => {
   }
 });
 
-// ==================== SLASH COMMAND HANDLER ====================
+// ==================== INTERACTION HANDLER (Slash + Buttons) ====================
 client.on('interactionCreate', async interaction => {
+  // ===== Button clicks (secret messages) =====
+  if (interaction.isButton()) {
+    if (interaction.customId.startsWith('secret_view:')) {
+      const secretId = interaction.customId.split(':')[1];
+
+      try {
+        const record = getSecretMessage(secretId);
+
+        if (!record) {
+          return interaction.reply({
+            content: '❌ This secret message no longer exists.',
+            ephemeral: true,
+          });
+        }
+
+        // 30 minute expiry
+        const age = Date.now() - record.created_at;
+        if (age > 30 * 60 * 1000) {
+          deleteSecretMessage(secretId);
+          return interaction.reply({
+            content: '⏰ This secret message has expired (30 minutes).',
+            ephemeral: true,
+          });
+        }
+
+        // Show the secret only to the person who clicked
+        await interaction.reply({
+          content: record.content,
+          ephemeral: true,
+        });
+      } catch (err) {
+        console.error('[secret button]', err);
+        await interaction.reply({
+          content: '❌ Failed to retrieve the secret message.',
+          ephemeral: true,
+        });
+      }
+      return;
+    }
+  }
+
+  // ===== Slash commands =====
   if (!interaction.isChatInputCommand()) return;
 
   const command =
@@ -240,7 +284,7 @@ client.on('interactionCreate', async interaction => {
 
     const reply = {
       content: '❌ There was an error while executing this command.',
-      ephemeral: true
+      ephemeral: true,
     };
 
     if (interaction.replied || interaction.deferred) {

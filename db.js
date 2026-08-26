@@ -160,6 +160,16 @@ db.prepare(`
   );
 `).run();
 
+// ====================== SECRET MESSAGES ======================
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS secret_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  )
+`).run();
+
 export function getConfig(key) {
   const row = db.prepare('SELECT value FROM bot_config WHERE key = ?').get(key);
   return row ? row.value : null;
@@ -491,6 +501,22 @@ export function setBattleCooldown(userId) {
     VALUES (?, ?)
     ON CONFLICT(user_id) DO UPDATE SET last_battle = excluded.last_battle
   `).run(userId, Date.now());
+}
+
+export function storeSecretMessage(userId, content) {
+  const result = db.prepare(`
+    INSERT INTO secret_messages (user_id, content, created_at)
+    VALUES (?, ?, ?)
+  `).run(userId, content, Date.now());
+  return result.lastInsertRowid;
+}
+
+export function getSecretMessage(id) {
+  return db.prepare(`SELECT * FROM secret_messages WHERE id = ?`).get(id);
+}
+
+export function deleteSecretMessage(id) {
+  db.prepare(`DELETE FROM secret_messages WHERE id = ?`).run(id);
 }
 
 export { db };
