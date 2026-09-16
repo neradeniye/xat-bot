@@ -42,7 +42,8 @@ export default {
             '`x removebanner` — Remove banner image for profile (booster only)',
             '`x status` — Set your status to be displayed on your profile card',
             '`x marry <@user>` — Marry someone you choose from the server',
-            '`x divorce` — Divorce who you had married or has married you'
+            '`x divorce` — Divorce who you had married or has married you',
+            '`x blog` — Create a custom blog channel for yourself (booster only)'
           ].join('\n'),
           inline: false
         },
