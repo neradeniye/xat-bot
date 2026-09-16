@@ -48,6 +48,14 @@ export default {
           inline: false
         },
         {
+          name: '🦒 Pokémon',
+          value: [
+            '`x poke battle <pokemon name>` — Battle pokemon to win / lose xats!',
+            '`x poke dex [page]` — View list of all pokemon caught'
+          ].join('\n'),
+          inline: false
+        },
+        {
           name: '🎨 Roles',
           value: [
             '`x enable <name>` — Activate a color or item role',
