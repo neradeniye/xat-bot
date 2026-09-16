@@ -21,6 +21,7 @@ import {
 } from './db.js';
 
 import { setupPokemonReactions } from './commands/poke.js';
+import { canHaveBlog, revokeBlogAccess } from './commands/blog.js';
 
 // Prevent duplicate starts
 if (global.xatBotStarted) {
@@ -332,6 +333,18 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
       }
     } catch (err) {
       console.error('[BOOSTER CLEANUP ERROR]', err);
+    }
+  }
+  const hadAccess = Boolean(oldMember.premiumSince) || canHaveBlog(oldMember);
+  const hasAccess = canHaveBlog(newMember);
+  if (hadAccess && !hasAccess) {
+    try {
+      const locked = await revokeBlogAccess(newMember.guild, userId);
+      if (locked) {
+        console.log(`[BLOG CLEANUP] Locked blog for ${newMember.user.tag}`);
+      }
+    } catch (err) {
+      console.error(`[BLOG CLEANUP ERROR]`, err);
     }
   }
 });

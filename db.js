@@ -160,6 +160,14 @@ db.prepare(`
   );
 `).run();
 
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS user_blogs (
+    user_id TEXT PRIMARY KEY,
+    channel_id TEXT NOT NULL UNIQUE,
+    created_at INTEGER
+  );
+`).run();
+
 // ====================== SECRET MESSAGES ======================
 db.prepare(`
   CREATE TABLE IF NOT EXISTS secret_messages (
@@ -169,6 +177,7 @@ db.prepare(`
     created_at INTEGER NOT NULL
   )
 `).run();
+
 
 export function getConfig(key) {
   const row = db.prepare('SELECT value FROM bot_config WHERE key = ?').get(key);
@@ -517,6 +526,30 @@ export function getSecretMessage(id) {
 
 export function deleteSecretMessage(id) {
   db.prepare(`DELETE FROM secret_messages WHERE id = ?`).run(id);
+}
+
+export function getUserBlog(userId) {
+  return db.prepare('SELECT user_id, channel_id, created_at FROM user_blogs WHERE user_id = ?').get(userId);
+}
+
+export function getBlogByChannel(channelId) {
+  return db.prepare('SELECT user_id, channel_id, created_at FROM user_blogs WHERE channel_id = ?').get(channelId);
+}
+
+export function getAllBlogs() {
+  return db.prepare('SELECT user_id, channel_id, created_at FROM user_blogs ORDER BY created_at ASC').all();
+}
+
+export function setUserBlog(userId, channelId) {
+  db.prepare(`
+    INSERT INTO user_blogs (user_id, channel_id, created_at)
+    VALUES (?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET channel_id = excluded.channel_id
+  `).run(userId, channelId, Date.now());
+}
+
+export function removeUserBlog(userId) {
+  db.prepare('DELETE FROM user_blogs WHERE user_id = ?').run(userId);
 }
 
 export { db };
