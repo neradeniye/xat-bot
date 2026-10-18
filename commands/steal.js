@@ -4,7 +4,6 @@ export default {
   name: 'steal',
   description: 'Attempt to steal 100-1000 xats from another user (50% chance, 12-hour cooldown). Failure costs you 100-1000 xats.',
   usage: '.x steal @user',
-
   async execute(message, args) {
     const target = message.mentions.members?.first();
     if (!target) return message.reply('Mention a user to steal from.');
@@ -13,7 +12,7 @@ export default {
 
     const now = Date.now();
     const lastSteal = getLastSteal(message.author.id);
-    const cooldown = 6 * 60 * 60 * 1000; // 6 hours
+    const cooldown = 12 * 60 * 60 * 1000; // 12 hours
 
     if (now - lastSteal < cooldown) {
       const remaining = Math.ceil((cooldown - (now - lastSteal)) / (60 * 60 * 1000));
@@ -29,7 +28,6 @@ export default {
       const targetBal = getUserBalance(target.id);
       const stealAmt = Math.min(amount, targetBal);
       if (stealAmt <= 0) return message.reply(`${target} has no xats to steal.`);
-
       addUserXats(target.id, -stealAmt);
       addUserXats(message.author.id, stealAmt);
       return message.reply(`Success! You stole **${stealAmt} xats** from ${target}.`);
@@ -37,7 +35,6 @@ export default {
       const thiefBal = getUserBalance(message.author.id);
       const loseAmt = Math.min(amount, thiefBal);
       if (loseAmt <= 0) return message.reply('You have no xats to lose on failure.');
-
       addUserXats(message.author.id, -loseAmt);
       return message.reply(`Failure! You lost **${loseAmt} xats**. Better luck next time.`);
     }
