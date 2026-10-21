@@ -178,6 +178,12 @@ db.prepare(`
   )
 `).run();
 
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS say_blacklist (
+    user_id TEXT PRIMARY KEY
+  )
+`).run();
+
 
 export function getConfig(key) {
   const row = db.prepare('SELECT value FROM bot_config WHERE key = ?').get(key);
@@ -550,6 +556,18 @@ export function setUserBlog(userId, channelId) {
 
 export function removeUserBlog(userId) {
   db.prepare('DELETE FROM user_blogs WHERE user_id = ?').run(userId);
+}
+
+export function addSayBlacklist(userId) {
+  db.prepare(`INSERT OR IGNORE INTO say_blacklist (user_id) VALUES (?)`).run(userId);
+}
+
+export function removeSayBlacklist(userId) {
+  db.prepare(`DELETE FROM say_blacklist WHERE user_id = ?`).run(userId);
+}
+
+export function isSayBlacklisted(userId) {
+  return !!db.prepare(`SELECT 1 FROM say_blacklist WHERE user_id = ?`).get(userId);
 }
 
 export { db };
