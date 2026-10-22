@@ -214,6 +214,8 @@ async function handleCreate(message) {
         `${member} this is your personal blog.`,
         '',
         '**Commands you can use:**',
+        '`.x blog name <name>` — rename this channel',
+        '`.x blog about <text>` — set the channel description',
         '`.x blog block @user` — hide this blog from someone',
         '`.x blog unblock @user` — let them see it again'
       ].join('\n')
@@ -268,6 +270,67 @@ async function handleAssign(message, args) {
   } catch (err) {
     console.error('[BLOG ASSIGN ERROR]', err);
     return message.reply('Could not update channel permissions.');
+  }
+}
+
+async function getOwnedBlog(message) {
+  const member = message.member;
+  if (!member) return { error: 'Could not load your member info.' };
+  if (!member.premiumSince) return { error: 'You can only manage your blog while you are boosting.' };
+
+  const record = getUserBlog(member.id);
+  if (!record) return { error: 'You do not have a blog. Use `.x blog create` first.' };
+
+  const channel = message.guild.channels.cache.get(record.channel_id)
+    ?? await message.guild.channels.fetch(record.channel_id).catch(() => null);
+  if (!channel) {
+    removeUserBlog(member.id);
+    return { error: 'Your blog channel is missing. Ask staff to reassign or create a new one.' };
+  }
+
+  return { member, channel };
+}
+
+async function handleName(message, args) {
+  const owned = await getOwnedBlog(message);
+  if (owned.error) return message.reply(owned.error);
+
+  const raw = args.slice(1).join(' ').trim();
+  if (!raw) return message.reply('Usage: `.x blog name <name>`');
+
+  const name = raw
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9_-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 100);
+
+  if (!name) return message.reply('That name is not valid. Use letters, numbers, spaces, or dashes.');
+
+  try {
+    await owned.channel.setName(name, `Blog renamed by ${message.author.tag}`);
+    return message.reply(`Renamed your blog to ${owned.channel}.`);
+  } catch (err) {
+    console.error('[BLOG NAME ERROR]', err);
+    return message.reply('Could not rename the channel.');
+  }
+}
+
+async function handleAbout(message, args) {
+  const owned = await getOwnedBlog(message);
+  if (owned.error) return message.reply(owned.error);
+
+  const about = args.slice(1).join(' ').trim();
+  if (!about) return message.reply('Usage: `.x blog about <description>`');
+  if (about.length > 1024) return message.reply('Description must be 1024 characters or less.');
+
+  try {
+    await owned.channel.setTopic(about, `Blog about set by ${message.author.tag}`);
+    return message.reply('Updated your blog description.');
+  } catch (err) {
+    console.error('[BLOG ABOUT ERROR]', err);
+    return message.reply('Could not update the description.');
   }
 }
 
@@ -380,7 +443,6 @@ async function handleRefresh(message) {
         for (const userId of blocks) {
           await channel.permissionOverwrites.edit(userId, { ViewChannel: false });
         }
-        await channel.setTopic(`${member.user.username}'s blog`).catch(() => {});
         opened++;
       } else {
         await channel.permissionOverwrites.edit(SERVER_ACCESS_ROLE_ID, {
@@ -460,6 +522,8 @@ export default {
     const sub = args[0]?.toLowerCase();
 
     if (sub === 'create') return handleCreate(message);
+    if (sub === 'name') return handleName(message, args);
+    if (sub === 'about') return handleAbout(message, args);
     if (sub === 'block') return handleBlock(message, args, true);
     if (sub === 'unblock') return handleBlock(message, args, false);
     if (sub === 'close') return handleClose(message);
@@ -471,6 +535,8 @@ export default {
     const lines = [
       '**Blog commands**',
       '`.x blog create` — create your blog',
+      '`.x blog name <name>` — rename your blog channel',
+      '`.x blog about <text>` — set the channel description',
       '`.x blog block @user` — hide your blog from someone',
       '`.x blog unblock @user` — let them see it again',
       '`.x blog close` — close your blog (same as boost ending)'
