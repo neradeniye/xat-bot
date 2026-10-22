@@ -133,6 +133,7 @@ export async function revokeBlogAccess(guild, userId, reason = 'Boost ended') {
   }
 
   try {
+    // Closed = server access role can no longer view the channel
     await channel.permissionOverwrites.edit(SERVER_ACCESS_ROLE_ID, {
       ViewChannel: false
     });
@@ -199,8 +200,10 @@ async function handleCreate(message) {
       reason: `Blog created for ${member.user.tag}`
     });
 
+    // Copy the category's permission overwrites onto this channel
     await channel.lockPermissions();
 
+    // Give the owner permission to delete messages in their blog
     await channel.permissionOverwrites.edit(member.id, {
       ManageMessages: true
     });
@@ -308,6 +311,27 @@ async function handleBlock(message, args, block) {
   }
 }
 
+async function handleClose(message) {
+  let targetId = message.author.id;
+  const mentioned = message.mentions.members?.first();
+
+  if (mentioned) {
+    if (!isStaff(message.member)) {
+      return message.reply('Only staff can close someone else\'s blog.');
+    }
+    targetId = mentioned.id;
+  }
+
+  const record = getUserBlog(targetId);
+  if (!record) return message.reply('No linked blog found.');
+
+  const closed = await revokeBlogAccess(message.guild, targetId, 'Boost ended');
+  if (closed) {
+    return message.reply(`Closed the blog for <@${targetId}> — same as when boosting stops.`);
+  }
+  return message.reply('Could not close that blog.');
+}
+
 async function handleUnassign(message, args) {
   if (!isStaff(message.member)) {
     return message.reply('Only staff can unassign blog channels.');
@@ -364,6 +388,7 @@ export default {
     if (sub === 'create') return handleCreate(message);
     if (sub === 'block') return handleBlock(message, args, true);
     if (sub === 'unblock') return handleBlock(message, args, false);
+    if (sub === 'close') return handleClose(message);
     if (sub === 'assign') return handleAssign(message, args);
     if (sub === 'unassign' || sub === 'remove') return handleUnassign(message, args);
     if (sub === 'list') return handleList(message);
@@ -372,7 +397,8 @@ export default {
       '**Blog commands**',
       '`.x blog create` — create your blog',
       '`.x blog block @user` — hide your blog from someone',
-      '`.x blog unblock @user` — let them see it again'
+      '`.x blog unblock @user` — let them see it again',
+      '`.x blog close` — close your blog (same as boost ending)'
     ];
 
     if (isStaff(message.member)) {
