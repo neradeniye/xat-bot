@@ -199,7 +199,13 @@ async function handleCreate(message) {
     // Copy the category's permission overwrites onto this channel
     await channel.lockPermissions();
 
+    // Give the owner permission to delete messages in their blog
+    await channel.permissionOverwrites.edit(member.id, {
+      ManageMessages: true
+    });
+
     setUserBlog(member.id, channel.id);
+
     await channel.send(
       `${member} this is your blog. Permissions were synced from the blogs category.`
     );
