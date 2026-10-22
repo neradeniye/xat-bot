@@ -12,6 +12,7 @@ import {
 } from '../db.js';
 
 const BLOG_CATEGORY_ID = '1491791192470458502';
+const SERVER_ACCESS_ROLE_ID = '1385720128708022395';
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 
 const BLOG_PERMS = [
@@ -118,7 +119,7 @@ async function applyOwnerAccess(channel, userId, allowView) {
   }
 }
 
-export async function revokeBlogAccess(guild, userId, reason = 'Subscriber / boost ended') {
+export async function revokeBlogAccess(guild, userId, reason = 'Boost ended') {
   const record = getUserBlog(userId);
   if (!record) return false;
 
@@ -132,12 +133,14 @@ export async function revokeBlogAccess(guild, userId, reason = 'Subscriber / boo
   }
 
   try {
-    await applyOwnerAccess(channel, userId, false);
-    await channel.setTopic(`Locked — ${reason}. Re-boost or resubscribe, then use .x blog to reopen.`).catch(() => {});
-    console.log(`[BLOG] Locked ${channel.name} for user ${userId}`);
+    await channel.permissionOverwrites.edit(SERVER_ACCESS_ROLE_ID, {
+      ViewChannel: false
+    });
+    await channel.setTopic(`Closed — ${reason}.`).catch(() => {});
+    console.log(`[BLOG] Closed ${channel.name} for user ${userId}`);
     return true;
   } catch (err) {
-    console.error(`[BLOG LOCK ERROR] ${userId}`, err);
+    console.error(`[BLOG CLOSE ERROR] ${userId}`, err);
     return false;
   }
 }
@@ -196,16 +199,13 @@ async function handleCreate(message) {
       reason: `Blog created for ${member.user.tag}`
     });
 
-    // Copy the category's permission overwrites onto this channel
     await channel.lockPermissions();
 
-    // Give the owner permission to delete messages in their blog
     await channel.permissionOverwrites.edit(member.id, {
       ManageMessages: true
     });
 
     setUserBlog(member.id, channel.id);
-
     await channel.send(
       `${member} this is your blog. Permissions were synced from the blogs category.`
     );
@@ -233,23 +233,72 @@ async function handleAssign(message, args) {
 
   const takenByUser = getUserBlog(target.id);
   if (takenByUser && takenByUser.channel_id !== channel.id) {
-    return message.reply(`That user is already linked to <#${takenByUser.channel_id}>. Unassign it first.`);
+    removeUserBlog(target.id);
   }
 
   const takenByChannel = getBlogByChannel(channel.id);
   if (takenByChannel && takenByChannel.user_id !== target.id) {
-    return message.reply(`That channel is already linked to <@${takenByChannel.user_id}>. Unassign it first.`);
+    removeUserBlog(takenByChannel.user_id);
+    await channel.permissionOverwrites.delete(takenByChannel.user_id).catch(() => {});
   }
 
   try {
-    await applyOwnerAccess(channel, target.id, canHaveBlog(target));
+    await channel.permissionOverwrites.edit(target.id, {
+      ManageMessages: true
+    });
     setUserBlog(target.id, channel.id);
-    return message.reply(
-      `Linked ${channel} to ${target}.${canHaveBlog(target) ? '' : ' They do not currently boost/subscribe, so the channel is locked until they do.'}`
-    );
+
+    if (!target.premiumSince) {
+      await revokeBlogAccess(message.guild, target.id, 'Assigned user is not boosting');
+      return message.reply(
+        `Linked ${channel} to ${target}. They are not boosting, so the blog is closed (server access cannot view it).`
+      );
+    }
+
+    return message.reply(`Linked ${channel} to ${target}.`);
   } catch (err) {
     console.error('[BLOG ASSIGN ERROR]', err);
     return message.reply('Could not update channel permissions.');
+  }
+}
+
+async function handleBlock(message, args, block) {
+  const member = message.member;
+  if (!member) return message.reply('Could not load your member info.');
+
+  if (!member.premiumSince) {
+    return message.reply('You can only manage your blog while you are boosting.');
+  }
+
+  const record = getUserBlog(member.id);
+  if (!record) return message.reply('You do not have a blog. Use `.x blog create` first.');
+
+  const channel = message.guild.channels.cache.get(record.channel_id)
+    ?? await message.guild.channels.fetch(record.channel_id).catch(() => null);
+  if (!channel) {
+    removeUserBlog(member.id);
+    return message.reply('Your blog channel is missing. Ask staff to reassign or create a new one.');
+  }
+
+  const target = message.mentions.members.first()
+    ?? (args[1] ? await message.guild.members.fetch(args[1]).catch(() => null) : null);
+
+  if (!target) {
+    return message.reply(block ? 'Usage: `.x blog block @user`' : 'Usage: `.x blog unblock @user`');
+  }
+  if (target.id === member.id) return message.reply('You cannot block yourself.');
+  if (target.user.bot) return message.reply('You cannot block bots.');
+
+  try {
+    if (block) {
+      await channel.permissionOverwrites.edit(target.id, { ViewChannel: false });
+      return message.reply(`Blocked ${target} from ${channel}.`);
+    }
+    await channel.permissionOverwrites.delete(target.id);
+    return message.reply(`Unblocked ${target} from ${channel}.`);
+  } catch (err) {
+    console.error('[BLOG BLOCK ERROR]', err);
+    return message.reply('Could not update that user\'s access.');
   }
 }
 
@@ -307,18 +356,22 @@ export default {
     const sub = args[0]?.toLowerCase();
 
     if (sub === 'create') return handleCreate(message);
+    if (sub === 'block') return handleBlock(message, args, true);
+    if (sub === 'unblock') return handleBlock(message, args, false);
     if (sub === 'assign') return handleAssign(message, args);
     if (sub === 'unassign' || sub === 'remove') return handleUnassign(message, args);
     if (sub === 'list') return handleList(message);
 
     const lines = [
       '**Blog commands**',
-      '`.x blog create` — create your blog (boosters / subscribers)'
+      '`.x blog create` — create your blog',
+      '`.x blog block @user` — hide your blog from someone',
+      '`.x blog unblock @user` — let them see it again'
     ];
 
     if (isStaff(message.member)) {
       lines.push(
-        '`.x blog assign @user #channel` — link an existing channel',
+        '`.x blog assign @user #channel` — link or reassign a channel',
         '`.x blog unassign @user` — unlink without deleting',
         '`.x blog list` — show all linked blogs'
       );
