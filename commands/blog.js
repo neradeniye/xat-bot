@@ -332,6 +332,74 @@ async function handleClose(message) {
   return message.reply('Could not close that blog.');
 }
 
+async function handleRefresh(message) {
+  if (!isStaff(message.member)) {
+    return message.reply('Only staff can refresh blogs.');
+  }
+
+  const rows = getAllBlogs();
+  if (!rows.length) return message.reply('No blogs are linked yet.');
+
+  await message.reply(`Refreshing **${rows.length}** blog(s)...`);
+
+  let opened = 0;
+  let closed = 0;
+  let failed = 0;
+
+  for (const row of rows) {
+    try {
+      const channel = message.guild.channels.cache.get(row.channel_id)
+        ?? await message.guild.channels.fetch(row.channel_id).catch(() => null);
+
+      if (!channel) {
+        failed++;
+        continue;
+      }
+
+      const member = await message.guild.members.fetch(row.user_id).catch(() => null);
+      const isOpen = Boolean(member?.premiumSince);
+
+      // Keep existing user blocks so a refresh does not unblock people
+      const blocks = [];
+      if (isOpen) {
+        for (const overwrite of channel.permissionOverwrites.cache.values()) {
+          if (overwrite.type !== 1) continue; // member overwrite
+          if (overwrite.id === row.user_id) continue;
+          if (overwrite.deny.has(PermissionFlagsBits.ViewChannel)) {
+            blocks.push(overwrite.id);
+          }
+        }
+      }
+
+      await channel.lockPermissions();
+
+      if (isOpen) {
+        await channel.permissionOverwrites.edit(member.id, {
+          ManageMessages: true
+        });
+        for (const userId of blocks) {
+          await channel.permissionOverwrites.edit(userId, { ViewChannel: false });
+        }
+        await channel.setTopic(`${member.user.username}'s blog`).catch(() => {});
+        opened++;
+      } else {
+        await channel.permissionOverwrites.edit(SERVER_ACCESS_ROLE_ID, {
+          ViewChannel: false
+        });
+        await channel.setTopic('Closed — Boost ended.').catch(() => {});
+        closed++;
+      }
+    } catch (err) {
+      console.error(`[BLOG REFRESH ERROR] ${row.user_id}`, err);
+      failed++;
+    }
+  }
+
+  return message.reply(
+    `Refresh done. **${opened}** open, **${closed}** closed, **${failed}** failed.`
+  );
+}
+
 async function handleUnassign(message, args) {
   if (!isStaff(message.member)) {
     return message.reply('Only staff can unassign blog channels.');
@@ -389,6 +457,7 @@ export default {
     if (sub === 'block') return handleBlock(message, args, true);
     if (sub === 'unblock') return handleBlock(message, args, false);
     if (sub === 'close') return handleClose(message);
+    if (sub === 'refresh') return handleRefresh(message);
     if (sub === 'assign') return handleAssign(message, args);
     if (sub === 'unassign' || sub === 'remove') return handleUnassign(message, args);
     if (sub === 'list') return handleList(message);
@@ -405,7 +474,8 @@ export default {
       lines.push(
         '`.x blog assign @user #channel` — link or reassign a channel',
         '`.x blog unassign @user` — unlink without deleting',
-        '`.x blog list` — show all linked blogs'
+        '`.x blog list` — show all linked blogs',
+        '`.x blog refresh` — resync every blog to category permissions'
       );
     }
 
