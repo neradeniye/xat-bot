@@ -207,7 +207,13 @@ async function handleCreate(message) {
 
     setUserBlog(member.id, channel.id);
     await channel.send(
-      `${member} this is your blog. Permissions were synced from the blogs category.`
+      [
+        `${member} this is your personal blog.`,
+        '',
+        '**Commands you can use:**',
+        '`.x blog block @user` — hide this blog from someone',
+        '`.x blog unblock @user` — let them see it again'
+      ].join('\n')
     );
     return message.reply(`Created your blog: ${channel}`);
   } catch (err) {
