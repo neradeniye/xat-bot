@@ -11,6 +11,7 @@ import {
   getAllBlogs
 } from '../db.js';
 
+const BLOG_CATEGORY_ID = '1491791192470458502';
 const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 
 const BLOG_PERMS = [
@@ -55,7 +56,7 @@ function sanitizeName(username) {
 }
 
 function findBlogCategory(guild) {
-  const configured = config.blogCategoryId;
+  const configured = config.blogCategoryId || BLOG_CATEGORY_ID;
   if (configured && !String(configured).startsWith('PASTE_')) {
     const byId = guild.channels.cache.get(configured);
     if (byId?.type === ChannelType.GuildCategory) return byId;
@@ -171,7 +172,6 @@ async function handleCreate(message) {
       ?? await message.guild.channels.fetch(existing.channel_id).catch(() => null);
 
     if (channel) {
-      await applyOwnerAccess(channel, member.id, true);
       return message.reply(`You already have a blog: ${channel}`);
     }
 
@@ -181,7 +181,7 @@ async function handleCreate(message) {
   const category = findBlogCategory(message.guild);
   if (!category) {
     return message.reply(
-      'No blogs category is set. Ask a staff member to create a category named **Blogs** (or put its ID in `config.json` as `blogCategoryId`).'
+      `Could not find the blogs category (\`${BLOG_CATEGORY_ID}\`). Make sure the bot can see it.`
     );
   }
 
@@ -193,13 +193,15 @@ async function handleCreate(message) {
       type: ChannelType.GuildText,
       parent: category.id,
       topic: `${member.user.username}'s blog`,
-      permissionOverwrites: ownerOverwrites(message.guild, member.id, message.client.user.id, true),
       reason: `Blog created for ${member.user.tag}`
     });
 
+    // Copy the category's permission overwrites onto this channel
+    await channel.lockPermissions();
+
     setUserBlog(member.id, channel.id);
     await channel.send(
-      `${member} this is your blog. You can post, pin, and manage this channel while you boost or stay subscribed.`
+      `${member} this is your blog. Permissions were synced from the blogs category.`
     );
     return message.reply(`Created your blog: ${channel}`);
   } catch (err) {
@@ -298,19 +300,24 @@ export default {
 
     const sub = args[0]?.toLowerCase();
 
-    if (!sub) return handleCreate(message);
+    if (sub === 'create') return handleCreate(message);
     if (sub === 'assign') return handleAssign(message, args);
     if (sub === 'unassign' || sub === 'remove') return handleUnassign(message, args);
     if (sub === 'list') return handleList(message);
 
-    return message.reply(
-      [
-        '**Blog commands**',
-        '`.x blog` — create your blog (boosters / subscribers)',
-        '`.x blog assign @user #channel` — staff: link an existing channel',
-        '`.x blog unassign @user` — staff: unlink without deleting',
-        '`.x blog list` — staff: show all linked blogs'
-      ].join('\n')
-    );
+    const lines = [
+      '**Blog commands**',
+      '`.x blog create` — create your blog (boosters / subscribers)'
+    ];
+
+    if (isStaff(message.member)) {
+      lines.push(
+        '`.x blog assign @user #channel` — link an existing channel',
+        '`.x blog unassign @user` — unlink without deleting',
+        '`.x blog list` — show all linked blogs'
+      );
+    }
+
+    return message.reply(lines.join('\n'));
   }
 };
