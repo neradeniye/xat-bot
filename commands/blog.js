@@ -344,7 +344,7 @@ async function handleRefresh(message) {
 
   let opened = 0;
   let closed = 0;
-  let failed = 0;
+  const failures = [];
 
   for (const row of rows) {
     try {
@@ -352,7 +352,7 @@ async function handleRefresh(message) {
         ?? await message.guild.channels.fetch(row.channel_id).catch(() => null);
 
       if (!channel) {
-        failed++;
+        failures.push(`<@${row.user_id}> — channel \`${row.channel_id}\` missing`);
         continue;
       }
 
@@ -391,13 +391,19 @@ async function handleRefresh(message) {
       }
     } catch (err) {
       console.error(`[BLOG REFRESH ERROR] ${row.user_id}`, err);
-      failed++;
+      failures.push(`<@${row.user_id}> / <#${row.channel_id}> — ${err.message || err}`);
     }
   }
 
-  return message.reply(
-    `Refresh done. **${opened}** open, **${closed}** closed, **${failed}** failed.`
-  );
+  const lines = [
+    `Refresh done. **${opened}** open, **${closed}** closed, **${failures.length}** failed.`
+  ];
+  if (failures.length) {
+    lines.push('', '**Failed**', ...failures.slice(0, 15));
+    if (failures.length > 15) lines.push(`…and ${failures.length - 15} more`);
+  }
+
+  return message.reply(lines.join('\n'));
 }
 
 async function handleUnassign(message, args) {
