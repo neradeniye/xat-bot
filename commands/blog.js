@@ -8,7 +8,8 @@ import {
   setUserBlog,
   removeUserBlog,
   getBlogByChannel,
-  getAllBlogs
+  getAllBlogs,
+  getBlogsByBooster
 } from '../db.js';
 
 const BLOG_CATEGORY_ID = '1491791192470458502';
@@ -120,30 +121,34 @@ async function applyOwnerAccess(channel, userId, allowView) {
 }
 
 export async function revokeBlogAccess(guild, userId, reason = 'Boost ended') {
-  const record = getUserBlog(userId);
-  if (!record) return false;
+  const records = getBlogsByBooster(userId);
+  const own = getUserBlog(userId);
+  if (own && !records.some(r => r.channel_id === own.channel_id)) records.push(own);
+  if (!records.length) return false;
 
-  const channel = guild.channels.cache.get(record.channel_id)
-    ?? await guild.channels.fetch(record.channel_id).catch(() => null);
+  let closedAny = false;
+  for (const record of records) {
+    const channel = guild.channels.cache.get(record.channel_id)
+      ?? await guild.channels.fetch(record.channel_id).catch(() => null);
 
-  if (!channel) {
-    removeUserBlog(userId);
-    console.log(`[BLOG] Channel missing for ${userId} — cleared DB record.`);
-    return false;
+    if (!channel) {
+      removeUserBlog(record.user_id);
+      console.log(`[BLOG] Channel missing for ${record.user_id} — cleared DB record.`);
+      continue;
+    }
+
+    try {
+      await channel.permissionOverwrites.edit(SERVER_ACCESS_ROLE_ID, {
+        ViewChannel: false
+      });
+      await channel.setTopic(`Closed — ${reason}.`).catch(() => {});
+      console.log(`[BLOG] Closed ${channel.name} for booster ${userId}`);
+      closedAny = true;
+    } catch (err) {
+      console.error(`[BLOG CLOSE ERROR] ${userId}`, err);
+    }
   }
-
-  try {
-    // Closed = server access role can no longer view the channel
-    await channel.permissionOverwrites.edit(SERVER_ACCESS_ROLE_ID, {
-      ViewChannel: false
-    });
-    await channel.setTopic(`Closed — ${reason}.`).catch(() => {});
-    console.log(`[BLOG] Closed ${channel.name} for user ${userId}`);
-    return true;
-  } catch (err) {
-    console.error(`[BLOG CLOSE ERROR] ${userId}`, err);
-    return false;
-  }
+  return closedAny;
 }
 
 export async function restoreBlogAccess(guild, userId) {
@@ -208,7 +213,7 @@ async function handleCreate(message) {
       ManageMessages: true
     });
 
-    setUserBlog(member.id, channel.id);
+    setUserBlog(member.id, channel.id, member.id);
     await channel.send(
       [
         `${member} this is your personal blog.`,
@@ -242,31 +247,51 @@ async function handleAssign(message, args) {
     return message.reply('Usage: `.x blog assign @user #channel`');
   }
 
+  const existing = getBlogByChannel(channel.id);
+  let boosterId = existing?.booster_id || existing?.user_id || target.id;
+  const currentBooster = await message.guild.members.fetch(boosterId).catch(() => null);
+  // If the saved booster is gone or not boosting, a boosting assignee becomes the booster
+  if (!currentBooster?.premiumSince && target.premiumSince) {
+    boosterId = target.id;
+  }
+
   const takenByUser = getUserBlog(target.id);
   if (takenByUser && takenByUser.channel_id !== channel.id) {
     removeUserBlog(target.id);
   }
 
-  const takenByChannel = getBlogByChannel(channel.id);
-  if (takenByChannel && takenByChannel.user_id !== target.id) {
-    removeUserBlog(takenByChannel.user_id);
-    await channel.permissionOverwrites.delete(takenByChannel.user_id).catch(() => {});
+  if (existing && existing.user_id !== target.id) {
+    removeUserBlog(existing.user_id);
+    // Keep the original booster's access. Only strip a previous command owner.
+    if (existing.user_id !== boosterId) {
+      await channel.permissionOverwrites.delete(existing.user_id).catch(() => {});
+    }
   }
 
   try {
     await channel.permissionOverwrites.edit(target.id, {
       ManageMessages: true
     });
-    setUserBlog(target.id, channel.id);
+    if (boosterId !== target.id) {
+      await channel.permissionOverwrites.edit(boosterId, {
+        ManageMessages: true
+      });
+    }
+    setUserBlog(target.id, channel.id, boosterId);
 
-    if (!target.premiumSince) {
-      await revokeBlogAccess(message.guild, target.id, 'Assigned user is not boosting');
+    const booster = await message.guild.members.fetch(boosterId).catch(() => null);
+    if (!booster?.premiumSince) {
+      await revokeBlogAccess(message.guild, boosterId, 'Boost ended');
       return message.reply(
-        `Linked ${channel} to ${target}. They are not boosting, so the blog is closed (server access cannot view it).`
+        `Linked ${channel} to ${target}. The original booster <@${boosterId}> is not boosting, so the blog is closed.`
       );
     }
 
-    return message.reply(`Linked ${channel} to ${target}.`);
+    return message.reply(
+      boosterId === target.id
+        ? `Linked ${channel} to ${target}.`
+        : `Linked ${channel} to ${target}. Original booster <@${boosterId}> still controls whether it stays open.`
+    );
   } catch (err) {
     console.error('[BLOG ASSIGN ERROR]', err);
     return message.reply('Could not update channel permissions.');
@@ -276,10 +301,15 @@ async function handleAssign(message, args) {
 async function getOwnedBlog(message) {
   const member = message.member;
   if (!member) return { error: 'Could not load your member info.' };
-  if (!member.premiumSince) return { error: 'You can only manage your blog while you are boosting.' };
 
   const record = getUserBlog(member.id);
   if (!record) return { error: 'You do not have a blog. Use `.x blog create` first.' };
+
+  const boosterId = record.booster_id || record.user_id;
+  const booster = await message.guild.members.fetch(boosterId).catch(() => null);
+  if (!booster?.premiumSince) {
+    return { error: 'This blog is closed because the original booster is no longer boosting.' };
+  }
 
   const channel = message.guild.channels.cache.get(record.channel_id)
     ?? await message.guild.channels.fetch(record.channel_id).catch(() => null);
@@ -288,7 +318,7 @@ async function getOwnedBlog(message) {
     return { error: 'Your blog channel is missing. Ask staff to reassign or create a new one.' };
   }
 
-  return { member, channel };
+  return { member, channel, record };
 }
 
 async function handleName(message, args) {
@@ -338,12 +368,14 @@ async function handleBlock(message, args, block) {
   const member = message.member;
   if (!member) return message.reply('Could not load your member info.');
 
-  if (!member.premiumSince) {
-    return message.reply('You can only manage your blog while you are boosting.');
-  }
-
   const record = getUserBlog(member.id);
   if (!record) return message.reply('You do not have a blog. Use `.x blog create` first.');
+
+  const boosterId = record.booster_id || record.user_id;
+  const booster = await message.guild.members.fetch(boosterId).catch(() => null);
+  if (!booster?.premiumSince) {
+    return message.reply('This blog is closed because the original booster is no longer boosting.');
+  }
 
   const channel = message.guild.channels.cache.get(record.channel_id)
     ?? await message.guild.channels.fetch(record.channel_id).catch(() => null);
@@ -419,15 +451,19 @@ async function handleRefresh(message) {
         continue;
       }
 
-      const member = await message.guild.members.fetch(row.user_id).catch(() => null);
-      const isOpen = Boolean(member?.premiumSince);
+      const boosterId = row.booster_id || row.user_id;
+      const booster = await message.guild.members.fetch(boosterId).catch(() => null);
+      const owner = row.user_id === boosterId
+        ? booster
+        : await message.guild.members.fetch(row.user_id).catch(() => null);
+      const isOpen = Boolean(booster?.premiumSince);
 
       // Keep existing user blocks so a refresh does not unblock people
       const blocks = [];
       if (isOpen) {
         for (const overwrite of channel.permissionOverwrites.cache.values()) {
           if (overwrite.type !== 1) continue; // member overwrite
-          if (overwrite.id === row.user_id) continue;
+          if (overwrite.id === row.user_id || overwrite.id === boosterId) continue;
           if (overwrite.deny.has(PermissionFlagsBits.ViewChannel)) {
             blocks.push(overwrite.id);
           }
@@ -437,9 +473,12 @@ async function handleRefresh(message) {
       await channel.lockPermissions();
 
       if (isOpen) {
-        await channel.permissionOverwrites.edit(member.id, {
-          ManageMessages: true
-        });
+        if (owner) {
+          await channel.permissionOverwrites.edit(owner.id, { ManageMessages: true });
+        }
+        if (booster && booster.id !== owner?.id) {
+          await channel.permissionOverwrites.edit(booster.id, { ManageMessages: true });
+        }
         for (const userId of blocks) {
           await channel.permissionOverwrites.edit(userId, { ViewChannel: false });
         }

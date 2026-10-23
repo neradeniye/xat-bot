@@ -168,6 +168,17 @@ db.prepare(`
   );
 `).run();
 
+try {
+  const blogCols = db.prepare("PRAGMA table_info('user_blogs')").all().map(c => c.name);
+  if (!blogCols.includes('booster_id')) {
+    db.prepare('ALTER TABLE user_blogs ADD COLUMN booster_id TEXT').run();
+    db.prepare('UPDATE user_blogs SET booster_id = user_id WHERE booster_id IS NULL').run();
+    console.log('[DB] Added booster_id to user_blogs');
+  }
+} catch (err) {
+  console.error('[DB MIGRATION ERROR user_blogs]', err);
+}
+
 // ====================== SECRET MESSAGES ======================
 db.prepare(`
   CREATE TABLE IF NOT EXISTS secret_messages (
