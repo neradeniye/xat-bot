@@ -161,6 +161,14 @@ db.prepare(`
 `).run();
 
 db.prepare(`
+  CREATE TABLE IF NOT EXISTS say_blacklist (
+    user_id TEXT PRIMARY KEY,
+    added_by TEXT,
+    added_at INTEGER
+  );
+`).run();
+
+db.prepare(`
   CREATE TABLE IF NOT EXISTS user_blogs (
     user_id TEXT PRIMARY KEY,
     channel_id TEXT NOT NULL UNIQUE,
@@ -572,6 +580,28 @@ export function setUserBlog(userId, channelId, boosterId = null) {
 
 export function removeUserBlog(userId) {
   db.prepare('DELETE FROM user_blogs WHERE user_id = ?').run(userId);
+}
+
+export function addSayBlacklist(userId, addedBy = null) {
+  db.prepare(`
+    INSERT INTO say_blacklist (user_id, added_by, added_at)
+    VALUES (?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET
+      added_by = excluded.added_by,
+      added_at = excluded.added_at
+  `).run(userId, addedBy, Date.now());
+}
+
+export function removeSayBlacklist(userId) {
+  db.prepare('DELETE FROM say_blacklist WHERE user_id = ?').run(userId);
+}
+
+export function isSayBlacklisted(userId) {
+  return !!db.prepare('SELECT 1 FROM say_blacklist WHERE user_id = ?').get(userId);
+}
+
+export function getSayBlacklist() {
+  return db.prepare('SELECT user_id, added_by, added_at FROM say_blacklist ORDER BY added_at DESC').all();
 }
 
 export { db };
