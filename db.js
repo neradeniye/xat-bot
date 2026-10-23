@@ -164,7 +164,8 @@ db.prepare(`
   CREATE TABLE IF NOT EXISTS user_blogs (
     user_id TEXT PRIMARY KEY,
     channel_id TEXT NOT NULL UNIQUE,
-    created_at INTEGER
+    created_at INTEGER,
+    booster_id TEXT
   );
 `).run();
 
@@ -186,12 +187,6 @@ db.prepare(`
     user_id TEXT NOT NULL,
     content TEXT NOT NULL,
     created_at INTEGER NOT NULL
-  )
-`).run();
-
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS say_blacklist (
-    user_id TEXT PRIMARY KEY
   )
 `).run();
 
@@ -546,39 +541,37 @@ export function deleteSecretMessage(id) {
 }
 
 export function getUserBlog(userId) {
-  return db.prepare('SELECT user_id, channel_id, created_at FROM user_blogs WHERE user_id = ?').get(userId);
+  return db.prepare('SELECT user_id, channel_id, created_at, booster_id FROM user_blogs WHERE user_id = ?').get(userId);
 }
 
 export function getBlogByChannel(channelId) {
-  return db.prepare('SELECT user_id, channel_id, created_at FROM user_blogs WHERE channel_id = ?').get(channelId);
+  return db.prepare('SELECT user_id, channel_id, created_at, booster_id FROM user_blogs WHERE channel_id = ?').get(channelId);
 }
 
 export function getAllBlogs() {
-  return db.prepare('SELECT user_id, channel_id, created_at FROM user_blogs ORDER BY created_at ASC').all();
+  return db.prepare('SELECT user_id, channel_id, created_at, booster_id FROM user_blogs ORDER BY created_at ASC').all();
 }
 
-export function setUserBlog(userId, channelId) {
+export function getBlogsByBooster(userId) {
+  return db.prepare(`
+    SELECT user_id, channel_id, created_at, booster_id
+    FROM user_blogs
+    WHERE booster_id = ? OR (booster_id IS NULL AND user_id = ?)
+  `).all(userId, userId);
+}
+
+export function setUserBlog(userId, channelId, boosterId = null) {
   db.prepare(`
-    INSERT INTO user_blogs (user_id, channel_id, created_at)
-    VALUES (?, ?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET channel_id = excluded.channel_id
-  `).run(userId, channelId, Date.now());
+    INSERT INTO user_blogs (user_id, channel_id, created_at, booster_id)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET
+      channel_id = excluded.channel_id,
+      booster_id = COALESCE(excluded.booster_id, user_blogs.booster_id)
+  `).run(userId, channelId, Date.now(), boosterId || userId);
 }
 
 export function removeUserBlog(userId) {
   db.prepare('DELETE FROM user_blogs WHERE user_id = ?').run(userId);
-}
-
-export function addSayBlacklist(userId) {
-  db.prepare(`INSERT OR IGNORE INTO say_blacklist (user_id) VALUES (?)`).run(userId);
-}
-
-export function removeSayBlacklist(userId) {
-  db.prepare(`DELETE FROM say_blacklist WHERE user_id = ?`).run(userId);
-}
-
-export function isSayBlacklisted(userId) {
-  return !!db.prepare(`SELECT 1 FROM say_blacklist WHERE user_id = ?`).get(userId);
 }
 
 export { db };
